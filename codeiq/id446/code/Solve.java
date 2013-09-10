@@ -29,17 +29,21 @@ public class Solve{
 			Arrays.fill(row,false);
 		}
 		/*ボートに乗る兵士,巨人の数を(k,l)とすると(k==0またはk>=l)かつk+l<=boat、問題の場合はboat=2なので前半の制限は無いのと同じ*/
-		/*ボートがこちら側にある場合*/
-		for(int i=0;i<=m;i++){ //こちら側の兵士の数
-			for(int j=0;j<=n;j++){ //巨人の数
-				if(!isValid(i,j))continue; //遷移前の状態が良いかどうか
-				int p1=toPoint(i,j,0); //遷移前の点
-				for(int k=0;k<=boat;k++){ //ボートに乗る兵士の数
-					for(int l=0;l<=boat-k;l++){ //ボートに乗る巨人の数
-						if(k>=1 && k<l)continue; //ボート内で大惨事不可避
-						if(!isValid(i-k,j-l))continue; //遷移後の状態が良いかどうか
-						int p2=toPoint(i-k,j-l,1);
-						edges[p1][p2]=true;
+		/*ボートがこちら側:t=0,向こう側:t=1*/
+		for(int t=0;t<2;t++){
+			for(int i=0;i<=m;i++){ //こちら側の兵士の数
+				for(int j=0;j<=n;j++){ //巨人の数
+					if(!isValid(i,j))continue; //遷移前の状態が良いかどうか
+					int p1=toPoint(i,j,t); //遷移前の点
+					for(int k=0;k<=boat;k++){ //ボートに乗る兵士の数
+						for(int l=0;l<=boat-k;l++){ //ボートに乗る巨人の数
+							if(k>=1 && k<l)continue; //ボート内で大惨事不可避
+							int x=t==1?i+k:i-k;//遷移後のこちら側の兵士の数
+							int y=t==1?j+l:j-l;//遷移後のこちら側の兵士の数
+							if(!isValid(x,y))continue; //遷移後の状態が良いかどうか
+							int p2=toPoint(x,y,1-t);//遷移後の点
+							edges[p1][p2]=true;
+						}
 					}
 				}
 			}
@@ -83,9 +87,9 @@ public class Solve{
 			System.out.print(isValid(i,j)?"o ":"x ");
 		}
 		System.out.println();
-		for(int i=0;i<v;i++){
-			for(int j=0;j<v;j++){
-				System.out.print(edges[i][j+v]?"* ":". ");
+		for(int i=0;i<2*v;i++){
+			for(int j=0;j<2*v;j++){
+				System.out.print(edges[i][j]?"* ":". ");
 			}
 			System.out.println();
 		}
