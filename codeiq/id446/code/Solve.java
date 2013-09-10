@@ -4,7 +4,7 @@ import java.util.*;
 	Solve.java
 	https://codeiq.jp/ace/joboffer_apli/q446 (川渡り)を解くプログラム
 	兵士の数をm人、巨人の数をn体とする。
-	方針:それぞれの岸に兵士がx人、巨人がy体、ボートが(こちら側:z=0|向こう側:z=1)にある、と言う状態を点(x+(m+1)*y+z*(m+1)*(n+1))番で表す(計2*(m+1)*(n+1)個)。
+	方針:それぞれの岸に兵士がx人、巨人がy体、ボートが(こちら側:z=0|向こう側:z=1)にある、という状態を点(x+(m+1)*y+z*(m+1)*(n+1))番で表す(計2*(m+1)*(n+1)個)。
 	それぞれの状態から別の状態へ遷移できるときに、各状態を表す点の間に矢印を引く。
 	最短の解に限らなければ無限個の解が存在する(無駄な移動を繰り返せばよい)ので、最短の解のみをすべて求める。
 */
@@ -40,6 +40,7 @@ public class Solve{
 					for(int k=0;k<=boat;k++){ //ボートに乗る兵士の数
 						for(int l=0;l<=boat-k;l++){ //ボートに乗る巨人の数
 							if(k>=1 && k<l)continue; //ボート内で大惨事不可避
+							if(k==0 && l==0)continue; //ボートは0人/0匹では運転できない
 							int x=t==1?i+k:i-k;//遷移後のこちら側の兵士の数
 							int y=t==1?j+l:j-l;//遷移後のこちら側の兵士の数
 							if(!isValid(x,y))continue; //遷移後の状態が良いかどうか
@@ -135,9 +136,9 @@ public class Solve{
 		return new String(out);
 	}
 	public void print(){
-		int goal=toId(0,0,0);
+		int goal=toId(0,0,1);//ボートは右側
 		this.routes=new ArrayList<int[]>();
-		traceback(goal,new int[0]);
+		traceback(goal,new int[]{goal});
 		if(routes.size()==1){ //解は1つ
 			int[] r=routes.get(0);
 			for(int i=r.length-1;i>=0;i--){
@@ -207,7 +208,7 @@ public class Solve{
 		assert m>=n;//兵士の方が多くなければ絶対に不可能
 		Solve sol=new Solve(m,n,boat);//初期化
 		sol.solve();//解をすべて求める
-		sol.debugPrint();//デバッグプリント
+		//sol.debugPrint();//デバッグプリント
 		sol.print();//解をすべて出力
 	}
 }
