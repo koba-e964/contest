@@ -13,6 +13,8 @@ public class Solve{
 	private int m,n;//兵士の数,巨人の数
 	private int np;//2(m+1)(n+1),点の数
 	private boolean[][] edges;//辺の有無、true:あり、false:なし
+	private int[] dist;//開始地点からの距離
+	private List<int[]> routes; //最短経路の集合
 	/*
 		初期化(m:兵士の数,n:巨人の数,boat:ボートに乗れる兵士・巨人の数)
 	*/
@@ -34,14 +36,14 @@ public class Solve{
 			for(int i=0;i<=m;i++){ //こちら側の兵士の数
 				for(int j=0;j<=n;j++){ //巨人の数
 					if(!isValid(i,j))continue; //遷移前の状態が良いかどうか
-					int p1=toPoint(i,j,t); //遷移前の点
+					int p1=toId(i,j,t); //遷移前の点
 					for(int k=0;k<=boat;k++){ //ボートに乗る兵士の数
 						for(int l=0;l<=boat-k;l++){ //ボートに乗る巨人の数
 							if(k>=1 && k<l)continue; //ボート内で大惨事不可避
 							int x=t==1?i+k:i-k;//遷移後のこちら側の兵士の数
 							int y=t==1?j+l:j-l;//遷移後のこちら側の兵士の数
 							if(!isValid(x,y))continue; //遷移後の状態が良いかどうか
-							int p2=toPoint(x,y,1-t);//遷移後の点
+							int p2=toId(x,y,1-t);//遷移後の点
 							edges[p1][p2]=true;
 						}
 					}
@@ -61,12 +63,19 @@ public class Solve{
 			(m-soldier>=n-titan || m-soldier==0); //向こう側で兵士の方が多いまたは0人かどうか
 	}
 	/*
+		各岸における兵士の数の正当性を調べる
+		pid:点の番号
+	*/
+	boolean isValid(int pid){
+		return isValid(pid%(m+1),(pid/(m+1))%(n+1));
+	}
+	/*
 		状態を表す点の番号を返す。
 		soldier:こちら側の兵士の数
 		titan:こちら側の巨人の数
 		boatplace:ボートがこちらなら0,向こうなら1
 	*/
-	private int toPoint(int soldier, int titan, int boatplace){
+	private int toId(int soldier, int titan, int boatplace){
 		assert isValid(soldier,titan);
 		return soldier+(m+1)*titan+(m+1)*(n+1)*boatplace;
 	}
@@ -75,9 +84,95 @@ public class Solve{
 		見つけるだけで出力はしない
 	*/
 	public void solve(){
-		
+		this.dist=new int[np];
+		/*
+			ワーシャル・フロイド法を用いて最短距離を見つける
+		*/
+		final int INF=0x3fffff;// 十分に大きい数
+		int[][] tmp=new int[np][np];
+		for(int i=0;i<np;i++){
+			for(int j=0;j<np;j++){
+				tmp[i][j]=edges[i][j]?1:INF;
+			}
+		}
+		for(int i=0;i<np;i++)
+			tmp[i][i]=0; //自分自身との距離は0
+		for(int k=0;k<np;k++){
+			for(int i=0;i<np;i++){
+				for(int j=0;j<np;j++){
+					if(tmp[i][j]>tmp[i][k]+tmp[k][j])
+						tmp[i][j]=tmp[i][k]+tmp[k][j];
+				}
+			}
+		}
+		int start=toId(m,n,0);
+		for(int i=0;i<np;i++){
+			this.dist[i]=tmp[start][i];//startからの距離をthis.distに格納
+		}
+	}
+	/*
+		点の番号からその状態を表す文字列を生成
+		pid:点の番号
+	*/
+	private String idToString(int pid){
+		int i=pid%(m+1);
+		int j=(pid/(m+1))%(n+1);
+		int t=pid/(m+1)/(n+1);
+		StringBuilder sb=new StringBuilder();
+		sb.append(repeat('S',i));
+		sb.append(repeat('T',j));
+		sb.append('/'); //separator
+		sb.append(repeat('S',m-i));
+		sb.append(repeat('T',n-j));
+		return sb.toString();
+	}
+	/*
+		文字cをnum個つなげた文字列を返す。
+	*/
+	private static String repeat(char c,int num){
+		char[] out=new char[num];
+		Arrays.fill(out,c);
+		return new String(out);
 	}
 	public void print(){
+		int goal=toId(0,0,0);
+		this.routes=new ArrayList<int[]>();
+		traceback(goal,new int[0]);
+		if(routes.size()==1){ //解は1つ
+			int[] r=routes.get(0);
+			for(int i=r.length-1;i>=0;i--){
+				System.out.println(idToString(r[i]));
+			}
+			return;
+		}
+		//解は2つ以上または0個
+		for(int i=0,s=routes.size();i<s;i++){
+			System.out.println("解答"+(i+1));//解答番号
+			int[] r=routes.get(i);
+			for(int j=r.length-1;j>=0;j--){
+				System.out.println(idToString(r[j]));
+			}
+		}
+		
+	}
+	/*
+		再帰的に来た道順をたどっていく
+		id:辿るべき点の番号。そこから前をたどる。
+		trace:ゴールからidまでの道のり
+	*/
+	private void traceback(int id,int[] trace){
+		if(!isValid(id))return;
+		if(dist[id]==0){ //スタート地点に戻った
+			this.routes.add(trace);
+		}
+		for(int i=0;i<np;i++){
+			if(edges[i][id]&& // 経路がある
+			dist[i]+1==dist[id]){ //スタート地点からの距離の差が1
+				int[] cp=Arrays.copyOf(trace,trace.length+1);
+				cp[trace.length]=i;
+				traceback(i,cp);
+			}
+		}
 	}
 	protected void debugPrint(){
 		int v=(m+1)*(n+1);
@@ -93,6 +188,14 @@ public class Solve{
 			}
 			System.out.println();
 		}
+		for(int t=0;t<2;t++){
+			for(int i=0;i<=m;i++){
+				for(int j=0;j<=n;j++){
+					if(!isValid(i,j))continue;
+					System.out.printf("(%d,%d,%d):%d\n",i,j,t,dist[toId(i,j,t)]);
+				}
+			}
+		}
 	}
 	/*
 		引数argsは無視される。
@@ -103,8 +206,8 @@ public class Solve{
 		int boat=2; // ボートに乗れる人員の数
 		assert m>=n;//兵士の方が多くなければ絶対に不可能
 		Solve sol=new Solve(m,n,boat);//初期化
-		sol.debugPrint();//デバッグプリント
 		sol.solve();//解をすべて求める
+		sol.debugPrint();//デバッグプリント
 		sol.print();//解をすべて出力
 	}
 }
