@@ -1,0 +1,109 @@
+24689222839,0
+ENV: Java 6
+
+まずはRubyでコードを書きました。ファイルを読み込んで得られる配列をary[],その長さをnとおくと、
+	ary[i]>ary[j],i<j
+を満たす添え字の組(i,j)の個数を数えれば良い、ということはすぐにわかりました。またO(n^2)時間かかる自明な解法もすぐに思いつきましたが、明らかに時間が足りないので却下しました。
+その後、解法1(下のソースのsolve1())を思いつきました。
+[解法1](solve1)
+これはi番目(ary[i])を読むときに、
+	j<i, ary[j]>ary[i]
+を満たすjの個数を数えるという方針をとっており、その際にary[j]の順番が関係ないことを利用して、毎回ary[0..i-1]をソートする(適切な位置にary[i]を挿入する)ことでlog(i)時間で計算を終えます。
+計算量は挿入場所を探すのにlog(1)+log(2)+...+log(n)=O(n*log(n))時間、挿入に1+2+...+n=O(n^2)ですが、
+挿入にかかる時間はよく分からないので、自明な解法よりは短い時間で解けると思われます。
+実際にやってみたところ、これは18秒ほど時間がかかったので、もう少し改善をしました。
+[解法2](solve2)
+解法1と大まかなやり方は同じですが、特殊なテーブル(以下のソースではcnt)を用意して、i,vに対して
+	「ary[0]～ary[i-1]の中でvより大きいものの個数」
+をO(log(n))時間で計算できるようにしました。このテーブルの更新もO(log(n))時間でできるので、合計でかかる時間はO(n*log(n))です。
+実際にやってみたところ4.2[sec]かかりました。そこでこのソースをJavaに移植して実行したところ、0.1[sec]以内に終了し、同じ答え(24689222839)を返しました。
+
+
+--------------------以下ソースコード(solve.rb)
+
+def reading()
+	filename='crossing.txt'
+	fp=open(filename,'r')
+	ary=[]
+	for line in fp
+		ary<<line.to_i
+	end
+	return ary
+end
+include Math
+def bsearch(ary,v) # ary needs to be sorted
+	i=0 #x<i ===> ary[x]<=v
+	j=ary.size-1 # x>j =====> ary[x]>v
+	while i<=j
+		m=(i+j)/2
+		if (ary[m]<=v)
+			i=m+1
+		else
+			j=m-1
+		end
+	end
+	return i
+end
+def solve1(ary)
+	prep=[]
+	n=ary.size
+	ans=0
+	for i in 0...n
+		if i%10000==0
+			puts i.to_s+'/'+n.to_s
+		end
+		v=ary[i]
+		k=bsearch(prep,v)
+		ans+=i-k
+		prep.insert(k,v)
+	end
+	return ans
+end
+def solve2(ary)
+	n=ary.size
+	m=1<<log2(n+1).ceil # guarantees that cnt[1..n] is valid
+	ans=0
+	cnt=Array.new(m,0) # cnt[...01110000]:ary[0]~ary[i]で、[....01110000, ....10000000)に存在するものの個数
+	for i in 0...n
+		if i%10000==0
+			puts i.to_s+'/'+n.to_s
+		end
+		v=ary[i] # v is in [1,n]
+		w=v
+		c=0
+		while(w<m)
+			least=w&(-w)
+			c+=cnt[w]
+			w+=least
+		end
+		ans+=c
+		w=v
+		while(w>0)
+			least=w&(-w)
+			cnt[w]+=1
+			w-=least
+		end
+	end
+	return ans
+end
+
+def test()
+	ary=reading()
+	#solution 1
+	cl=ary.clone
+	st=Time.now
+	res=solve1(cl)
+	en=Time.now
+	puts "solution 2:"
+	puts "result="+res.to_s
+	puts "time:"+(en-st).to_s+" sec"
+
+	#solution 2
+	cl=ary.clone
+	st=Time.now
+	res=solve2(cl)
+	en=Time.now
+	puts "solution 2:"
+	puts "result="+res.to_s
+	puts "time:"+(en-st).to_s+" sec"
+end
