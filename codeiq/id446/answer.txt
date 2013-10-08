@@ -1,0 +1,289 @@
+※これは解答用サンプルテキストファイルです。
+
+■兵士が巨人に食べられることなく、右の川岸から左の川岸に渡る順番を書いてください。
+・「SSSTTT/」でスタートし、「/SSSTTT」で終了します。
+・川を1回渡るごとに1行書き、改行してください。
+・兵士が巨人に食べられたり、あるいはちゃんと全員が川を渡りきれなかったりすると不正解となります。
+・複数解答ある場合は「解答1」「解答2」とそれぞれの順番の最初に書いてください。
+
+解答1
+SSSTTT/
+SSST/TT
+SSSTT/T
+SSS/TTT
+SSST/TT
+ST/SSTT
+SSTT/ST
+TT/SSST
+TTT/SSS
+T/SSSTT
+ST/SSTT
+/SSSTTT
+解答2
+SSSTTT/
+SSTT/ST
+SSSTT/T
+SSS/TTT
+SSST/TT
+ST/SSTT
+SSTT/ST
+TT/SSST
+TTT/SSS
+T/SSSTT
+ST/SSTT
+/SSSTTT
+解答3
+SSSTTT/
+SSST/TT
+SSSTT/T
+SSS/TTT
+SSST/TT
+ST/SSTT
+SSTT/ST
+TT/SSST
+TTT/SSS
+T/SSSTT
+TT/SSST
+/SSSTTT
+解答4
+SSSTTT/
+SSTT/ST
+SSSTT/T
+SSS/TTT
+SSST/TT
+ST/SSTT
+SSTT/ST
+TT/SSST
+TTT/SSS
+T/SSSTT
+TT/SSST
+/SSSTTT
+
+■あなたが書いたコードの内容や工夫した点について簡潔に書いてください。
+【内容】
+両方の岸に居る兵士と巨人の数、およびボートの位置の状態を点で表し、
+状態Xから状態Yにボートを1回動かすだけで遷移できるときに点Xと点Yの間に辺を引く、という方法で(有向)グラフを作りました。(実は無向グラフでもある)
+その後初期状態(SSSTTT/,ボートこちら)から終状態(/SSSTTT,ボート向こう)への最短距離をワーシャル・フロイド法を用いて求めました。
+【工夫した点】
+兵士の数、巨人の数をそれぞれm,nとおくとき、m=n=3と決めつけた実装をせず、mとnを任意に決められるようにしました。
+このため、m>=nであればほかの場合でも解けます。
+
+■あなたが書いたJavaのバージョンを書いてください。
+Java 6.0
+
+■あなたが書いたコードそのものをはりつけてください。
+
+import java.io.*;
+import java.util.*;
+/*
+	Solve.java
+	https://codeiq.jp/ace/joboffer_apli/q446 (川渡り)を解くプログラム
+	兵士の数をm人、巨人の数をn体とする。
+	方針:それぞれの岸に兵士がx人、巨人がy体、ボートが(こちら側:z=0|向こう側:z=1)にある、という状態を点(x+(m+1)*y+z*(m+1)*(n+1))番で表す(計2*(m+1)*(n+1)個)。
+	それぞれの状態から別の状態へ遷移できるときに、各状態を表す点の間に矢印を引く。
+	最短の解に限らなければ無限個の解が存在する(無駄な移動を繰り返せばよい)ので、最短の解のみをすべて求める。
+*/
+
+public class Solve{
+	private int m,n;//兵士の数,巨人の数
+	private int np;//2(m+1)(n+1),点の数
+	private boolean[][] edges;//辺の有無、true:あり、false:なし
+	private int[] dist;//開始地点からの距離
+	private List<int[]> routes; //最短経路の集合
+	/*
+		初期化(m:兵士の数,n:巨人の数,boat:ボートに乗れる兵士・巨人の数)
+	*/
+	Solve(int m,int n,int boat){
+		if(m<n){
+			throw new IllegalArgumentException("兵士の方が少ない");
+		}
+		this.m=m;
+		this.n=n;
+		this.np=2*(m+1)*(n+1);
+		this.edges=new boolean[np][np];
+		//false埋め。実は必要なし
+		for(boolean[] row:edges){
+			Arrays.fill(row,false);
+		}
+		/*ボートに乗る兵士,巨人の数を(k,l)とすると(k==0またはk>=l)かつk+l<=boat、問題の場合はboat=2なので前半の制限は無いのと同じ*/
+		/*ボートがこちら側:t=0,向こう側:t=1*/
+		for(int t=0;t<2;t++){
+			for(int i=0;i<=m;i++){ //こちら側の兵士の数
+				for(int j=0;j<=n;j++){ //巨人の数
+					if(!isValid(i,j))continue; //遷移前の状態が良いかどうか
+					int p1=toId(i,j,t); //遷移前の点
+					for(int k=0;k<=boat;k++){ //ボートに乗る兵士の数
+						for(int l=0;l<=boat-k;l++){ //ボートに乗る巨人の数
+							if(k>=1 && k<l)continue; //ボート内で大惨事不可避
+							if(k==0 && l==0)continue; //ボートは0人/0匹では運転できない
+							int x=t==1?i+k:i-k;//遷移後のこちら側の兵士の数
+							int y=t==1?j+l:j-l;//遷移後のこちら側の兵士の数
+							if(!isValid(x,y))continue; //遷移後の状態が良いかどうか
+							int p2=toId(x,y,1-t);//遷移後の点
+							edges[p1][p2]=true;
+						}
+					}
+				}
+			}
+		}
+	}
+	/*
+		各岸における兵士の数の正当性を調べる
+		soldier:こちら側の兵士の数
+		titan:こちら側の巨人の数
+	*/
+	boolean isValid(int soldier,int titan){
+		return soldier>=0 && titan>=0 && //こちら側で兵士と巨人の数が両方0以上かどうか
+			soldier<=m && titan<=n && //向こう側で兵士と巨人の数が両方0以上かどうか
+			(soldier>=titan || soldier==0)&& //こちら側で兵士の方が多いまたは0人かどうか
+			(m-soldier>=n-titan || m-soldier==0); //向こう側で兵士の方が多いまたは0人かどうか
+	}
+	/*
+		各岸における兵士の数の正当性を調べる
+		pid:点の番号
+	*/
+	boolean isValid(int pid){
+		return isValid(pid%(m+1),(pid/(m+1))%(n+1));
+	}
+	/*
+		状態を表す点の番号を返す。
+		soldier:こちら側の兵士の数
+		titan:こちら側の巨人の数
+		boatplace:ボートがこちらなら0,向こうなら1
+	*/
+	private int toId(int soldier, int titan, int boatplace){
+		assert isValid(soldier,titan);
+		return soldier+(m+1)*titan+(m+1)*(n+1)*boatplace;
+	}
+	/*
+		あり得る解をすべて見つける
+		見つけるだけで出力はしない
+	*/
+	public void solve(){
+		this.dist=new int[np];
+		/*
+			ワーシャル・フロイド法を用いて最短距離を見つける
+		*/
+		final int INF=0x3fffff;// 十分に大きい数
+		int[][] tmp=new int[np][np];
+		for(int i=0;i<np;i++){
+			for(int j=0;j<np;j++){
+				tmp[i][j]=edges[i][j]?1:INF;
+			}
+		}
+		for(int i=0;i<np;i++)
+			tmp[i][i]=0; //自分自身との距離は0
+		for(int k=0;k<np;k++){
+			for(int i=0;i<np;i++){
+				for(int j=0;j<np;j++){
+					if(tmp[i][j]>tmp[i][k]+tmp[k][j])
+						tmp[i][j]=tmp[i][k]+tmp[k][j];
+				}
+			}
+		}
+		int start=toId(m,n,0);
+		for(int i=0;i<np;i++){
+			this.dist[i]=tmp[start][i];//startからの距離をthis.distに格納
+		}
+	}
+	/*
+		点の番号からその状態を表す文字列を生成
+		pid:点の番号
+	*/
+	private String idToString(int pid){
+		int i=pid%(m+1);
+		int j=(pid/(m+1))%(n+1);
+		int t=pid/(m+1)/(n+1);
+		StringBuilder sb=new StringBuilder();
+		sb.append(repeat('S',i));
+		sb.append(repeat('T',j));
+		sb.append('/'); //separator
+		sb.append(repeat('S',m-i));
+		sb.append(repeat('T',n-j));
+		return sb.toString();
+	}
+	/*
+		文字cをnum個つなげた文字列を返す。
+	*/
+	private static String repeat(char c,int num){
+		char[] out=new char[num];
+		Arrays.fill(out,c);
+		return new String(out);
+	}
+	public void print(){
+		int goal=toId(0,0,1);//ボートは右側
+		this.routes=new ArrayList<int[]>();
+		traceback(goal,new int[]{goal});
+		if(routes.size()==1){ //解は1つ
+			int[] r=routes.get(0);
+			for(int i=r.length-1;i>=0;i--){
+				System.out.println(idToString(r[i]));
+			}
+			return;
+		}
+		//解は2つ以上または0個
+		for(int i=0,s=routes.size();i<s;i++){
+			System.out.println("解答"+(i+1));//解答番号
+			int[] r=routes.get(i);
+			for(int j=r.length-1;j>=0;j--){
+				System.out.println(idToString(r[j]));
+			}
+		}
+		
+	}
+	/*
+		再帰的に来た道順をたどっていく
+		id:辿るべき点の番号。そこから前をたどる。
+		trace:ゴールからidまでの道のり
+	*/
+	private void traceback(int id,int[] trace){
+		if(!isValid(id))return;
+		if(dist[id]==0){ //スタート地点に戻った
+			this.routes.add(trace);
+		}
+		for(int i=0;i<np;i++){
+			if(edges[i][id]&& // 経路がある
+			dist[i]+1==dist[id]){ //スタート地点からの距離の差が1
+				int[] cp=Arrays.copyOf(trace,trace.length+1);
+				cp[trace.length]=i;
+				traceback(i,cp);
+			}
+		}
+	}
+	protected void debugPrint(){
+		int v=(m+1)*(n+1);
+		for(int x=0;x<v;x++){
+			int i=x%(m+1);
+			int j=x/(m+1);
+			System.out.print(isValid(i,j)?"o ":"x ");
+		}
+		System.out.println();
+		for(int i=0;i<2*v;i++){
+			for(int j=0;j<2*v;j++){
+				System.out.print(edges[i][j]?"* ":". ");
+			}
+			System.out.println();
+		}
+		for(int t=0;t<2;t++){
+			for(int i=0;i<=m;i++){
+				for(int j=0;j<=n;j++){
+					if(!isValid(i,j))continue;
+					System.out.printf("(%d,%d,%d):%d\n",i,j,t,dist[toId(i,j,t)]);
+				}
+			}
+		}
+	}
+	/*
+		引数argsは無視される。
+	*/
+	public static void main(String[] args){
+		int m=3;//兵士の数
+		int n=3;//巨人の数
+		int boat=2; // ボートに乗れる人員の数
+		assert m>=n;//兵士の方が多くなければ絶対に不可能
+		Solve sol=new Solve(m,n,boat);//初期化
+		sol.solve();//解をすべて求める
+		//sol.debugPrint();//デバッグプリント
+		sol.print();//解をすべて出力
+	}
+}
