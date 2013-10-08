@@ -1,0 +1,27 @@
+src=[[[255,0,0],[0,255,0],[0,0,255]],[[0,255,255],[255,0,155],[255,255,0]]];
+d=[];
+for(y=0;y<200;y++){
+	d[y]=[];
+	for(x=0;x<400;x++)d[y][x]=[]
+}
+for(y=0;y<200;y++)for(x=0;x<400;x++)
+	for(x0=Math.floor(x/200),
+	y0=Math.floor(3*y/40),
+	x1=x/200-x0,
+	y1=y/(40/3)-y0,
+	y0%=2,
+	col0=src[y0][x0],
+	col1=src[y0][x0+1],
+	col2=src[1-y0][x0],
+	col3=src[1-y0][x0+1],
+	c=0;c<3;c++)
+		d[y][x][c]=Math.round(
+			(1-x1)*(1-y1)*col0[c]+
+			(1-x1)*y1*col2[c]+
+			x1*(1-y1)*col1[c]+
+			x1*y1*col3[c]);
+
+
+for(y=0;y<200;d[y]=d[y].join(","),y++)
+for(x=0;x<400;x++)d[y][x]=d[y][x].join("/");
+return d.join("\n")
