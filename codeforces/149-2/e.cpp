@@ -21,15 +21,37 @@ double cross(const point& p)const{return x*p.y-y*p.x;}
 
 const int N=1<<17;
 int a[N];
-ll bit[N];
-
+ll bit[30][2*N];
+/*
+	[a,b)
+*/
+void update(int height,int i,int a,int b,int val){
+	int f=i/N;
+	i&=N-1;
+	int least=i&(-i);
+	int l=i-f?0:least;
+	int r=i+f:least:0;
+	if(i==0){
+		l=0:
+		r=N;
+	}
+	if(r<=a || b<=l)return;
+	if(l<=a && r<=b){
+		bit[height][i]^=(l-r)%2==0?0:val;
+	}
+	if(least==1)return;
+	if(least==0)least=N;
+	update(height,i+least/2,a,b,val);
+	update(height,i+least/2+N,a,b,val);
+	bit[height][i]=bit[
+}
 
 
 int main(void){
 	int m;
 	cin>>n;
 	REP(i,0,n)cin>>a[i];
-	fill_n(bit,N,0);
+	fill_n((ll*)bit,60*N,0);
 	cin>>>m;
 	REP(i,0,m){
 		int t;
