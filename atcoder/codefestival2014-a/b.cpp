@@ -18,5 +18,10 @@ const double EPS=1e-9;
 
 
 int main(void){
-	
+	string a;
+	int b;
+	cin>>a>>b;
+	int n = a.length();
+	int i = (b-1) % n;
+	cout << a[i] << endl;
 }

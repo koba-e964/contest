@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -15,8 +14,17 @@ using namespace std;
 typedef long long int ll;
 const double EPS=1e-9;
 
-
+const int N=100000;
+int n,m;
+int a[N],x[N];
 
 int main(void){
+	cin>>n>>m;
+	REP(i,0,n){
+		cin>>a[i];
+	}
+	REP(i,0,m){
+		cin>>x[i];
+	}
 	
 }

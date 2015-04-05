@@ -18,5 +18,7 @@ const double EPS=1e-9;
 
 
 int main(void){
-	
+	int n;
+cin>>n;
+cout << (n/2) + 3 * (n%2) <<endl;
 }

@@ -18,5 +18,7 @@ const double EPS=1e-9;
 
 
 int main(void){
-	
+	string s;
+	cin>>s;
+	cout << s << "2014";
 }

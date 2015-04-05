@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -13,10 +12,4 @@
 
 using namespace std;
 typedef long long int ll;
-const double EPS=1e-9;
 
-
-
-int main(void){
-	
-}

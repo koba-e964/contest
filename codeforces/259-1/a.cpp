@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -13,10 +12,17 @@
 
 using namespace std;
 typedef long long int ll;
-const double EPS=1e-9;
 
 
 
+int m,n;
 int main(void){
-	
+	cin>>m>>n;
+	double t=(double)1 / (double)m;
+	double sum=0;
+	REP(i,1,m+1) {
+		sum += i* pow((double)i/double(m),n);
+		sum -= i* pow((double)(i-1)/double(m), n);
+	}
+	printf("%.10f\n", sum);
 }

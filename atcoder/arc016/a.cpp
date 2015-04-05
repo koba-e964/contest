@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -13,10 +12,19 @@
 
 using namespace std;
 typedef long long int ll;
-const double EPS=1e-9;
-
 
 
 int main(void){
-	
+	int n,m;
+	cin>>n>>m;
+	srand(13);
+	while(1){
+		int k=rand()%n;
+		k++;
+		if(k!=m){
+			cout<<k<<endl;
+			return 0;
+		}
+	}
+	return -1;
 }

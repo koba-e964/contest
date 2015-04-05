@@ -18,5 +18,21 @@ const double EPS=1e-9;
 
 
 int main(void){
-	
+	int a, b;
+	set<int> sa;
+	cin >> a >> b;
+	REP(i, 0, a) {
+		int t;
+		cin >> t;
+		sa.insert(t);
+	}
+	int c = 0;
+	REP(i, 0, b) {
+		int t;
+		cin >> t;
+		if (sa.count(t)) {
+			c ++;
+		}
+	}
+	printf("%.10f\n", (double)c / (a + b - c));
 }

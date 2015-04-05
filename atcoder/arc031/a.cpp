@@ -18,5 +18,13 @@ const double EPS=1e-9;
 
 
 int main(void){
-	
+	string s;
+	cin>>s;
+	REP(i,0,s.length()) {
+		if (s[i] != s[s.length()-i-1]) {
+			cout << "NO" <<endl;
+			return 0;
+		}
+	}
+	cout << "YES" << endl;
 }

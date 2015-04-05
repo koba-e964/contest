@@ -16,7 +16,16 @@ typedef long long int ll;
 const double EPS=1e-9;
 
 
+const int N = 100500;
+int n;
+
+int b[N];
+
 
 int main(void){
+	cin>>n;
+	REP(i,0,n) {
+		cin>>b[i];
+	}
 	
 }

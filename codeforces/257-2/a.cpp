@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -13,10 +12,22 @@
 
 using namespace std;
 typedef long long int ll;
-const double EPS=1e-9;
 
 
-
+int n,m;
+int v[101];
 int main(void){
-	
+	cin>>n>>m;
+	REP(i,0,n) {
+		cin>>v[i];
+	}
+	int maxi = 0, maxv =0;
+	REP(i,0,n) {
+		int t= (v[i]+ m - 1)/m;
+		if(maxv<=t) {
+			maxi = i;
+			maxv=t;
+		}
+	}
+	cout<<(maxi + 1)<< endl;
 }

@@ -15,8 +15,15 @@ using namespace std;
 typedef long long int ll;
 const double EPS=1e-9;
 
-
+ll check(ll y) {
+	ll s = y / 400;
+	s += y/4;
+	s -= y/100;
+	return s;
+}
 
 int main(void){
-	
+	int a,b;
+	cin>>a>>b;
+	cout << check(b) - check(a-1) << endl;
 }

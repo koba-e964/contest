@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -13,10 +12,24 @@
 
 using namespace std;
 typedef long long int ll;
-const double EPS=1e-9;
 
-
-
+int a, b;
+int n;
 int main(void){
-	
+	int t;
+	a = b = 0;
+	REP(i,0,3) {
+		cin >> t;
+		a += t;
+	}
+	REP(i,0,3) {
+		cin >> t;
+		b += t;
+	}
+	cin >> n;
+	if ((a+4)/5 + (b+9)/10 <= n) {
+		cout << "YES" <<endl;
+	} else {
+		cout << "NO" <<endl;
+	}
 }
