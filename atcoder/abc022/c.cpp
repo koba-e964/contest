@@ -1,0 +1,122 @@
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
+#include <queue>
+
+/*
+ * Requirement of headers: vector, queue
+ */
+class MinCostFlow {
+private:
+  struct edge {
+    int to, cap, cost, rev; // rev is the position of reverse edge in graph[to]
+  };
+  typedef std::pair<int, int> P;
+  int v; // the number of vertices
+  std::vector<std::vector<edge> > graph;
+  std::vector<int> h; // potential
+  std::vector<int> dist; // minimum distance
+  std::vector<int> prevv, preve; // previous vertex and edge
+public:
+  /* Initializes this solver. v is the number of vertices. */
+  MinCostFlow(int v) : v(v), graph(v), h(v), dist(v), prevv(v), preve(v) {}
+  /* Initializes this solver with a existing instance. Only graph is copied. */
+  MinCostFlow(const MinCostFlow &ano) : v(ano.v), graph(), h(ano.v), dist(ano.v), prevv(ano.v), preve(ano.v) {
+    for (int i = 0; i < ano.v; ++i) {
+      std::vector<edge> tt;
+      for (int j = 0; j < ano.graph[i].size(); ++j) {
+	tt.push_back(ano.graph[i][j]);
+      }
+      graph.push_back(tt);
+    }
+  }
+  /* Adds an edge. */
+  void add_edge(int from, int to, int cap, int cost) {
+    graph[from].push_back((edge) {to, cap, cost, graph[to].size()});
+    graph[to].push_back((edge) {from, 0, -cost, graph[from].size() - 1});
+  }
+  /* Calcucates the minimum cost flow whose source is s, sink is t, and flow is f. */
+  int min_cost_flow(int s, int t, int f) {
+    const int inf = 0x3fffffff;
+    int res = 0;
+    std::fill(h.begin(), h.end(), 0);
+    while (f > 0) {
+      std::priority_queue<P, std::vector<P>, std::greater<P> > que;
+      std::fill(dist.begin(), dist.end(), inf);
+      dist[s] = 0;
+      que.push(P(0, s));
+      while (! que.empty()) {
+	P p(que.top()); que.pop();
+	int v = p.second;
+	if (dist[v] < p.first) {
+	  continue;
+	}
+	for (int i = 0; i < graph[v].size(); ++i) {
+	  edge &e = graph[v][i];
+	  if (e.cap > 0 && dist[e.to] > dist[v] + e.cost + h[v] - h[e.to]) {
+	    dist[e.to] = dist[v] + e.cost + h[v] - h[e.to];
+	    prevv[e.to] = v;
+	    preve[e.to] = i;
+	    que.push(P(dist[e.to], e.to));
+	  }
+	}
+      }
+      if (dist[t] == inf) {
+	return -1; // Cannot add flow anymore
+      }
+      for (int i = 0; i < v; ++i) {
+	h[i] += dist[i];
+      }
+      // Add flow fully
+      int d = f;
+      for (int i = t; i != s; i = prevv[i]) {
+	d = std::min(d, graph[prevv[i]][preve[i]].cap);
+      }
+      f -= d;
+      res += d * h[t];
+      for (int i = t; i != s; i = prevv[i]) {
+	edge &e = graph[prevv[i]][preve[i]];
+	e.cap -= d;
+	graph[i][e.rev].cap += d;
+      }
+    } // while (f > 0)
+    return res;
+  }
+};
+#define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
+
+using namespace std;
+typedef long long int ll;
+const double EPS=1e-9;
+
+
+
+int main(void){
+  int n, m;
+  const int inf = 0x3fffffff;
+  cin >> n >> m;
+  MinCostFlow mcf(n);
+  REP(i,0,m) {
+    int u, v, l;
+    cin >> u >> v >> l;
+    u--, v--;
+    mcf.add_edge(u, v, 1, l);
+    mcf.add_edge(v, u, 1, l);
+  }
+  int minv = inf;
+  REP(i, 1, n) {
+    MinCostFlow cp(mcf);
+    int res = cp.min_cost_flow(0, i, 2);
+    if (res >= 0) {
+      minv = min(minv, res);
+    }
+  }
+  cout << (minv == inf ? -1 : minv) << endl;
+}
