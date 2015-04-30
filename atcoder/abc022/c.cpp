@@ -97,24 +97,46 @@ typedef long long int ll;
 const double EPS=1e-9;
 
 
+const int N = 310;
+int dist[N][N];
+
+int d0[N];
 
 int main(void){
   int n, m;
-  const int inf = 0x3fffffff;
+  const int inf = 0x3ffffff;
   cin >> n >> m;
-  MinCostFlow mcf(n);
+  REP(i,0,n) {
+    REP(j,0,n) {
+      dist[i][j] = inf;
+    }
+    dist[i][i] = 0;
+    d0[i] = inf;
+  }
   REP(i,0,m) {
     int u, v, l;
     cin >> u >> v >> l;
     u--, v--;
-    mcf.add_edge(u, v, 1, l);
-    mcf.add_edge(v, u, 1, l);
+    dist[u][v] = min(dist[u][v], l);
+    dist[v][u] = min(dist[v][u], l);
+  }
+  REP(i,0,n) {
+    d0[i] = dist[0][i];
+  }
+  REP(k,1,n) {
+    REP(i,1,n) {
+      REP(j,1,n) {
+	dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);
+      }
+    }
   }
   int minv = inf;
   REP(i, 1, n) {
-    MinCostFlow cp(mcf);
-    int res = cp.min_cost_flow(0, i, 2);
-    if (res >= 0) {
+    REP(j,1,n) {
+      if (i == j) {
+	continue;
+      }
+      int res = dist[i][j] + d0[i] + d0[j];
       minv = min(minv, res);
     }
   }
