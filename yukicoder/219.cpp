@@ -30,6 +30,7 @@ typedef vector<int> VI;
 typedef pair<int, int> PI;
 const double EPS=1e-9;
 
+#define double __float128
 
 struct sci {
   double m;
@@ -58,6 +59,7 @@ int main(void){
       m_a /= 10;
       e_a++;
     }
+    m_a *= 1 + (double)1e-30;
     sci s = (sci) {m_a, e_a};
     sci sum = (sci) {1, 0};
     sci cur = s;
