@@ -8,24 +8,34 @@ class FFT {
 private:
   static const double pi = 3.141592653589793238463;
   typedef std::complex<double> comp;
-  static std::vector<comp> internal_fft(std::vector<comp> f, int n, const std::vector<comp> &ztbl, int x) {
+  static void
+  inplace_internal_fft(
+		       const std::vector<comp> &f,
+		       std::vector<comp> &output,
+		       const std::vector<comp> &ztbl,
+		       int x,
+		       int fstart,
+		       int fstep,
+		       int n,
+		       int ostart) {
     if (n == 1) {
-      return f;
+      output[ostart] = f[fstart];
+      return;
     }
-    std::vector<comp> f0(n / 2), f1(n / 2);
-    for(int i = 0; i < n / 2; ++i) {
-      f0[i] = f[2 * i];
-      f1[i] = f[2 * i + 1];
-    }
-    f0 = internal_fft(f0, n / 2, ztbl, x + 1);
-    f1 = internal_fft(f1, n / 2, ztbl, x + 1);
+    inplace_internal_fft(f, output, ztbl, x + 1,
+			 fstart, 2 * fstep, n / 2, ostart);
+    inplace_internal_fft(f, output, ztbl, x + 1,
+			 fstart + fstep, 2 * fstep, n / 2, ostart + n / 2);
     comp zeta = ztbl[x];
     comp pzeta = 1;
-    for (int i = 0; i < n; ++i) {
-      f[i] = f0[i % (n / 2)] + pzeta * f1[i % (n / 2)];
+    for (int i = 0; i < n / 2; ++i) {
+      comp f0 = output[ostart + i];
+      comp f1 = output[ostart + i + n / 2];
+      output[ostart + i] = f0 + pzeta * f1;
+      output[ostart + i + n / 2] = f0 - pzeta * f1;
       pzeta *= zeta;
     }
-    return f;
+    return;
   }
 public:
   static int ceil_pow2(int n) {
@@ -42,7 +52,9 @@ public:
       comp zeta = comp(cos(2 * pi / d), sin(2 * pi / d));
       ztbl[i] = zeta;
     }
-    return internal_fft(f, n, ztbl, 0);
+    std::vector<comp> output(n);
+    inplace_internal_fft(f, output, ztbl, 0, 0, 1, n, 0);
+    return output;
   }
 
   static std::vector<comp> inverse_transform(std::vector<comp> f, int n) {
@@ -53,7 +65,9 @@ public:
       comp zeta = comp(cos(2 * pi / d), - sin(2 * pi / d));
       ztbl[i] = zeta;
     }
-    return internal_fft(f, n, ztbl, 0);
+    std::vector<comp> output(n);
+    inplace_internal_fft(f, output, ztbl, 0, 0, 1, n, 0);
+    return output;
   }
 };
 
