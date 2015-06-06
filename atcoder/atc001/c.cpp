@@ -10,9 +10,9 @@ private:
   typedef std::complex<double> comp;
   static void
   inplace_internal_fft(
-		       const std::vector<comp> &f,
-		       std::vector<comp> &output,
-		       const std::vector<comp> &ztbl,
+		       comp const *f,
+		       comp *output,
+		       comp const *ztbl,
 		       int x,
 		       int fstart,
 		       int fstep,
@@ -53,7 +53,7 @@ public:
       ztbl[i] = zeta;
     }
     std::vector<comp> output(n);
-    inplace_internal_fft(f, output, ztbl, 0, 0, 1, n, 0);
+    inplace_internal_fft(&f[0], &output[0], &ztbl[0], 0, 0, 1, n, 0);
     return output;
   }
 
@@ -66,7 +66,7 @@ public:
       ztbl[i] = zeta;
     }
     std::vector<comp> output(n);
-    inplace_internal_fft(f, output, ztbl, 0, 0, 1, n, 0);
+    inplace_internal_fft(&f[0], &output[0], &ztbl[0], 0, 0, 1, n, 0);
     return output;
   }
 };
