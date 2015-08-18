@@ -13,10 +13,12 @@ int main(void){
   int c = (n - 1) % (k + 1);
   cout << c << endl;
   while (1) {
-    cin >> c;
-    if (c >= n) {
+    int d;
+    cin >> d;
+    if (d >= n) {
       return 0;
     }
-    cout << (c + k) / (k + 1) * (k + 1) << endl;
+    c += k + 1;
+    cout << c << endl;
   }
 }
