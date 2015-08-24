@@ -4,6 +4,13 @@ fn getline() -> String {
   return ret;
 }
 
+fn parse<T : std::str::FromStr>(s : &str) -> T {
+  match s.parse::<T>() {
+    Ok(t) => t,
+    _    => panic!(),
+  }
+}
+
 fn main() {
   
 }
