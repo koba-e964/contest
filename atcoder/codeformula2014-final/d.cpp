@@ -1,98 +1,81 @@
+/*
+ * Reference: http://kmjp.hatenablog.jp/entry/2014/10/08/0900
+ */
 #include <algorithm>
 #include <cassert>
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
 #include <iostream>
 #include <map>
-#include <set>
-#include <string>
 #include <vector>
 
 #define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
 
 using namespace std;
-typedef long long int ll;
-const double EPS=1e-9;
-const int N = 3010;
-const int H = 6100;
 
 const int DEBUG = 0;
 
-int n;
-int h[N];
-int m[N],s[N], e[N];
+struct mov {
+	int m, s, e;
+};
 
-set<int> tm;
-map<int,int> tmu;
-int uniq = 0;
+istream &operator>>(istream &os, mov &m) {
+	os >> m.m >> m.s >> m.e;
+	return os;
+}
 
-int dp[H][N];
-int dpa[H];
-int dpb[H];
-int dpacc[H];
+bool mov_cmp(const mov &m1, const mov &m2) {
+	return m1.s < m2.s || (m1.s == m2.s && (m1.e < m2.e || (m1.e == m2.e && m1.m < m2.m)));
+}
 
-
-vector<int> pred[N];
-
-void reg(int v) {
-	if(tm.count(v)) {
-		return;
+int solve(const vector<int> &h, const vector<mov> &ms) {
+	int n = h.size();
+	vector<map<int, int> > dp(n);
+	vector<int> dpm(n, -1);
+	REP(i, 0, n) {
+		dp[i] = map<int, int>();
 	}
-	tm.insert(v);
-}
-
-
-void rec(int x) {
-	if(dpacc[x] >= 0) return;
-		int mm = 0;
-		REP(c,1,n+1) {
-			int mmc = c == 1 ? h[0] : -1;
-			REP(q,0,pred[x].size()) {
-				int pr = pred[x][q];
-				rec(pr);
-				if(m[x] == m[pr] && c >= 2 && dp[pr][c-1] >= 0)
-					mmc = max(mmc, dp[pr][c - 1] + h[c-1]);
-				if( c == 1)
-					mmc = max(mmc, dpacc[pr] + h[0]);
+	REP(i, 0, n) {
+		vector<bool> vis(n + 1, false);
+		dp[i][1] = h[0];
+		for (int k = i - 1; k >= 0; --k) {
+			if (vis[ms[k].m]) { continue; }
+			if (ms[k].e > ms[i].s) { continue; }
+			vis[ms[k].m] = true;
+			if (ms[k].m != ms[i].m) {
+				if (dpm[k] >= 0) {
+					dp[i][1] = max(dp[i][1], dpm[k] + h[0]);
+				}
+			} else {
+				for (map<int, int>::iterator it = dp[k].begin();
+						 it != dp[k].end(); ++it) {
+					dp[i][it->first + 1] =
+						max(dp[i][it->first + 1], it->second + h[it->first]);
+				}
 			}
-			mm = max(mm,mmc);
-			dp[x][c] = mmc;
-			if(DEBUG) cout << "dp[" << x << "][" << c << "]=" << mmc << endl;
 		}
-		dpacc[x] = mm;
-		if(DEBUG) cout << "dpacc[" << x << "]=" << mm << endl;
-
+		for (map<int, int>::iterator it = dp[i].begin();
+				 it != dp[i].end(); ++it) {
+			dpm[i] = max(dpm[i], it->second);
+		}
+		assert (dpm[i] >= 0);
+	}
+	int ma = 0;
+	REP(i, 0, n) {
+		ma = max(ma, dpm[i]);
+	}
+	return ma;
 }
 
-int main(void){
+int main(void) {
+	int n;
 	cin >> n;
-	REP(i,0,n) cin>>h[i];
-	REP(i,0,n) {
-		cin >> m[i] >> s[i] >> e[i];
+	vector<int> h(n);
+	vector<mov> ms(n);
+	REP(i, 0, n) {
+		cin >> h[i];
 	}
-	REP(i,0,n) {
-		REP(j,0,n) {
-			if(e[j] <= s[i])
-				pred[i].push_back(j);
-		}
+	REP(i, 0, n) {
+		cin >> ms[i];
 	}
-	if(DEBUG) {
-		REP(i,0,n) {
-			cout << "pred[" << i << "]=";
-			REP(j,0,pred[i].size()) {
-				cout << pred[i][j] << " ";
-			}
-			cout << endl;
-		}
-	}
-	REP(x,0,n) dpacc[x] = -1;
-	REP(x,0,n) {
-		rec(x);
-	}
-	int mm = 0;
-	REP(i,0,n) {
-		mm = max(mm, dpacc[i]);
-	}
-	cout << mm << endl;
+	sort(ms.begin(), ms.end(), mov_cmp);
+	cout << solve(h, ms) << endl;
 }
