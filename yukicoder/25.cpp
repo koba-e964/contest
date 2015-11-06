@@ -32,11 +32,19 @@ const double EPS=1e-9;
 
 
 
+ll gcd(ll a, ll b) {
+    while (b != 0) {
+        ll r = a % b;
+        a = b;
+        b = r;
+    }
+    return a;
+}
 
 int main(void){
   ll n, m;
   cin >> n >> m;
-  ll g = __gcd(n, m);
+  ll g = gcd(n, m);
   n /= g;
   m /= g;
   if (m == 1) {
@@ -72,6 +80,6 @@ int main(void){
     return 0;
   }
   int ar[4] = {6, 2, 4, 8};
-  cout << ((n % 10) * ar[c % 4]) % 10 << endl;
+    cout << ((n % 10) * (c == 0 ? 1 : ar[c % 4])) % 10 << endl;
 
 }
