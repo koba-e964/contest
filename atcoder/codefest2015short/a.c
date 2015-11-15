@@ -1,0 +1,1 @@
+t;u;main(s){for(scanf("%*d%d",&s);~scanf("%d",&u);t-=2*s-u);return!puts(t<s?"Pass":"Fail");}

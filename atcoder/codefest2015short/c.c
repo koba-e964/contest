@@ -1,0 +1,1 @@
+g(n){int i=n/2,t=0;for(;i;--i)n%i==0&&t<g(i)?t=g(i):0;return t+(n-100?n-n/10*9:1);}main(n){scanf("%d",&n);return!printf("%d\n",g(n));}
