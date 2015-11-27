@@ -1,0 +1,1 @@
+x;main(y){scanf("%d%d",&x,&y);x=!printf("%d\n",x*y+(x<y?y:x));}

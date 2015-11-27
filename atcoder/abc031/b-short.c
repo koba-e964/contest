@@ -1,0 +1,1 @@
+l,h,d;main(x){for(scanf("%d%d%*d",&l,&h);d=~scanf("%d",&x);printf("%d\n",x<l?l-x:x>h?-1:0));}
