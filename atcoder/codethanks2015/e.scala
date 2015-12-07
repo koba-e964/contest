@@ -10,9 +10,9 @@ object Main extends App {
   import scala.collection.JavaConverters._
   import scala.math._
 
-  val sc = new ju.Scanner(System.in)
+  final val sc = new ju.Scanner(System.in)
   
-  def solve(s:String, t:String) : Boolean = {
+  final def solve(s:String, t:String) : Boolean = {
     val bs = mu.BitSet()
     t foreach { i => bs(i - 'a') = true }
     val tr = s.filter((i : Char) => bs(i - 'a'))
