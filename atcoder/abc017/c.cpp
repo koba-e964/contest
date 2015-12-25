@@ -21,7 +21,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 #define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
 
 using namespace std;
@@ -32,51 +31,27 @@ const double EPS=1e-9;
 const int N = 100010;
 int n,m;
 
-struct dat {
-  int l, r, s;
-  bool operator <(const dat &o) const {
-    if (l != o.l) {
-      return l < o.l;
-    }
-    if (r != o.r) {
-      return r < o.r;
-    }
-    return s < o.s;
-  }
-};
 
-dat qq[N];
+int qq[N];
 
 int main(void){
   cin >> n >> m;
+  int tot = 0;
+  
   REP(i, 0, n) {
     int l, r, s;
     cin >> l >> r >> s;
-    qq[i] = (dat) {l, r, s};
+    l--, r--;
+    tot += s;
+    qq[l] += s;
+    qq[r + 1] -= s;
   }
-  sort(qq, qq + n);
-  if (n >= 13) {
-    return 1; // RE
+  int mi = 1e9;
+  REP(i, 1, m) {
+    qq[i] += qq[i - 1];
   }
-  int ma = 0;
-  REP(bits, 0, 1 << n) {
-    int en = 1; // [1,en)
-    int s = 0;
-    REP(i, 0, n) {
-      if ((bits & (1 << i)) == 0) {
-	continue;
-      }
-      if (en < qq[i].l) {
-	break;
-      }
-      en = max(en, qq[i].r + 1);
-    }
-    if (en < m + 1) {
-      REP(i, 0, n) {
-	s += (bits & (1 << i)) ? qq[i].s : 0;
-      }
-      ma = max(ma, s);
-    }
+  REP(i, 0, m) {
+    mi = min(mi, qq[i]);
   }
-  cout << ma << endl;
+  cout << tot - mi << endl;
 }
