@@ -18,7 +18,7 @@ fn main() {
     let mut hm: HashMap<String, i32, _> = HashMap::new();
     for _ in 0 .. n {
         let a: String = String::from(getline().trim());
-        if let Some(x) = hm.clone().get(&a) { // TODO ugly cloning. 
+        if let Some(x) = hm.get(&a).cloned() { // revised by https://twitter.com/mandel59/status/708973482411819008
             hm.insert(a, x + 1);
         } else {
             hm.insert(a, 1);
