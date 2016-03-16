@@ -1,18 +1,21 @@
+#[allow(unused_imports)]
 use std::cmp::*;
 use std::io::*;
+#[allow(dead_code)]
 fn getline() -> String {
     let mut ret = String::new();
     std::io::stdin().read_line(&mut ret).ok();
     return ret;
 }
+#[allow(dead_code)]
 fn getword() -> String {
     let mut stdin = std::io::stdin();
     let mut u8b: [u8; 1] = [0];
     loop {
         let mut buf: Vec<u8> = Vec::with_capacity(16);
         loop {
-            stdin.read(&mut u8b);
-            if u8b[0] <= ' ' as u8 {
+            let res = stdin.read(&mut u8b);
+            if res.is_err() ||u8b[0] <= ' ' as u8 {
                 break;
             } else {
                 buf.push(u8b[0]);
@@ -24,11 +27,9 @@ fn getword() -> String {
         }
     }
 }
+#[allow(dead_code)]
 fn parse<T : std::str::FromStr>(s : &str) -> T {
-    match s.parse::<T>() {
-        Ok(t) => t,
-        _    => panic!(),
-    }
+     return s.parse::<T>().ok().unwrap();
 }
 
 fn main() {
