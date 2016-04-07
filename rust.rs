@@ -32,6 +32,11 @@ fn parse<T : std::str::FromStr>(s : &str) -> T {
      return s.parse::<T>().ok().unwrap();
 }
 
+#[allow(dead_code)]
+fn get<T: std::str::FromStr>() -> T {
+    parse(&getword())
+}
+
 fn main() {
     
 }
