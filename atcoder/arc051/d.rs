@@ -33,6 +33,41 @@ fn parse<T: std::str::FromStr>(s: &str) -> T { s.parse::<T>().ok().unwrap() }
 #[allow(dead_code)]
 fn get<T: std::str::FromStr>() -> T { parse(&get_word()) }
 
+
+/*
+ * Manages multiple linear graphs.
+ * Lines that are not necessary to calculate maximum values are deleted.
+ */
+struct ConvexHullTrick {
+    dat: Vec<(i64, i64)> // (a,b) -> y = a * x + b
+}
+
+impl ConvexHullTrick {
+    fn new() -> Self {
+        ConvexHullTrick { dat: Vec::new() }
+    }
+    fn check(a: (i64, i64), b: (i64, i64), c: (i64, i64)) -> bool {
+        (b.0 - a.0) * (c.1 - b.1) >= (b.1 - a.1) * (c.0 - b.0)
+    }
+    /*
+     * added.0 must be the largest.
+     */
+    fn add(&mut self, added: (i64, i64)) {
+        while self.dat.len() >= 2 {
+            let l = self.dat.len();
+            if Self::check(self.dat[l - 2], self.dat[l - 1], added) {
+                self.dat.pop().unwrap();
+            } else {
+                break;
+            }
+        }
+        self.dat.push(added);
+    }
+    fn get(&self) -> Vec<(i64, i64)> {
+        self.dat.clone()
+    }
+}
+
 const MINF: i64 = -1_i64 << 60;
 
 /*
@@ -65,9 +100,6 @@ fn make_table(a: &[i64]) -> Vec<Vec<i64>> {
     return tbl;
 }
 
-fn check(a: (i64, i64), b: (i64, i64), c: (i64, i64)) -> bool {
-    (b.0 - a.0) * (c.1 - b.1) >= (b.1 - a.1) * (c.0 - b.0)
-}
 
 fn query(maxw: &[Vec<i64>], maxh: &[Vec<i64>], qa: usize, qb: usize) -> i64 {
     let ra = &maxw[qa];
@@ -81,29 +113,14 @@ fn query(maxw: &[Vec<i64>], maxh: &[Vec<i64>], qa: usize, qb: usize) -> i64 {
     xcoords.sort_by(|&a, b| a.0.partial_cmp(&b.0).unwrap());
 
 
-    let mut cht: Vec<(i64, i64)> = Vec::new();
+    let mut cht_obj = ConvexHullTrick::new();
+    for k2 in 1 .. (qb + 1) {
+        cht_obj.add((k2 as i64, rb[k2]));
+    }
+    let cht = cht_obj.get();
 
     let app = |(a, b), x| (a as f64) * x + (b as f64);
 
-    // convex hull trick
-    {
-        let mut chta: Vec<(i64, i64)> = Vec::new();
-        for k2 in 1 .. (qb + 1) {
-            let added = (k2 as i64, rb[k2]);
-            while chta.len() >= 2 {
-                let l = chta.len();
-                if check(chta[l - 2], chta[l - 1], added) {
-                    chta.pop().unwrap();
-                } else {
-                    break;
-                }
-            }
-            chta.push(added);
-        }
-        for q in chta.iter().cloned() {
-            cht.push(q);
-        }
-    }
     let mut cur = 0;
     
     for (x, k1) in xcoords.iter().cloned() {
