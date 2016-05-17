@@ -37,7 +37,6 @@ int main(void){
   ll l, h;
   cin >> l >> h;
   VI a(N);
-  VI b(M);
   REP(i, 2, N) a[i] = 1;
   REP(i, 2, N) {
     REP(j, 2, N / i) {
@@ -45,20 +44,29 @@ int main(void){
     }
   }
   // a: prime
-  if (h - l >= M) {
-    l = h - M + 1;
-  }
-  REP(i, 2, N) {
-    if (a[i]) {
-      for (ll j = max((l + i - 1) / i * i, 2LL * i); j <= h; j += i) {
-	if (b[j - l] == 0) b[j - l] = i;
+  ll ma = 0;
+  ll maxv = 0;
+  for (ll p = N - 1; p >= max(ma, 2LL); --p) {
+    if (a[p] == 0) {
+      continue;
+    }
+    for (ll i = h / p; i >= p && i * p >= l; --i) {
+      ll minfact = 2;
+      for(; minfact < p; ++minfact) {
+	if (i % minfact == 0) {
+	  break;
+	}
+      }
+      assert (a[minfact]);
+      if (minfact >= ma) {
+	maxv = minfact == ma ? max(maxv, i * p) : i * p;
+	ma = minfact;
+      }
+      if (minfact == p) {
+	break;
       }
     }
   }
-  int ma = 0;
-  for (ll i = 0; i < h - l + 1; ++i) {
-    if (b[i] >= b[ma]) ma = i;
-  }
-  cout << ma + l << endl;
+  cout << maxv << endl;
   return 0;
 }
