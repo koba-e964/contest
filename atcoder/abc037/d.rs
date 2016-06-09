@@ -61,16 +61,9 @@ fn rec(dp: &mut Vec<Vec<i64>>, a: &Vec<Vec<i32>>, x: i32, y: i32) -> i64 {
 fn main() {
     let h: usize = get();
     let w: usize = get();
-    let mut a: Vec<Vec<i32>> = Vec::new();
-    let mut dp: Vec<Vec<i64>> = Vec::new();
-    for _ in 0 .. h {
-        let mut v = vec![0; w];
-        for j in 0 .. w {
-            v[j] = get();
-        }
-        a.push(v);
-        dp.push(vec![-1; w]);
-    }
+    let a: Vec<Vec<i32>> = (0 .. h).
+        map(|_| (0 .. w).map(|_| get()).collect()).collect();
+    let mut dp: Vec<Vec<i64>> = (0 .. h).map(|_| vec![-1; w]).collect();
     let mut sum: i64 = 0;
     for x in 0 .. h {
         for y in 0 .. w {
