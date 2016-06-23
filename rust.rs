@@ -16,7 +16,7 @@ fn get_word() -> String {
         let mut buf: Vec<u8> = Vec::with_capacity(16);
         loop {
             let res = stdin.read(&mut u8b);
-            if res.is_err() || u8b[0] <= ' ' as u8 {
+            if res.is_err() || res.ok().unwrap() == 0 || u8b[0] <= ' ' as u8 {
                 break;
             } else {
                 buf.push(u8b[0]);
