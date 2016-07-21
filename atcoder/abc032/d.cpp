@@ -27,53 +27,76 @@
 using namespace std;
 typedef long long int ll;
 typedef vector<int> VI;
-typedef pair<int, int> PI;
+typedef pair<ll, ll> PI;
 const double EPS=1e-9;
 
 const int N = 210;
 const int W = 1010 * 210;
 ll v[N], w[N];
 
-int n, limw;
-void solve1() {
-    ll ma = 0;
-    REP(bits, 0, 1 << n) {
-        ll totv = 0;
-        ll totw = 0;
-        REP(i, 0, n) {
-            if (bits & (1 << i)) {
-                totv += v[i];
-                totw += w[i];
-            }
-        }
-        if (totw <= limw) {
-            ma = max(ma, totv);
-        }
+int n;
+ll limw;
+
+vector<PI> enumerate(int step, int end) {
+  vector<PI> ret;
+  for (int bits = 0; bits < end; bits += step) {
+    ll totv = 0;
+    ll totw = 0;
+    REP(i, 0, n) {
+      if (bits & (1 << i)) {
+	totv += v[i];
+	totw += w[i];
+      }
     }
-    cout << ma << endl;
+    ret.push_back(PI(totw, -totv));
+  }
+  sort(ret.begin(), ret.end());
+  vector<PI> ret2;
+  ll curv = 1;
+  REP(i, 0, ret.size()) {
+    if (ret[i].second < curv) {
+      ret2.push_back(PI(ret[i].first, -ret[i].second));
+    }
+    curv = min(curv, ret[i].second);
+  }
+  return ret2;
 }
-void solve11() {
-    
+void solve1() {
+  ll ma = 0;
+  vector<PI> former = enumerate(1, 1 << (n / 2));
+  vector<PI> latter = enumerate(1 << (n / 2), 1 << n);
+  REP(i, 0, latter.size()) {
+    ll remw = limw - latter[i].first;
+    if (remw < 0) {
+      continue;
+    }
+    int p = upper_bound(former.begin(), former.end(), PI(remw, 0)) - former.begin();
+    if (p == 0) {
+      continue;
+    }
+    ma = max(ma, latter[i].second + former[p - 1].second);
+  }
+  cout << ma << endl;
 }
 ll dp[N][W];
 
 void solve2() {
-//w <= 1000
+  //w <= 1000
+  REP(j, 0, W) {
+    dp[0][j] = 0;
+  }
+  REP(i, 0, n) {
     REP(j, 0, W) {
-        dp[0][j] = 0;
+      dp[i + 1][j] = dp[i][j];
+      if (j >= w[i])
+	dp[i + 1][j] = max(dp[i + 1][j], dp[i][j - w[i]] + v[i]);
     }
-    REP(i, 0, n) {
-        REP(j, 0, W) {
-            dp[i + 1][j] = dp[i][j];
-            if (j >= w[i])
-                dp[i + 1][j] = max(dp[i + 1][j], dp[i][j - w[i]] + v[i]);
-        }
-    }
-    ll ma = 0;
-    REP(j, 0, limw + 1) {
-        ma = max(ma, dp[n][j]);
-    }
-    cout << ma << endl;
+  }
+  ll ma = 0;
+  REP(j, 0, limw + 1) {
+    ma = max(ma, dp[n][j]);
+  }
+  cout << ma << endl;
 }
 
 void solve3() {
@@ -115,15 +138,14 @@ int main(void){
     }
     if (v1000) {
         solve3();
-        return 0;
+	return 0;
     }
     if (w1000) {
         solve2();
         return 0;
     }
     if (n <= 30) {
-        if (n <= 20) solve1();
-        else solve11();
+        solve1();
         return 0;
     }
     assert (0);
