@@ -1,1 +1,1 @@
-require"prime";n,l=gets.split.map &:to_i;s=0;Prime.each(l/~-n){|v|s-=~l+v*~-n};p s
+require"prime";eval"N,L="+gets.split*'-1,';s=0;Prime.each(L/N){|v|s-=~L+v*N};p s
