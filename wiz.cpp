@@ -27,11 +27,12 @@
 using namespace std;
 typedef long long int ll;
 typedef vector<int> VI;
+typedef vector<ll> VL;
 typedef pair<int, int> PI;
-const double EPS=1e-9;
+const ll mod = 1e9 + 7;
 
 
 
 int main(void){
-	
+  
 }
