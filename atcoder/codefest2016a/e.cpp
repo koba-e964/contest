@@ -32,15 +32,22 @@ typedef pair<int, int> PI;
 const ll mod = 1e9 + 7;
 const int DEBUG = 0;
 
+std::vector<int> perm_inv(const std::vector<int> &p) {
+  int len = p.size();
+  std::vector<int> ans(len);
+  for (int i = 0; i < len; ++i) {
+    ans[p[i]] = i;
+  }
+  return ans;
+}
+
 const int N = 100010;
 bool done[N];
 
 bool match(int n, int m, const VI &target, const VI &op, int tol) {
   assert (0 <= tol && tol < m);
-  VI inv_t(m);
-  REP(i, 0, m) {
-    inv_t[target[i]] = i;
-  }
+  assert (target.size() == m);
+  VI inv_t = perm_inv(target);
   VI prog(m + 1);
   VI pass(m + 1);
   prog[0] = n;
