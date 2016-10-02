@@ -7,3 +7,13 @@ std::vector<int> perm_inv(const std::vector<int> &p) {
   }
   return ans;
 }
+
+// q after p
+std::vector<int> perm_comp(const std::vector<int> &q, const std::vector<int> &p) {
+  int n = p.size();
+  std::vector<int> ret(n);
+  for (int i = 0; i < n; ++i) {
+    ret[i] = q[p[i]];
+  }
+  return ret;
+}
