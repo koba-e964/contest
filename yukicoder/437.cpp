@@ -43,6 +43,7 @@ int main(void){
     int ma = -1;
     REP(i, 0, n) {
       if ((bits & 1 << i) == 0) { continue; }
+      if (s[i] == '0') { continue; }
       REP(j, i + 1, n) {
 	if ((bits & 1 << j) == 0) { continue; }
 	REP(k, j + 1, n) {
