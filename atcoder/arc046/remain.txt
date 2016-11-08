@@ -1,3 +1,2 @@
-a:direct
-c
+# a:direct
 d
