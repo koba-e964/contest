@@ -23,7 +23,8 @@ contest_name = File.basename(FileUtils.pwd)
 task_name = source_name.split(".")[0] # x.cpp --> x
 task_full_name = ""
 task_id = ""
-cpp_lang_id = "3003" # C++'s language ID
+language_name = ""
+language_id = ""
 source = ""
 open(source_name, "r") {|fp|
   source = fp.read
@@ -57,11 +58,24 @@ agent.get("https://#{contest_name}.contest.atcoder.jp/submit") do |page|
   if task_id == "" # A proper task_id was not found
     raise "Task name \e[32m#{task_name}\e[0m was not found"
   end
+  languages = doc.xpath("//select[@name=\"language_id_#{task_id}\"]/option")
+  for lang in languages
+    if /C\+\+/.match(lang.text) # look for C++ in available languages
+      language_name = lang.text
+      language_id = lang.attribute("value").value
+      break
+    end
+  end
+  if language_name == ""
+    raise "C++ was not found"
+  end
+
   mypage = page.form_with(:class => 'form-horizontal') do |form|
     form.task_id = task_id
-    form.field_with(:name => "language_id_#{task_id}").value = cpp_lang_id
+    form.field_with(:name => "language_id_#{task_id}").value = language_id
     form.source_code = source
-    puts "Submitting \e[34m#{source_name}\e[0m to \e[32m#{task_full_name}\e[0m (id = #{task_id}) in \e[32m#{contest_name}\e[0m"
+    puts "Submitting \e[34m#{source_name}\e[0m as \e[34m#{language_name}\e[0m (id = #{language_id})"
+    puts "\tto \e[32m#{task_full_name}\e[0m (id = #{task_id}) in \e[32m#{contest_name}\e[0m"
   end.submit
 end
 agent.get("https://#{contest_name}.contest.atcoder.jp/logout") # logout
