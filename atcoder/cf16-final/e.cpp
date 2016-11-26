@@ -31,41 +31,51 @@ typedef vector<ll> VL;
 typedef pair<int, int> PI;
 const ll mod = 1e9 + 7;
 
-ll solve(ll  n, ll a) {
-  if (n <= 1) {
+ll solve(ll n, ll a) {
+  ll mi = n;
+  if (n == 1) {
     return 1;
   }
-  VL dp(n, -1);
-  for (int i = n - 1; i >= 1; --i) {
-    ll res = (n + i - 1) / i;
-    REP(j, 2, n / i + 2) {
-      ll idx = i * j;
-      res = min(res, j + a + (idx >= n ? 1 : dp[idx]));
+  REP(b, 1, 40) {
+    if (2 * n < 1LL << b) {
+      break;
     }
-    dp[i] = res;
-  }
-  if (0) {
-    REP(i, 0, n) {
-      cout << "dp[" << i << "]=" << dp[i] << endl;
+    ll lo = 1;
+    ll hi = n;
+    while (hi - lo > 1) {
+      ll mid = (hi + lo) / 2;
+      if (pow(mid, b) >= n) {
+	hi = mid;
+      } else {
+	lo = mid;
+      }
     }
+    assert (hi >= 2);
+    // hi
+    int minus = 0;
+    REP(i, 0, b) {
+      double omni = 1;
+      ll scient = 1;
+      REP(j, 0, i) { omni *= hi - 1; scient *= hi - 1; }
+      REP(j, 0, b - i) { omni *= hi; scient *= hi; }
+      if (omni >= n) {
+	minus = i;
+      }
+    }
+    ll res = (b - 1) * a + hi * b - minus;
+    if (0) {
+      cerr << "b=" << b << endl;
+      cerr << "hi=" << hi << endl;
+      cerr << "minus = " << minus<<endl;
+      cerr << "res=" << res << endl << endl;
+    }
+    mi = min(mi, res);
   }
-  return dp[1];
+  return mi;
 }
 
 int main(void){
   ll n, a;
   cin >> n >> a;
-  if (1) {
-    cerr << "solve(-, 10):";
-    int cur = 0;
-    REP(i, 1, 1000) {
-      int w = solve(i, 10);
-      if (cur < w) {
-	cerr << "solve(" << i << ",1)" << w << endl;
-      }
-      cur = w;
-    }
-    cerr << endl;
-  }
   cout << solve(n, a) << endl;
 }
