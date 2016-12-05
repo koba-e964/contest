@@ -21,6 +21,7 @@ mod.module_eval File.read(config_path)
 source_name = ARGV[0]
 contest_name = File.basename(FileUtils.pwd)
 task_name = source_name.split(".")[0] # x.cpp --> x
+source_ext = source_name.split(".")[1] # x.cpp -> cpp
 task_full_name = ""
 task_id = ""
 language_name = ""
@@ -29,6 +30,8 @@ source = ""
 open(source_name, "r") {|fp|
   source = fp.read
 }
+extension_language_table = {"cpp" => "C++", "rb" => "Ruby", "java" => "Java", "rs" => "Rust"}
+source_language = extension_language_table[source_ext]
 
 puts "Run in \e[32m#{contest_name}\e[0m"
 agent = Mechanize.new
@@ -60,17 +63,17 @@ agent.get("https://#{contest_name}.contest.atcoder.jp/submit") do |page|
   end
   languages = doc.xpath("//select[@name=\"language_id_#{task_id}\"]/option")
   for lang in languages
-    if /C\+\+/.match(lang.text) # look for C++ in available languages
+    if lang.text.index(source_language) # look for C++ in available languages
       language_name = lang.text
       language_id = lang.attribute("value").value
       break
     end
   end
   if language_name == ""
-    raise "C++ was not found"
+    raise "#{source_language} was not found"
   end
 
-  mypage = page.form_with(:class => 'form-horizontal') do |form|
+  page.form_with(:class => 'form-horizontal') do |form|
     form.task_id = task_id
     form.field_with(:name => "language_id_#{task_id}").value = language_id
     form.source_code = source
