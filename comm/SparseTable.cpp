@@ -10,13 +10,13 @@ template<class T, class BiOp>
 class SparseTable {
 private:
   BiOp biop;
-  std::vector<std::vector<int> > st;
-  void create_sparse_table(int n, const std::vector<int> &lcp) {
+  std::vector<std::vector<T> > st;
+  void create_sparse_table(int n, const std::vector<T> &lcp) {
     int h = 1;
     while ((1 << h) < n) {
       ++h;
     }
-    st = std::vector<std::vector<int> >(h + 1, std::vector<int>(n));
+    st = std::vector<std::vector<T> >(h + 1, std::vector<T>(n));
 
     for (int i = 0; i < n; ++i) {
       st[0][i] = lcp[i];
@@ -42,14 +42,14 @@ public:
   /*
    * Initializes this sparse table. O(n log n) where n = ary.size().
    */
-  SparseTable(BiOp biop, const std::vector<int> &ary): biop(biop) {
+  SparseTable(BiOp biop, const std::vector<T> &ary): biop(biop) {
     create_sparse_table(ary.size(), ary);
   }
   /*
    * Computes biop(ary[f], ary[f+1], ..., ary[s]). O(1).
    * Note: the interval is inclusive.
    */
-  int query(int f, int s) const {
+  T query(int f, int s) const {
     assert (f <= s);
     int diff = top_bit(s + 1 - f);
     return biop(st[diff][f], st[diff][s + 1 - (1 << diff)]);
