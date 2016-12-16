@@ -1,2 +1,3 @@
 # coding: utf-8
-$<.split(/[^…]+/).map(&:size).max
+res = gets.split(/[^…]+/).map(&:size).max
+puts res ? res : 0
