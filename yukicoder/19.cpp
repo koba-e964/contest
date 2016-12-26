@@ -1,3 +1,8 @@
+#include <algorithm>
+#include <cassert>
+#include <set>
+#include <vector>
+
 /**
  * Strong connected components.
  * Header requirement: algorithm, cassert, set, vector
@@ -107,3 +112,42 @@ public:
     return vret;
   }
 };
+#include <iostream>
+
+
+#define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
+
+using namespace std;
+typedef vector<int> VI;
+
+
+
+
+int main(void){
+  int n;
+  cin >> n;
+  int tot = 0;
+  VI l(n), s(n);
+  // SCC de naguru (Using SCC is too much for this problem!!)
+  SCC scc(n);
+  REP(i, 0, n) {
+    cin >> l[i] >> s[i];
+    s[i]--;
+    tot += l[i];
+    scc.add_edge(i, s[i]);
+  }
+  scc.scc();
+  vector<VI> comps = scc.scc_components();
+  // Get the minimum level for every cycle, and count it twice
+  REP(i, 0, comps.size()) {
+    if (comps[i].size() >= 2
+	|| (comps[i].size() == 1 && s[comps[i][0]] == comps[i][0])) {
+      int mi = 101;
+      REP(j, 0, comps[i].size()) {
+	mi = min(mi, l[comps[i][j]]);
+      }
+      tot += mi;
+    }
+  }
+  printf("%.1f\n", tot / 2.0);
+}
