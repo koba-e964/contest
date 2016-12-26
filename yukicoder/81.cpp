@@ -45,7 +45,7 @@ int main(void){
   ll q = s1 / M;
   s0 += q;
   s1 -= q * M;
-  int sgn = s0 < 0;
+  int sgn = s0 < 0 || (s0 == 0 && s1 < 0);
   if (sgn) {
     s0 = -s0;
     s1 = -s1;
