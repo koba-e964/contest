@@ -77,10 +77,10 @@ fn main() {
     let b: Vec<i64> = (0 .. n).map(|_| get()).collect();
     let mut mods: Vec<Vec<(i64, usize)>> = vec![Vec::new(); n];
     for i in 0 .. n {
-        mods[i].push((p[i], 1));
+        mods[i].push((p[i], 0));
     }
-    let mut tot: i64 = 0;
-    for stage in 1 .. (k + 1) {
+    let mut tot: u64 = 0;
+    for stage in 1 .. k {
         let ret = match next_permutation(&mut p) {
             Some(idx) => idx,
             None => 0,
@@ -90,12 +90,12 @@ fn main() {
         }
     }
     for i in 0 .. n {
-        mods[i].push((0x1145141919810893, k + 1));
+        mods[i].push((0x3141592653589793, k));
     }
     for i in 0 .. n {
         let m = &mods[i];
         for j in 0 .. m.len() - 1 {
-            tot += (b[i] - m[j].0).abs() * ((m[j + 1].1 - m[j].1) as i64);
+            tot += (b[i] - m[j].0).abs() as u64 * ((m[j + 1].1 - m[j].1) as u64);
         }
     }
     println!("{}", tot);
