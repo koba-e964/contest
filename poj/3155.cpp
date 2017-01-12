@@ -1,3 +1,5 @@
+#include <vector>
+#include <queue>
 /**
  * Dinic's algorithm for maximum flow problem.
  * Header requirement: vector, queue
@@ -74,7 +76,7 @@ public:
       }
     }
   }
-  std::pair<T,std::vector<int> > max_flow_cut(int s, int t) {
+  std::pair<T,std::vector<int> >  max_flow_cut(int s, int t) {
     T flow = 0;
     while (1) {
       bfs(s);
@@ -95,3 +97,95 @@ public:
     }
   }
 };
+
+
+#include <algorithm>
+#include <cmath>
+#include <iostream>
+
+#define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
+
+using namespace std;
+typedef long long int ll;
+typedef vector<int> VI;
+typedef vector<ll> VL;
+typedef pair<int, int> PI;
+
+
+
+int main(void){
+  ios::sync_with_stdio(false);
+  int n, m;
+  cin >> n >> m;
+  vector<PI> edges;
+  VI idx(n, 0);
+  REP(i, 0, m) {
+    int u, v;
+    cin >> u >> v;
+    u--;
+    v--;
+    edges.push_back(PI(u, v));
+    idx[u]++;
+    idx[v]++;
+  }
+  double lo = 0;
+  double hi = n;
+  REP(loop_cnt, 0, 40) {
+    double mid = (hi + lo) / 2;
+    Dinic<double> din(n + m + 2);
+    const double inf = 1e5;
+    REP(i, 0, m) {
+      PI t = edges[i];
+      din.add_edge(i + 2, m + t.first + 2, inf);
+      din.add_edge(i + 2, m + t.second + 2, inf);
+      din.add_edge(0, i + 2, 1);
+    }
+    REP(i, 0, n) {
+      din.add_edge(0, m + i + 2, mid);
+      din.add_edge(m + i + 2, 1, idx[i]);
+    }
+    double res = 2 * m - din.max_flow(0, 1);
+    if (res < 1e-9) {
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+  // guess a fraction that represents res
+  double mindiff = 1e8;
+  int num = -1, den = -1;
+  REP(b, 1, 100) {
+    int q = hi * b + 0.5;
+    double diff = abs((double) q / b - hi);
+    if (mindiff > diff) {
+      mindiff = diff;
+      num = q;
+      den = b;
+    }
+  }
+  Dinic<ll> din(n + m + 2);
+  const ll inf = 1e9;
+  REP(i, 0, m) {
+    PI t = edges[i];
+    din.add_edge(i + 2, m + t.first + 2, inf);
+    din.add_edge(i + 2, m + t.second + 2, inf);
+    din.add_edge(0, i + 2, den);
+  }
+  REP(i, 0, n) {
+    din.add_edge(0, m + i + 2, num);
+    din.add_edge(m + i + 2, 1, idx[i] * den);
+  }
+  pair<ll, VI> res = din.max_flow_cut(0, 1);
+  VI st = res.second;
+  VI ans;
+  REP(i, 0, st.size()) {
+    if (st[i] >= 2 + m) {
+      ans.push_back(st[i] - m - 2);
+    }
+  }
+
+  cout << ans.size() << endl;
+  REP(i, 0, ans.size()) {
+    cout << ans[i] + 1 << endl;
+  }
+}

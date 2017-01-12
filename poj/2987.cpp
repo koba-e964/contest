@@ -1,9 +1,40 @@
+#include <algorithm>
+#include <bitset>
+#include <cassert>
+#include <cctype>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <deque>
+#include <functional>
+#include <iomanip>
+#include <iostream>
+#include <list>
+#include <map>
+#include <numeric>
+#include <queue>
+#include <set>
+#include <sstream>
+#include <stack>
+#include <string>
+#include <utility>
+#include <vector>
+
+#define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
+
+using namespace std;
+typedef long long int ll;
+typedef vector<int> VI;
+typedef vector<ll> VL;
+typedef pair<int, int> PI;
+
 /**
  * Dinic's algorithm for maximum flow problem.
  * Header requirement: vector, queue
  * Verified by: ABC010-D(http://abc010.contest.atcoder.jp/submissions/602810)
  *              ARC031-D(http://arc031.contest.atcoder.jp/submissions/1050071)
- *              POJ 3155(http://poj.org/problem?id=3155)
  */
 template<class T = int>
 class Dinic {
@@ -74,18 +105,18 @@ public:
       }
     }
   }
-  std::pair<T,std::vector<int> > max_flow_cut(int s, int t) {
+  pair<T, vector<T> > max_flow_cut(int s, int t) {
     T flow = 0;
     while (1) {
       bfs(s);
       if (level[t] < 0) {
-	std::vector<int> ret;
-	for (int i = 0; i < graph.size(); ++i) {
-	  if (level[i] < 0) {
-	    ret.push_back(i);
+	vector<T> cut;
+	REP(i, 0, graph.size()) {
+	  if (level[i] >= 0) {
+	    cut.push_back(i);
 	  }
 	}
-	return std::pair<T, std::vector<int> >(flow, ret);
+	return pair<T, vector<T> >(flow, cut);
       }
       iter.assign(iter.size(), 0);
       T f;
@@ -95,3 +126,28 @@ public:
     }
   }
 };
+
+
+int main(void){
+  int n, m;
+  scanf("%d%d", &n, &m);
+  Dinic<ll> din(n + 2);
+  const ll bias = 1e7;
+  const ll inf = 1e12;
+  REP(i, 0, n) {
+    ll v;
+    scanf("%lld", &v);
+    din.add_edge(i + 2, 1, (bias - v) * (n + 1) + 1);
+    din.add_edge(0, i + 2, bias * (n + 1));
+  }
+  REP(i, 0, m) {
+    int u, v;
+    scanf("%d%d", &u, &v);
+    u--, v--;
+    din.add_edge(u + 2, v + 2, inf);
+  }
+  ll result = din.max_flow(0, 1);
+  ll ans = result / (n + 1) - n * bias;
+  assert (ans <= 0);
+  printf("%lld %lld\n", result % (n + 1), -ans);
+}
