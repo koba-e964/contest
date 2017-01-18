@@ -1,0 +1,45 @@
+ll gcd(ll a, ll b) {
+  return b == 0 ? a : gcd(b, a % b);
+}
+
+ll ex_gcd(ll x, ll y, ll &a, ll &b) {
+  if (y == 0) {
+    a = 1;
+    b = 0;
+    return x;
+  }
+  ll q = x / y;
+  ll r = x % y;
+  ll res = ex_gcd(y, r, a, b);
+  ll tmp = a - q * b;
+  a = b;
+  b = tmp;
+  return res;
+}
+
+
+/*
+ * Calculates the intersection of two arithmetic progressions,
+ * x[n] = a + b * n and y[n] = c + d * n (n >= 0).
+ * p1 = (a, b), p2 = (c, d)
+ * Verified by: yukicoder No.261 (http://yukicoder.me/submissions/144768)
+ */
+pair<ll, ll> arith_prog_intersect(const pair<ll, ll> &p1, const pair<ll, ll> &p2) {
+  if (p1.first > p2.first) {
+    return arith_prog_intersect(p2, p1);
+  }
+  ll u, v;
+  ll g = ex_gcd(p1.second, p2.second, u, v);
+  ll lcm = p1.second / g * p2.second;
+  if ((p1.first - p2.first) % g != 0) {
+    return pair<ll, ll>(-1, -1);
+  }
+  ll diff = (p2.first - p1.first) / g;
+  diff *= -v % (p1.second / g);
+  diff %= p1.second / g;
+  if (diff < 0) {
+    diff += p1.second / g;
+  }
+  ll x = p2.first + diff * p2.second;
+  return pair<ll, ll>(x, lcm);
+}
