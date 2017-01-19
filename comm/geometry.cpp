@@ -66,3 +66,27 @@ void line_points(pair<double, double> p1,
   b = p1.first - p2.first;
   c = a * p1.first + b * p1.second;
 }
+
+/*
+ * r1 > 0 ===> outer tangent
+ * r1 < 0 ===> inner tangent
+ * ax + by = c
+ * Verified by: AOJ 2201 (http://judge.u-aizu.ac.jp/onlinejudge/review.jsp?rid=2162049)
+ */
+void circle_tangent(double x0, double y0, double r0,
+		    double x1, double y1, double r1,
+		    double &a, double &b, double &c) {
+  double rd = r0 - r1;
+  // p = ((x1 - x0) + (y1 - y0)i) / (u + (r0 - r1)i)
+  double u = sqrt(pow(x1 - x0, 2) + pow(y1 - y0, 2) - rd * rd);
+  double alpha = u * u + (r0 - r1) * (r0 - r1);
+  double px = (x1 - x0) * u + (y1 - y0) * (r0 - r1);
+  double py = - (x1 - x0) * (r0 - r1) + (y1 - y0) * u;
+  px /= alpha;
+  py /= alpha;
+  a = py;
+  b = -px;
+  double qx = x0 - r0 * py;
+  double qy = y0 + r0 * px;
+  c = a * qx + b * qy;
+}
