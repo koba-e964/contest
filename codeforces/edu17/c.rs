@@ -68,6 +68,6 @@ fn main() {
         println!("-");
     } else {
         println!("{}{}", String::from_utf8(b[0 .. dpl[mini]].to_vec()).unwrap(),
-                 String::from_utf8(b[dpr[mini] .. m].to_vec()).unwrap());
+                 String::from_utf8(b[max(dpr[mini], dpl[mini]) .. m].to_vec()).unwrap());
     }
 }
