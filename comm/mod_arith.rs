@@ -60,3 +60,47 @@ fn modsqrt(mut a: i64, p: i64) -> Option<i64> {
     }
     Some(x)
 }
+
+#[derive(PartialEq,Eq,Hash,Clone,Copy,Debug)]
+struct Hash {
+    h: [i64; 2],
+}
+const MD: [i64; 2] = [1_000_000_007, 1_000_000_009];
+
+impl Hash {
+    fn new() -> Self { Hash::from(0) }
+    fn from(v: i64) -> Self {
+        Hash { h: [(v % MD[0] + MD[0]) % MD[0],
+                   (v % MD[1] + MD[1]) % MD[1]] }
+    }
+}
+impl std::ops::Add for Hash {
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        let mut ret = Self::new();
+        for i in 0 .. 2 {
+            ret.h[i] = (self.h[i] + other.h[i]) % MD[i];
+        }
+        ret
+    }
+}
+impl std::ops::Neg for Hash {
+    type Output = Self;
+    fn neg(self) -> Self {
+        let mut ret = Self::new();
+        for i in 0 .. 2 {
+            ret.h[i] = (MD[i] - self.h[i]) % MD[i];
+        }
+        ret
+    }
+}
+impl std::ops::Mul for Hash {
+    type Output = Self;
+    fn mul(self, other: Self) -> Self {
+        let mut ret = Self::new();
+        for i in 0 .. 2 {
+            ret.h[i] = (self.h[i] * other.h[i]) % MD[i];
+        }
+        ret
+    }
+}
