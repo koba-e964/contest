@@ -121,6 +121,23 @@ vector<PI> solve(vector<VI> a) {
       REP(j, 0, W) {
 	if (ma == a[i][j]) {
 	  que.push(make_pair(PI(i, j), 0));
+	} else {
+	  // is [i][j] maximal?
+	  bool ok = true;
+	  REP(d, 0, 4) {
+	    int nx = i + dx[d];
+	    int ny = j + dy[d];
+	    if (nx < 0 || nx >= W || ny < 0 || ny >= W) {
+	      continue;
+	    }
+	    if (a[i][j] < a[nx][ny]) {
+	      ok = false;
+	      break;
+	    }
+	  }
+	  if (ok) {
+	    que.push(make_pair(PI(i, j), 0));
+	  }
 	}
       }
     }
