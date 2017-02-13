@@ -117,7 +117,13 @@ vector<PI> solve(vector<VI> a) {
     const int inf = 1e8;
     vector<VI> dist(W, VI(W, inf));
     queue<pair<PI, int> > que;
-    que.push(make_pair(PI(maxx, maxy), 0));
+    REP(i, 0, W) {
+      REP(j, 0, W) {
+	if (ma == a[i][j]) {
+	  que.push(make_pair(PI(i, j), 0));
+	}
+      }
+    }
     while (not que.empty()) {
       pair<PI, int> t = que.front();
       int x = t.first.first;
