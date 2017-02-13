@@ -84,6 +84,8 @@ void checker(void) {
 	cout << " [" << trial + 1 << "] estimated avrg = " << avrg << " \\pm "
 	   << avrg_uncertainty << endl;
 	if (trial >= 10 && avrg_uncertainty <= 50) {
+	  cout << " estimated stdev = "
+	       << sqrt(variance * (trial + 1) / trial) << endl;
 	  break;
 	}
       }
@@ -121,16 +123,19 @@ vector<PI> solve(vector<VI> a) {
       int dy[4] = {0, 1, 0, -1};
       int cx = -1;
       int cy = -1;
+      double score = -1.0;
       REP(d, 0, 4) {
 	int nx = x + dx[d];
 	int ny = y + dy[d];
 	if (nx < 0 || nx >= W || ny < 0 || ny >= W) {
 	  continue;
 	}
-	if (tmp == a[nx][ny]) {
+	// centre's score is the highest
+	double tsc = (nx - W / 2) * (nx - W / 2) + (ny - W / 2) * (ny - W / 2);
+	if (tmp == a[nx][ny] && score < tsc) {
 	  cx = nx;
 	  cy = ny;
-	  break;
+	  score = tsc;
 	}
       }
       if (cx >= 0 && cy >= 0) {
