@@ -123,15 +123,16 @@ vector<PI> solve(vector<VI> a) {
       int dy[4] = {0, 1, 0, -1};
       int cx = -1;
       int cy = -1;
-      double score = -1.0;
+      double score = -1.0 / 0.0;
       REP(d, 0, 4) {
 	int nx = x + dx[d];
 	int ny = y + dy[d];
 	if (nx < 0 || nx >= W || ny < 0 || ny >= W) {
 	  continue;
 	}
-	// centre's score is the highest
+	// centre's score is the lowest
 	double tsc = (nx - W / 2) * (nx - W / 2) + (ny - W / 2) * (ny - W / 2);
+	tsc -= x * ny - y * nx;
 	if (tmp == a[nx][ny] && score < tsc) {
 	  cx = nx;
 	  cy = ny;
