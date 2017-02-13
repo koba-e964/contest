@@ -132,6 +132,7 @@ vector<PI> solve(vector<VI> a) {
 	}
 	// centre's score is the lowest
 	double tsc = (nx - W / 2) * (nx - W / 2) + (ny - W / 2) * (ny - W / 2);
+	tsc *= 0.01;
 	tsc -= x * ny - y * nx;
 	if (tmp == a[nx][ny] && score < tsc) {
 	  cx = nx;
