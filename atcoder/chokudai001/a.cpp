@@ -80,10 +80,10 @@ void checker(void) {
     double variance = sq_sum / (trial + 1) - avrg * avrg;
     if (trial >= 9) {
       double avrg_uncertainty = sqrt(variance / trial);
-      if (trial % 10 == 9 || avrg_uncertainty <= 50) {
+      if (trial % 10 == 9 || avrg_uncertainty <= 40) {
 	cout << " [" << trial + 1 << "] estimated avrg = " << avrg << " \\pm "
 	   << avrg_uncertainty << endl;
-	if (trial >= 10 && avrg_uncertainty <= 50) {
+	if (trial >= 10 && avrg_uncertainty <= 40) {
 	  cout << " estimated stdev = "
 	       << sqrt(variance * (trial + 1) / trial) << endl;
 	  break;
@@ -95,12 +95,16 @@ void checker(void) {
 
 vector<PI> solve(vector<VI> a) {
   vector<PI> ret;
+  const int dx[4] = {1, 0, -1, 0};
+  const int dy[4] = {0, 1, 0, -1};
+ 
   while (true) {
     int ma = 0;
     int maxx = -1, maxy = -1;
     REP(i, 0, W) {
       REP(j, 0, W) {
 	if (ma < a[i][j]) {
+	  ma = a[i][j];
 	  maxx = i;
 	  maxy = j;
 	}
@@ -109,47 +113,81 @@ vector<PI> solve(vector<VI> a) {
     if (maxx == -1 && maxy == -1) {
       break;
     }
-    int x = maxx;
-    int y = maxy;
-    while (true) {
-      //cerr << "x = " << x << ", y = " << y << " a[x][y] = " << a[x][y] << endl;
-      a[x][y]--;
-      ret.push_back(PI(x, y));
-      int tmp = a[x][y];
-      if (tmp <= 0) {
-	break;
+    // detect the longest path from (maxx, maxy)
+    const int inf = 1e8;
+    vector<VI> dist(W, VI(W, inf));
+    queue<pair<PI, int> > que;
+    que.push(make_pair(PI(maxx, maxy), 0));
+    while (not que.empty()) {
+      pair<PI, int> t = que.front();
+      int x = t.first.first;
+      int y = t.first.second;
+      int c = t.second;
+      que.pop();
+      if (a[x][y] <= 0) {
+	continue;
       }
-      int dx[4] = {1, 0, -1, 0};
-      int dy[4] = {0, 1, 0, -1};
-      int cx = -1;
-      int cy = -1;
-      double score = -1.0 / 0.0;
+      if (dist[x][y] <= c) {
+	continue;
+      }
+      dist[x][y] = c;
       REP(d, 0, 4) {
 	int nx = x + dx[d];
 	int ny = y + dy[d];
 	if (nx < 0 || nx >= W || ny < 0 || ny >= W) {
 	  continue;
 	}
-	// centre's score is the lowest
-	double tsc = (nx - W / 2) * (nx - W / 2) + (ny - W / 2) * (ny - W / 2);
-	tsc *= 0.01;
-	tsc -= x * ny - y * nx;
-	if (tmp == a[nx][ny] && score < tsc) {
-	  cx = nx;
-	  cy = ny;
-	  score = tsc;
+	if (a[x][y] - 1 == a[nx][ny]) {
+	  que.push(make_pair(PI(nx, ny), c + 1));
 	}
       }
-      if (cx >= 0 && cy >= 0) {
-	x = cx; y = cy;
-      } else {
+    }
+    // Find the longest path from (maxx, maxy)
+    int tx = maxx, ty = maxy;
+    {
+      int ma = 0;
+      REP(i, 0, W) {
+	REP(j, 0, W) {
+	  if (dist[i][j] < inf && ma < dist[i][j]) {
+	    ma = dist[i][j];
+	    tx = i;
+	    ty = j;
+	  }
+	}
+      }
+    }
+    vector<PI> path; // path recovery
+    while (dist[tx][ty] > 0) {
+      path.push_back(PI(tx, ty));
+      REP(d, 0, 4) {
+	int nx = tx + dx[d];
+	int ny = ty + dy[d];
+	if (nx < 0 || nx >= W || ny < 0 || ny >= W) {
+	  continue;
+	}
+	if (dist[tx][ty] - 1 == dist[nx][ny]) {
+	  tx = nx;
+	  ty = ny;
+	  break;
+	}
+      }
+    }
+    path.push_back(PI(tx, ty));
+    reverse(path.begin(), path.end());
+    int tmp = -1;
+    REP(i, 0, path.size()) {
+      int x = path[i].first;
+      int y = path[i].second;
+      if (tmp >= 0 && tmp != a[x][y]) {
 	break;
       }
+      a[x][y]--;
+      tmp = a[x][y];
+      ret.push_back(path[i]);
     }
   }
   return ret;
 }
-
 
 int main(void){
 #ifdef DEBUG
