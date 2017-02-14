@@ -100,17 +100,14 @@ vector<PI> solve(vector<VI> a) {
  
   while (true) {
     int ma = 0;
-    int maxx = -1, maxy = -1;
     REP(i, 0, W) {
       REP(j, 0, W) {
 	if (ma < a[i][j]) {
 	  ma = a[i][j];
-	  maxx = i;
-	  maxy = j;
 	}
       }
     }
-    if (maxx == -1 && maxy == -1) {
+    if (ma == 0) {
       break;
     }
     // detect the longest path from (maxx, maxy)
@@ -166,9 +163,9 @@ vector<PI> solve(vector<VI> a) {
       }
     }
     // Find the longest path from (maxx, maxy)
-    int tx = maxx, ty = maxy;
+    int tx = -1, ty = -1;
     {
-      int ma = 0;
+      int ma = -1;
       REP(i, 0, W) {
 	REP(j, 0, W) {
 	  if (dist[i][j] < inf && ma < dist[i][j]) {
