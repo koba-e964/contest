@@ -10,8 +10,11 @@ using namespace std;
 typedef long long int ll;
 typedef vector<int> VI;
 typedef vector<ll> VL;
-
-int gauss_elim_i64(VL a, ll b) {
+/*
+ * Find an assignment (result) s.t. xor_i a[i] * result[i] = b (in GF(2))
+ * Returns true if such an assignment was found.
+ */
+bool gauss_elim_gf2_i64(vector<ll> a, ll b, vector<bool> &result) {
   int n = a.size();
   int c = 0;
   vector<int> revmap;
@@ -48,18 +51,18 @@ int gauss_elim_i64(VL a, ll b) {
   }
   // recover
   int rank = revmap.size();
-  ll x = 0;
+  result.assign(n, false);
   for (int i = rank - 1; i >= 0; --i) {
     if (b & 1LL << i) {
       int c = revmap[i];
       if (c < 0) {
-	return -1;
+	return false;
       }
       b ^= a[c];
-      x |= 1LL << c;
+      result[c] = true;
     }
   }
-  return b == 0 ? __builtin_popcountll(x) : -1;
+  return b == 0;
 }
 
 int solve(ll board, int m, int n) {
@@ -94,8 +97,10 @@ int solve(ll board, int m, int n) {
 	bd ^= varbasis[i];
       }
     }
-    int rank = gauss_elim_i64(basis, bd);
-    if (rank >= 0) {
+    vector<bool> result;
+    bool succ = gauss_elim_gf2_i64(basis, bd, result);
+    if (succ) {
+      int rank = count(result.begin(), result.end(), true);
       mi = min(mi, __builtin_popcount(bits) + rank);
     }
   }
