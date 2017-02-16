@@ -30,7 +30,7 @@ source = ""
 open(source_name, "r") {|fp|
   source = fp.read
 }
-extension_language_table = {"cpp" => "C++", "rb" => "Ruby", "java" => "Java", "rs" => "Rust"}
+extension_language_table = {"cpp" => "C++", "rb" => "Ruby", "py" => "Python3", "java" => "Java", "rs" => "Rust", "txt" => "Text"}
 source_language = extension_language_table[source_ext]
 
 puts "Run in \e[32m#{contest_name}\e[0m"
