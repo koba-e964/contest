@@ -138,6 +138,7 @@ std::vector<int> two_sat(int n, const vector<pair<int, int> > &cons) {
       y = -c.second - 1 + n;
     }
     scc.add_edge(x, y);
+    scc.add_edge((y + n) % (2 * n), (x + n) % (2 * n));
   }
   scc.scc();
   std::vector<int> result(n);

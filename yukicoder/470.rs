@@ -163,6 +163,7 @@ fn two_sat(n: usize, cons: &[(i32, i32)]) -> Option<Vec<bool>> {
             -c2 - 1 + ni
         } as usize;
         scc.add_edge(x, y);
+        scc.add_edge((y + n) % (2 * n), (x + n) % (2 * n));
     }
     scc.scc();
     let mut result = vec![false; n];
