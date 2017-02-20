@@ -183,7 +183,7 @@ void checker(void) {
 vector<VI> solve(vector<VI> a) {
   REP(loop_cnt, 0, 15) {
     REP(j, 0, N) {
-      REP(i, 0, N) {
+      for (int i = N - 1; i >= 0; --i) {
 	if (a[i][j] != 0) {
 	  continue;
 	}
