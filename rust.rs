@@ -2,12 +2,12 @@
 use std::cmp::*;
 #[allow(unused_imports)]
 use std::collections::*;
-use std::io::*;
+use std::io::Read;
 #[allow(dead_code)]
 fn getline() -> String {
     let mut ret = String::new();
-    std::io::stdin().read_line(&mut ret).ok();
-    return ret;
+    std::io::stdin().read_line(&mut ret).ok().unwrap();
+    ret
 }
 fn get_word() -> String {
     let mut stdin = std::io::stdin();
@@ -23,16 +23,22 @@ fn get_word() -> String {
             }
         }
         if buf.len() >= 1 {
-            let ret = std::string::String::from_utf8(buf).unwrap();
+            let ret = String::from_utf8(buf).unwrap();
             return ret;
         }
     }
 }
-fn parse<T: std::str::FromStr>(s: &str) -> T { s.parse::<T>().ok().unwrap() }
 
 #[allow(dead_code)]
-fn get<T: std::str::FromStr>() -> T { parse(&get_word()) }
+fn get<T: std::str::FromStr>() -> T { get_word().parse().ok().unwrap() }
+
+fn solve() {
+    
+}
 
 fn main() {
-    
+    // In order to avoid potential stack overflow, spawn a new thread.
+    let stack_size = 104_857_600; // 100 MB
+    let thd = std::thread::Builder::new().stack_size(stack_size);
+    thd.spawn(|| solve()).unwrap().join().unwrap();
 }
