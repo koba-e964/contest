@@ -1,6 +1,11 @@
+/**
+ * For every prime factor p, perform result[p] += e. (where n = \prod p^e)
+ * Verified by: Codeforces #400 E
+ *              (http://codeforces.com/contest/776/submission/24956471)
+ */
 void factorize(long long v, std::map<long long, int> &result) {
   long long p = 2;
-  while (v > 1 || p * p <= v) {
+  while (v > 1 && p * p <= v) {
     int cnt = 0;
     while (v % p == 0) {
       cnt++;
@@ -13,6 +18,12 @@ void factorize(long long v, std::map<long long, int> &result) {
       result[p] += cnt;
     }
     p += p == 2 ? 1 : 2;
+  }
+  if (v > 1) {
+    if (result.count(v) == 0) {
+      result[v] = 0;
+    }
+    result[v] += 1;
   }
 }
 
