@@ -1,25 +1,7 @@
 #include <algorithm>
-#include <bitset>
 #include <cassert>
-#include <cctype>
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <ctime>
-#include <deque>
-#include <functional>
-#include <iomanip>
 #include <iostream>
-#include <list>
-#include <map>
-#include <numeric>
-#include <queue>
 #include <set>
-#include <sstream>
-#include <stack>
-#include <string>
-#include <utility>
 #include <vector>
 
 #define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
@@ -27,7 +9,6 @@
 using namespace std;
 typedef long long int ll;
 typedef vector<int> VI;
-typedef vector<ll> VL;
 typedef pair<int, int> PI;
 
 /**
@@ -142,7 +123,7 @@ public:
 std::vector<int> two_sat(int n, const vector<pair<int, int> > &cons) {
   SCC scc(2 * n);
   for (int i = 0; i < cons.size(); ++i) {
-    pair<int, int> c = cons[i];
+    std::pair<int, int> c = cons[i];
     int x, y;
     if (c.first > 0) {
       x = c.first - 1 + n;
