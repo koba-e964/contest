@@ -38,15 +38,15 @@ const N: usize = 1_000_001;
 fn main() {
     let n: usize = get();
     let x: Vec<usize> = (0 .. n).map(|_| get()).collect();
-    let mut tbl: Vec<bool> = (0 .. N).map(|_| false).collect();
+    let mut tbl: Vec<bool> = vec![false; N];
     for i in x {
         tbl[i] = true;
     }
-    let mut dp: Vec<i32> = (0 .. N).map(|_| 0).collect();
+    let mut dp: Vec<i32> = vec![0; N];
     for i in (1 .. N).rev() {
         if tbl[i] {
             dp[i] = 1;
-            for j in 2 .. N / i {
+            for j in 2 .. (N - 1) / i + 1 {
                 dp[i] = max(dp[i], dp[i * j] + 1);
             }
         } else {
