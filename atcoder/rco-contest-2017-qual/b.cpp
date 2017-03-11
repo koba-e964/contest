@@ -126,7 +126,8 @@ VI solve(vector<string> s, vector<PIPI> food, int sx, int sy) {
     mp[sx][sy] = -1;
     vis[sx][sy] += 1;
     vector<int> dist = dijk.solve(sx * H + sy);
-    int ma = 0;
+    const ll minf = -1e15;
+    ll ma = minf;
     int maxi = -1;
     int mdist = -1;
     REP(i, 0, K) {
@@ -134,7 +135,8 @@ VI solve(vector<string> s, vector<PIPI> food, int sx, int sy) {
 	int idx = mp[i / H][i % H];
 	int eta = time + dist[i];
 	PI f = food[idx].second;
-	int qol = f.first - eta * f.second;
+	int pt = f.first - eta * f.second;
+	ll qol = pt >  -50000 ? pt - 100000LL * dist[i] : minf;
 	if (ma < qol) {
 	  ma = qol;
 	  maxi = i;
@@ -142,7 +144,7 @@ VI solve(vector<string> s, vector<PIPI> food, int sx, int sy) {
 	}
       }
     }
-    if (ma == 0) {
+    if (maxi == -1) {
       break;
     }
     int cur = maxi;
