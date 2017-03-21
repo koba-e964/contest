@@ -104,3 +104,63 @@ impl std::ops::Mul for Hash {
         ret
     }
 }
+
+/// Refers external ::MOD.
+mod mod_int {
+    use ::MOD;
+    use std::ops::*;
+    #[derive(Copy, Clone, Debug)]
+    pub struct ModInt {
+        pub x: i64,
+    }
+    impl ModInt {
+        pub fn new(x: i64) -> Self { ModInt { x: x } }
+    }
+    impl Add for ModInt {
+        type Output = Self;
+        fn add(self, others: Self) -> Self {
+            let mut sum = self.x + others.x;
+            if sum >= MOD {
+                sum -= MOD;
+            }
+        Self::new(sum)
+        }
+    }
+    impl Sub for ModInt {
+        type Output = Self;
+        fn sub(self, others: Self) -> Self {
+            let mut sum = self.x - others.x;
+            if sum < 0 {
+                sum += MOD;
+            }
+            Self::new(sum)
+        }
+    }
+    impl Mul for ModInt {
+        type Output = Self;
+        fn mul(self, others: Self) -> Self {
+            // Naive multiplication in order to avoid overflow
+            let mut sum = 0;
+            let mut cur = self.x;
+            let mut e = others.x;
+            if self.x < others.x {
+                cur = others.x;
+                e = self.x;
+            }
+            while e > 0 {
+                if e % 2 == 1 {
+                    sum += cur;
+                    if sum >= MOD {
+                        sum -= MOD;
+                    }
+                }
+                cur *= 2;
+                if cur >= MOD {
+                    cur -= MOD;
+                }
+                e /= 2;
+            }
+            Self::new(sum)
+        }
+    }
+} // mod mod_int
