@@ -1,7 +1,7 @@
 /// 2-3 Tree
 /// Reference: https://en.wikipedia.org/wiki/2%E2%80%933_tree
 /// https://www.slideshare.net/sandpoonia/23-tree
-/// Verified by: ARC061-D (http://arc061.contest.atcoder.jp/submissions/1243868)
+/// Verified by: ARC061-D (http://arc061.contest.atcoder.jp/submissions/1246253)
 #[derive(Clone, Debug)]
 enum TwoThreeTree<T> {
     Tip,
@@ -41,17 +41,18 @@ impl<T: Ord> TwoThreeTree<T> {
         use TwoThreeTree::*;
         Three(2, x, y, Box::new(Tip), Box::new(Tip), Box::new(Tip))
     }
-    fn node_two(x: T, left: Self, right: Self) -> Self {
+    fn node_two(x: T, left: Box<Self>, right: Box<Self>) -> Self {
         TwoThreeTree::Two(left.size() + right.size() + 1, x,
-                          Box::new(left), Box::new(right))
+                          left, right)
     }
-    fn node_three(x: T, y: T, left: Self, middle: Self, right: Self) -> Self {
+    fn node_three(x: T, y: T, left: Box<Self>, middle: Box<Self>, right: Box<Self>)
+                  -> Self {
         TwoThreeTree::Three(left.size() + middle.size() + right.size() + 2,
                             x, y,
-                            Box::new(left), Box::new(middle), Box::new(right))
+                            left, middle, right)
     }
-    fn divide_four(t1: Self, v1: T, t2: Self, v2: T,
-                       t3: Self, v3: T, t4: Self) -> (Self, Self, T) {
+    fn divide_four(t1: Box<Self>, v1: T, t2: Box<Self>, v2: T,
+                       t3: Box<Self>, v3: T, t4: Box<Self>) -> (Self, Self, T) {
         (Self::node_two(v1, t1, t2), Self::node_two(v3, t3, t4), v2)
     }
     // Ok(x) -> ordinary tree
@@ -91,18 +92,22 @@ impl<T: Ord> TwoThreeTree<T> {
                         Ok(Two(size, val, left, right)),
                     std::cmp::Ordering::Less => {
                         match left.insert_sub(x) {
-                            Ok(t) => Ok(Self::node_two(val, t, *right)),
+                            Ok(t) =>
+                                Ok(Self::node_two(val, Box::new(t), right)),
                             Err((t1, t2, sub_up)) =>
-                                Ok(Self::node_three(sub_up, val,
-                                                    t1, t2, *right)),
+                                Ok(Self::node_three(
+                                    sub_up, val,
+                                    Box::new(t1), Box::new(t2), right)),
                         }
                     },
                     std::cmp::Ordering::Greater => {
                         match right.insert_sub(x) {
-                            Ok(t) => Ok(Self::node_two(val, *left, t)),
+                            Ok(t) =>
+                                Ok(Self::node_two(val, left, Box::new(t))),
                             Err((t1, t2, sub_up)) =>
-                                Ok(Self::node_three(val, sub_up,
-                                                    *left, t1, t2)),
+                                Ok(Self::node_three(
+                                    val, sub_up,
+                                    left, Box::new(t1), Box::new(t2))),
                         }
                     },
                 }
@@ -115,36 +120,39 @@ impl<T: Ord> TwoThreeTree<T> {
                 if x < val1 {
                     match left.insert_sub(x) {
                         Ok(sub_tr) =>
-                            Ok(Self::node_three(val1, val2,
-                                                sub_tr, *middle, *right)),
+                            Ok(Self::node_three(
+                                val1, val2,
+                                Box::new(sub_tr), middle, right)),
                         Err((t1, t2, sub_up)) => {
                             let (t1, t2, v) = Self::divide_four(
-                                t1, sub_up, t2, val1,
-                                *middle, val2, *right);
+                                Box::new(t1), sub_up, Box::new(t2), val1,
+                                middle, val2, right);
                             Err((t1, t2, v))
                         },
                     }
                 } else if x < val2 {
                     match middle.insert_sub(x) {
                         Ok(sub_tr) =>
-                            Ok(Self::node_three(val1, val2,
-                                                *left, sub_tr, *right)),
+                            Ok(Self::node_three(
+                                val1, val2,
+                                left, Box::new(sub_tr), right)),
                         Err((t1, t2, sub_up)) => {
                             let (t1, t2, v) = Self::divide_four(
-                                *left, val1, t1, sub_up,
-                                t2, val2, *right);
+                                left, val1, Box::new(t1), sub_up,
+                                Box::new(t2), val2, right);
                             Err((t1, t2, v))
                         },
                     }
                 } else {
                     match right.insert_sub(x) {
                         Ok(sub_tr) =>
-                            Ok(Self::node_three(val1, val2,
-                                                *left, *middle, sub_tr)),
+                            Ok(Self::node_three(
+                                val1, val2,
+                                left, middle, Box::new(sub_tr))),
                         Err((t1, t2, sub_up)) => {
                             let (t1, t2, v) = Self::divide_four(
-                                *left, val1, *middle, val2,
-                                t1, sub_up, t2);
+                                left, val1, middle, val2,
+                                Box::new(t1), sub_up, Box::new(t2));
                             Err((t1, t2, v))
                         },
                     }
@@ -156,7 +164,7 @@ impl<T: Ord> TwoThreeTree<T> {
         match self.insert_sub(x) {
             Ok(t) => t,
             Err((t1, t2, v)) =>
-                Self::node_two(v, t1, t2),
+                Self::node_two(v, Box::new(t1), Box::new(t2)),
         }
     }
     fn into_vec_sub(self, ret: &mut Vec<T>) {
@@ -214,14 +222,5 @@ impl<T: Ord> TwoThreeTree<T> {
         let mut ret = Vec::with_capacity(self.size());
         self.into_vec_sub(&mut ret);
         ret
-    }
-}
-
-fn depth<T>(t: &TwoThreeTree<T>) -> usize {
-    use TwoThreeTree::*;
-    match *t {
-        Tip => 0,
-        Two(_, _, ref left, _) => 1 + depth(left),
-        Three(_, _, _, ref left, _, _) => 1 + depth(left),
     }
 }
