@@ -1,7 +1,7 @@
 /// 2-3 Tree
 /// Reference: https://en.wikipedia.org/wiki/2%E2%80%933_tree
 /// https://www.slideshare.net/sandpoonia/23-tree
-/// Verified by: ARC061-D (http://arc061.contest.atcoder.jp/submissions/1246253)
+/// Verified by: ARC061-D (http://arc061.contest.atcoder.jp/submissions/1246386)
 #[derive(Clone, Debug)]
 enum TwoThreeTree<T> {
     Tip,
@@ -33,14 +33,6 @@ impl<T: Ord> TwoThreeTree<T> {
             Three(sz, _, _, _, _, _) => sz,
         }
     }
-    fn leaf_one(x: T) -> Self {
-        use TwoThreeTree::*;
-        Two(1, x, Box::new(Tip), Box::new(Tip))
-    }
-    fn leaf_two(x: T, y: T) -> Self {
-        use TwoThreeTree::*;
-        Three(2, x, y, Box::new(Tip), Box::new(Tip), Box::new(Tip))
-    }
     fn node_two(x: T, left: Box<Self>, right: Box<Self>) -> Self {
         TwoThreeTree::Two(left.size() + right.size() + 1, x,
                           left, right)
@@ -60,32 +52,7 @@ impl<T: Ord> TwoThreeTree<T> {
     fn insert_sub(self, x: T) -> Result<Self, (Self, Self, T)> {
         use TwoThreeTree::*;
         match self {
-            Tip => Ok(Self::leaf_one(x)),
-            Two(1, val, _, _) => // leaf
-                Ok(match x.cmp(&val) {
-                    std::cmp::Ordering::Equal => Self::leaf_one(val),
-                    std::cmp::Ordering::Less => Self::leaf_two(x, val),
-                    std::cmp::Ordering::Greater => Self::leaf_two(val, x),
-                }),
-            Three(2, val1, val2, _, _, _) => { // leaf
-                // $a, $b, $c should be increasing in this order.
-                macro_rules! err_3 {
-                    ($a:expr, $b:expr, $c:expr) => {
-                        Err((Self::leaf_one($a),
-                             Self::leaf_one($c),
-                             $b))
-                    }
-                }
-                if val1 == x || val2 == x {
-                    Ok(Self::leaf_two(val1, val2))
-                } else if x < val1 {
-                    err_3!(x, val1, val2)
-                } else if x < val2 {
-                    err_3!(val1, x, val2)
-                } else {
-                    err_3!(val1, val2, x)
-                }
-            }
+            Tip => Err((Tip, Tip, x)),
             Two(size, val, left, right) => {
                 match x.cmp(&val) {
                     std::cmp::Ordering::Equal => 
