@@ -2,6 +2,7 @@
 /// Reference: https://en.wikipedia.org/wiki/2%E2%80%933_tree
 /// https://www.slideshare.net/sandpoonia/23-tree
 /// Verified by: ARC061-D (http://arc061.contest.atcoder.jp/submissions/1246386)
+/// Codeforces 404E (http://codeforces.com/contest/785/submission/26747752), TLE
 #[derive(Clone, Debug)]
 enum TwoThreeTree<T> {
     Tip,
@@ -25,7 +26,7 @@ impl<T: Ord> TwoThreeTree<T> {
     pub fn new() -> Self {
         TwoThreeTree::Tip
     }
-    fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         use TwoThreeTree::*;
         match *self {
             Tip => 0,
@@ -55,7 +56,7 @@ impl<T: Ord> TwoThreeTree<T> {
             Tip => Err((Tip, Tip, x)),
             Two(size, val, left, right) => {
                 match x.cmp(&val) {
-                    std::cmp::Ordering::Equal => 
+                    std::cmp::Ordering::Equal =>
                         Ok(Two(size, val, left, right)),
                     std::cmp::Ordering::Less => {
                         match left.insert_sub(x) {
@@ -78,7 +79,6 @@ impl<T: Ord> TwoThreeTree<T> {
                         }
                     },
                 }
-                        
             }
             Three(size, val1, val2, left, middle, right) => {
                 if x == val1 || x == val2 {
@@ -127,11 +127,280 @@ impl<T: Ord> TwoThreeTree<T> {
             }
         }
     }
-    fn insert(self, x: T) -> Self {
+    pub fn insert(self, x: T) -> Self {
         match self.insert_sub(x) {
             Ok(t) => t,
             Err((t1, t2, v)) =>
                 Self::node_two(v, Box::new(t1), Box::new(t2)),
+        }
+    }
+    fn get_min(&mut self) -> &mut T {
+        use TwoThreeTree::*;
+        match *self {
+            Tip => panic!(),
+            Two(_, ref mut val, ref mut left, _) => {
+                if let &Tip = &left as &Self {
+                    val
+                } else {
+                    left.get_min()
+                }
+            }
+            Three(_, ref mut val, _, ref mut left, _, _) => {
+                if let &Tip = &left as &Self {
+                    val
+                } else {
+                    left.get_min()
+                }
+            }
+        }
+    }
+    fn delete_sub(self, x: &T, mut leftist: bool)
+                  -> (Result<Self, Box<Self>>, Option<T>) {
+        use TwoThreeTree::*;
+        match self {
+            Tip => (Ok(Tip), None),
+            Two(_, mut val, left, mut right) => {
+                let mut cmp_result = x.cmp(&val);
+                if leftist {
+                    if let &Tip = &left as &Self {
+                        cmp_result = std::cmp::Ordering::Equal;
+                    } else {
+                        cmp_result = std::cmp::Ordering::Less;
+                    }
+                }
+                if cmp_result == std::cmp::Ordering::Equal {
+                    if let Tip = *right {
+                        return (Err(Box::new(Tip)), Some(val));
+                    }
+                    let inord_succ = right.get_min();
+                    std::mem::swap(&mut val, inord_succ);
+                    cmp_result = std::cmp::Ordering::Greater;
+                    leftist = true;
+                }
+                match cmp_result {
+                    std::cmp::Ordering::Equal => panic!(),
+                    std::cmp::Ordering::Less => {
+                        match left.delete_sub(x, leftist) {
+                            (Ok(t), ret) =>
+                                (Ok(Self::node_two(val, Box::new(t), right)), ret),
+                            (Err(box_t), ret) => {
+                                let right = *right; // Workaround: http://stackoverflow.com/questions/28466809/collaterally-moved-error-on-deconstructing-box-of-pairs
+                                match right {
+                                    Tip => panic!(),
+                                    Two(_, rv, rleft, rright) => {
+                                        let newtree =
+                                            Self::node_three(val, rv, box_t, rleft, rright);
+                                        (Err(Box::new(newtree)), ret)
+                                    },
+                                    Three(_, rv1, rv2, rleft, rmiddle, rright) => {
+                                        // rotation
+                                        let left = Self::node_two(val, box_t, rleft);
+                                        let right = Self::node_two(rv2, rmiddle, rright);
+                                        (Ok(Self::node_two(rv1, Box::new(left), Box::new(right))), ret)
+                                    },
+                                }
+                            },
+                        }
+                    },
+                    std::cmp::Ordering::Greater => {
+                        match right.delete_sub(x, leftist) {
+                            (Ok(t), ret) =>
+                                (Ok(Self::node_two(val, left, Box::new(t))), ret),
+                            (Err(box_t), ret) => {
+                                let left = *left; // Workaround
+                                match left {
+                                    Tip => panic!(),
+                                    Two(_, lv, lleft, lright) => {
+                                        let newtree =
+                                            Self::node_three(lv, val, lleft, lright, box_t);
+                                        (Err(Box::new(newtree)), ret)
+                                    },
+                                    Three(_, lv1, lv2, lleft, lmiddle, lright) => {
+                                        // rotation
+                                        let left = Self::node_two(lv1, lleft, lmiddle);
+                                        let right = Self::node_two(val, lright, box_t);
+                                        (Ok(Self::node_two(lv2, Box::new(left), Box::new(right))), ret)
+                                    },
+                                }
+                            },
+                        }
+                    },
+                }
+            }
+            Three(_, mut val1, mut val2, left, mut middle, mut right) => {
+                let mut cmp_result;
+                if leftist {
+                    if let &Tip = &left as &Self {
+                        cmp_result = 1;
+                    } else {
+                        cmp_result = 0;
+                    }
+                } else if x < &val1 {
+                    cmp_result = 0;
+                } else if x == &val1 {
+                    cmp_result = 1;
+                } else if x < &val2 {
+                    cmp_result = 2;
+                } else if x == &val2 {
+                    cmp_result = 3;
+                } else {
+                    cmp_result = 4;
+                }
+                if cmp_result == 1 {
+                    if let Tip = *right {
+                        return (Ok(Self::node_two(
+                            val2, Box::new(Tip), Box::new(Tip))),
+                                   Some(val1));
+                    }
+                    let inord_succ = middle.get_min();
+                    std::mem::swap(&mut val1, inord_succ);
+                    cmp_result = 2;
+                    leftist = true;
+                }
+                if cmp_result == 3 {
+                    if let Tip = *right {
+                        return (Ok(Self::node_two(
+                            val1, Box::new(Tip), Box::new(Tip))),
+                                   Some(val2));
+                    }
+                    let inord_succ = right.get_min();
+                    std::mem::swap(&mut val2, inord_succ);
+                    cmp_result = 4;
+                    leftist = true;
+                }
+                macro_rules! three_two {
+                    ($ll:expr, $lv:expr, $lr:expr,
+                     $val1:expr,
+                     $ml:expr, $mv:expr, $mr:expr,
+                     $val2:expr,
+                     $rl:expr, $rv:expr, $rr:expr) => {
+                        Self::node_three(
+                            $val1,
+                            $val2,
+                            Box::new(Self::node_two($lv, $ll, $lr)),
+                            Box::new(Self::node_two($mv, $ml, $mr)),
+                            Box::new(Self::node_two($rv, $rl, $rr)))
+                    }
+                }
+                match cmp_result {
+                    0 => {
+                        match left.delete_sub(x, leftist) {
+                            (Ok(t), ret) =>
+                                (Ok(Self::node_three(
+                                    val1, val2,
+                                    Box::new(t), middle, right)),
+                                 ret),
+                            (Err(t), ret) => {
+                                match (*middle, *right) {
+                                    (Three(_, mv1, mv2, mleft, mmiddle, mright),
+                                     right) =>
+                                        (Ok(Self::node_three(
+                                            mv1, val2,
+                                            Box::new(Self::node_two(val1, t, mleft)),
+                                            Box::new(Self::node_two(mv2, mmiddle, mright)),
+                                            Box::new(right))), ret),
+                                    (Two(_, mv, mleft, mright),
+                                     Three(_, rv1, rv2, rleft, rmiddle, rright)) =>
+                                        (Ok(three_two!(
+                                            t, val1, mleft,
+                                            mv,
+                                            mright, val2, rleft,
+                                            rv1,
+                                            rmiddle, rv2, rright)), ret),
+                                    (Two(_, mv, mleft, mright),
+                                     right) =>
+                                        (Ok(Self::node_two(
+                                            val2,
+                                            Box::new(Self::node_three(
+                                                val1, mv, t, mleft, mright)),
+                                            Box::new(right))), ret),
+                                    _ => panic!("Unexpected Tip"),
+                                }
+                            }
+                        }
+                    },
+                    2 => {
+                        match middle.delete_sub(x, leftist) {
+                            (Ok(t), ret) =>
+                                (Ok(Self::node_three(
+                                    val1, val2,
+                                    left, Box::new(t), right)),
+                                 ret),
+                            (Err(t), ret) => {
+                                match (*left, *right) {
+                                    (Three(_, lv1, lv2, lleft, lmiddle, lright),
+                                     right) =>
+                                        (Ok(Self::node_three(
+                                            lv2, val2,
+                                            Box::new(Self::node_two(lv1, lleft, lmiddle)),
+                                            Box::new(Self::node_two(val1, lright, t)),
+                                            Box::new(right))), ret),
+                                    (Two(_, lv, lleft, lright),
+                                     Three(_, rv1, rv2, rleft, rmiddle, rright)) =>
+                                        (Ok(three_two!(
+                                            lleft, lv, lright,
+                                            val1,
+                                            t, val2, rleft,
+                                            rv1,
+                                            rmiddle, rv2, rright)), ret),
+                                    (Two(_, lv, lleft, lright),
+                                     right) =>
+                                        (Ok(Self::node_two(
+                                            val2,
+                                            Box::new(Self::node_three(
+                                                lv, val1, lleft, lright, t)),
+                                            Box::new(right))), ret),
+                                    _ => panic!("Unexpected Tip"),
+                                }
+                            }
+                        }
+                    },
+                    4 => {
+                        match right.delete_sub(x, leftist) {
+                            (Ok(t), ret) =>
+                                (Ok(Self::node_three(
+                                    val1, val2,
+                                    left, middle, Box::new(t))),
+                                 ret),
+                            (Err(t), ret) => {
+                                match (*left, *middle) {
+                                    (left,
+                                     Three(_, mv1, mv2, mleft, mmiddle, mright)) =>
+                                        (Ok(Self::node_three(
+                                            val1, mv2,
+                                            Box::new(left),
+                                            Box::new(Self::node_two(mv1, mleft, mmiddle)),
+                                            Box::new(Self::node_two(val2, mright, t)))), ret),
+                                    (Three(_, lv1, lv2, lleft, lmiddle, lright),
+                                     Two(_, mv, mleft, mright)) =>
+                                        (Ok(three_two!(
+                                            lleft, lv1, lmiddle,
+                                            lv2,
+                                            lright, val1, mleft,
+                                            mv,
+                                            mright, val2, t)), ret),
+                                    (left,
+                                     Two(_, mv, mleft, mright)) =>
+                                        (Ok(Self::node_two(
+                                            val1,
+                                            Box::new(left),
+                                            Box::new(Self::node_three(
+                                                mv, val2, mleft, mright, t)))), ret),
+                                    _ => panic!("Unexpected Tip"),
+                                }
+                            }
+                        }
+                    },
+                    _ => panic!("Unexpected case"),
+                }
+            },
+        }
+    }
+    pub fn delete(self, x: &T) -> (Self, Option<T>) {
+        let (t, ret) = self.delete_sub(x, false);
+        match t {
+            Ok(t) => (t, ret),
+            Err(t) => (*t, ret),
         }
     }
     fn into_vec_sub(self, ret: &mut Vec<T>) {
