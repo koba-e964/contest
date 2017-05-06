@@ -1,0 +1,6 @@
+4
+kinesis
+koba
+variance
+kobushu
+3 1 2

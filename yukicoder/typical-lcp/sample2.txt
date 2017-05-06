@@ -1,0 +1,7 @@
+5
+aaaaa
+dadad
+aaaab
+abcbc
+aaaac
+4 1 1
