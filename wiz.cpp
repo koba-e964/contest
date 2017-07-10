@@ -33,6 +33,8 @@ const ll mod = 1e9 + 7;
 
 
 
-int main(void){
+int main(void) {
+  ios::sync_with_stdio(false);
+  cin.tie(0);
   
 }
