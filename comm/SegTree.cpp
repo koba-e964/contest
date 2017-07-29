@@ -4,7 +4,7 @@
  * element of I and the operation of I.
  * Header requirement: vector, algorithm
  * Verified by ABC017-D (http://abc017.contest.atcoder.jp/submissions/660402)
- *             AGC009-C (http://agc009.contest.atcoder.jp/submissions/1460892)
+ *             AGC009-C (http://agc009.contest.atcoder.jp/submissions/1461012)
  */
 template<class I, class BiOp = I (*) (I, I)>
 class SegTree {
@@ -53,20 +53,21 @@ public:
   }
   /* http://proc-cpuinfo.fixstars.com/2017/07/optimize-segment-tree/ */
   I querySub(int a, int b) const {
-    I y = e;
+    I left = e;
+    I right = e;
     a += n - 1;
     b += n - 1;
     while (a < b) {
       if ((a & 1) == 0) {
-	y = op(dat[a], y);
+	left = op(left, dat[a]);
       }
       if ((b & 1) == 0) {
-	y = op(y, dat[b - 1]);
+	right = op(dat[b - 1], right);
       }
       a = a / 2;
       b = (b - 1) / 2;
     }
-    return y;
+    return op(left, right);
   }
   /* [a, b] (note: inclusive) */
   I query(int a, int b) const {
