@@ -61,9 +61,10 @@ fn coord_compress<T: Ord>(a: &[T])
 
 /**
  * Segment Tree. This data structure is useful for fast folding on intervals of an array
- * whose elements are elements of monoid M. Note that constructing this tree requires the identity
- * element of M and the operation of M.
+ * whose elements are elements of monoid I. Note that constructing this tree requires the identity
+ * element of I and the operation of I.
  * Verified by: yukicoder No. 259 (http://yukicoder.me/submissions/100581)
+ *              AGC015-E (http://agc015.contest.atcoder.jp/submissions/1461001)
  */
 struct SegTree<I, BiOp> {
     n: usize,
@@ -89,18 +90,24 @@ impl<I, BiOp> SegTree<I, BiOp>
             self.dat[k] = (self.op)(self.dat[2 * k + 1], self.dat[2 * k + 2]);
         }
     }
-    /* l,r are for simplicity */
-    fn query_sub(&self, a: usize, b: usize, k: usize, l: usize, r: usize) -> I {
-        // [a,b) and  [l,r) intersects?
-        if r <= a || b <= l { return self.e; }
-        if a <= l && r <= b { return self.dat[k]; }
-        let vl = self.query_sub(a, b, 2 * k + 1, l, (l + r) / 2);
-        let vr = self.query_sub(a, b, 2 * k + 2, (l + r) / 2, r);
-        (self.op)(vl, vr)
-    }
-    /* [a, b] (note: inclusive) */
-    pub fn query(&self, a: usize, b: usize) -> I {
-        self.query_sub(a, b + 1, 0, 0, self.n)
+    /* [a, b) (note: half-inclusive)
+     * http://proc-cpuinfo.fixstars.com/2017/07/optimize-segment-tree/ */
+    pub fn query(&self, mut a: usize, mut b: usize) -> I {
+        let mut left = self.e;
+        let mut right = self.e;
+        a += self.n - 1;
+        b += self.n - 1;
+        while a < b {
+            if (a & 1) == 0 {
+                left = (self.op)(left, self.dat[a]);
+            }
+            if (b & 1) == 0 {
+                right = (self.op)(self.dat[b - 1], right);
+            }
+            a = a / 2;
+            b = (b - 1) / 2;
+        }
+        (self.op)(left, right)
     }
 }
 
@@ -110,10 +117,10 @@ fn calc(range: Vec<(usize, usize)>, lim: usize) -> i64 {
     let mut st = SegTree::new(lim + 1, |x, y| (x + y) % MOD, 0);
     st.update(0, 1);
     for (l, r) in range {
-        let tmp = st.query(l - 1, r) + st.query(r, r);
+        let tmp = st.query(l - 1, r + 1) + st.query(r, r + 1);
         st.update(r, tmp);
     }
-    st.query(lim, lim)
+    st.query(lim, lim + 1)
 }
 
 const INF: i64 = 1 << 50;
