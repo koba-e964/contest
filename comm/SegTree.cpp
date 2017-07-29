@@ -1,9 +1,10 @@
 /**
  * Segment Tree. This data structure is useful for fast folding on intervals of an array
- * whose elements are elements of monoid M. Note that constructing this tree requires the identity
- * element of M and the operation of M.
+ * whose elements are elements of monoid I. Note that constructing this tree requires the identity
+ * element of I and the operation of I.
  * Header requirement: vector, algorithm
- * Verified by AtCoder ABC017-D (http://abc017.contest.atcoder.jp/submissions/660402)
+ * Verified by ABC017-D (http://abc017.contest.atcoder.jp/submissions/660402)
+ *             AGC009-C (http://agc009.contest.atcoder.jp/submissions/1460892)
  */
 template<class I, class BiOp = I (*) (I, I)>
 class SegTree {
@@ -50,17 +51,25 @@ public:
       }
     }
   }
-  /* l,r are for simplicity */
-  I querySub(int a, int b, int k, int l, int r) const {
-    // [a,b) and  [l,r) intersects?
-    if (r <= a || b <= l) return e;
-    if (a <= l && r <= b) return dat[k];
-    I vl = querySub(a, b, 2 * k + 1, l, (l + r) / 2);
-    I vr = querySub(a, b, 2 * k + 2, (l + r) / 2, r);
-    return op(vl, vr);
+  /* http://proc-cpuinfo.fixstars.com/2017/07/optimize-segment-tree/ */
+  I querySub(int a, int b) const {
+    I y = e;
+    a += n - 1;
+    b += n - 1;
+    while (a < b) {
+      if ((a & 1) == 0) {
+	y = op(dat[a], y);
+      }
+      if ((b & 1) == 0) {
+	y = op(y, dat[b - 1]);
+      }
+      a = a / 2;
+      b = (b - 1) / 2;
+    }
+    return y;
   }
   /* [a, b] (note: inclusive) */
   I query(int a, int b) const {
-    return querySub(a, b + 1, 0, 0, n);
+    return querySub(a, b + 1);
   }
 };
