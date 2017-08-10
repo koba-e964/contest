@@ -45,3 +45,22 @@ public:
     }
   }
 };
+
+template<class T>
+class TwoBIT {
+  BIT<T, plus<T> > bit0, bit1;
+public:
+  TwoBIT(int n): bit0(n + 1), bit1(n + 1) {}
+  // [l, r)
+  void add_interval(int l, int r, T x) {
+    bit1.add(l + 1, x);
+    bit1.add(r + 1, -x);
+    bit0.add(l + 1, -x * (l + 1));
+    bit0.add(r + 1, x * (r + 1));
+  }
+  // [l, r)
+  T sum_interval(int l, int r) {
+    return bit1.accum(r + 1) * (r + 1) + bit0.accum(r + 1)
+      - bit1.accum(l + 1) * (l + 1) - bit0.accum(l + 1);
+  }
+};
