@@ -1,6 +1,6 @@
 b (TLE for challenge cases)
 c
-d
+d (TLE for full score)
 e
 f
 g
