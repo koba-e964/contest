@@ -54,7 +54,8 @@ int main(void) {
   int two = pool[2];
   int addup = pool[1] + pool[2] + 2 * pool[3];
   if (pool[1] + 2 * n < two) {
-    addup += two - pool[1] - n;
+    int diff = two - pool[1] - 2 * n;
+    addup += diff / 3 + (diff % 3);
   }
   if (2 * rem >= addup) {
     cout << "YES\n";
