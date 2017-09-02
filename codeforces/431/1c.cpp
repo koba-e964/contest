@@ -9,14 +9,8 @@
 #include <functional>
 #include <iomanip>
 #include <iostream>
-#include <list>
-#include <map>
-#include <queue>
-#include <random>
 #include <set>
-#include <sstream>
 #include <string>
-#include <utility>
 #include <vector>
 
 #define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
@@ -39,14 +33,6 @@ struct mo_cmp {
     return (turner ? -1 : 1) * (a.second.first - b.second.first) < 0;
   }
 };
-
-ll get_range(const set<int> &v) {
-  if (v.size() <= 1) {
-    return 0;
-  }
-  return *v.rbegin() - *v.begin();
-}
-
 
 const int DEBUG = 0;
 
@@ -147,23 +133,8 @@ int main(void) {
     tempo_aux.push_back(opseq);
     tempo_rev_aux.push_back(invopseq);
   }
-  for (int i = tempo.size() - 1; i >= 0; --i) {
-    PI q = tempo_rev[i];
-    int p = q.first;
-    int x = q.second;
-    a[p] = x;
-    for (PI op: tempo_rev_aux[i]) {
-      int idx = op.first;
-      int val = op.second;
-      if (idx >= n) {
-	nextt[idx - n] = val;
-      } else {
-	prevv[idx] = val;
-      }
-    }
-  }
   sort(que.begin(), que.end(), mo_cmp());
-  int cur = 0;
+  int cur = tempo.size();
   int cl = 0;
   int cr = 0;
   // states
