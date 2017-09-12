@@ -1,3 +1,37 @@
+#[allow(unused_imports)]
+use std::cmp::*;
+#[allow(unused_imports)]
+use std::collections::*;
+use std::io::Read;
+#[allow(dead_code)]
+fn getline() -> String {
+    let mut ret = String::new();
+    std::io::stdin().read_line(&mut ret).ok().unwrap();
+    ret
+}
+fn get_word() -> String {
+    let mut stdin = std::io::stdin();
+    let mut u8b: [u8; 1] = [0];
+    loop {
+        let mut buf: Vec<u8> = Vec::with_capacity(16);
+        loop {
+            let res = stdin.read(&mut u8b);
+            if res.unwrap_or(0) == 0 || u8b[0] <= b' ' {
+                break;
+            } else {
+                buf.push(u8b[0]);
+            }
+        }
+        if buf.len() >= 1 {
+            let ret = String::from_utf8(buf).unwrap();
+            return ret;
+        }
+    }
+}
+
+#[allow(dead_code)]
+fn get<T: std::str::FromStr>() -> T { get_word().parse().ok().unwrap() }
+
 const MOD: i64 = 1_000_000_007;
 
 fn powmod(x: i64, mut e: i64, m: i64) -> i64 {
@@ -11,98 +45,6 @@ fn powmod(x: i64, mut e: i64, m: i64) -> i64 {
         e /= 2;
     }
     sum
-}
-
-/**
- * Calculates x s.t. x^2 = a (mod p)
- * p is prime
- * Verified by: CF #395 Div1-C
- *              (http://codeforces.com/contest/763/submission/24380573)
- */
-fn modsqrt(mut a: i64, p: i64) -> Option<i64> {
-    a %= p;
-    if a == 0 {
-        return Some(0);
-    }
-    if p == 2 {
-        return Some(a);
-    }
-    if powmod(a, (p - 1) / 2, p) != 1 {
-        return None;
-    }
-    let mut b = 1;
-    while powmod(b, (p - 1) / 2, p) == 1 {
-        b += 1;
-    }
-    let mut e = 0;
-    let mut m = p - 1;
-    while m % 2 == 0 {
-        m /= 2;
-        e += 1;
-    }
-    let mut x = powmod(a, (m - 1) / 2, p);
-    let mut y = a * (x * x % p) % p;
-    x = x * a % p;
-    let mut z = powmod(b, m, p);
-    while y != 1 {
-        let mut j = 0;
-        let mut t = y;
-        while t != 1 {
-            j += 1;
-            t = t * t % p;
-        }
-        assert!(j < e);
-        z = powmod(z, 1 << (e - j - 1), p);
-        x = x * z % p;
-        z = z * z % p;
-        y = y * z % p;
-        e = j;
-    }
-    Some(x)
-}
-
-#[derive(PartialEq,Eq,Hash,Clone,Copy,Debug)]
-struct Hash {
-    h: [i64; 2],
-}
-const MD: [i64; 2] = [1_000_000_007, 1_000_000_009];
-
-impl Hash {
-    fn new() -> Self { Hash::from(0) }
-    fn from(v: i64) -> Self {
-        Hash { h: [(v % MD[0] + MD[0]) % MD[0],
-                   (v % MD[1] + MD[1]) % MD[1]] }
-    }
-}
-impl std::ops::Add for Hash {
-    type Output = Self;
-    fn add(self, other: Self) -> Self {
-        let mut ret = Self::new();
-        for i in 0 .. 2 {
-            ret.h[i] = (self.h[i] + other.h[i]) % MD[i];
-        }
-        ret
-    }
-}
-impl std::ops::Neg for Hash {
-    type Output = Self;
-    fn neg(self) -> Self {
-        let mut ret = Self::new();
-        for i in 0 .. 2 {
-            ret.h[i] = (MD[i] - self.h[i]) % MD[i];
-        }
-        ret
-    }
-}
-impl std::ops::Mul for Hash {
-    type Output = Self;
-    fn mul(self, other: Self) -> Self {
-        let mut ret = Self::new();
-        for i in 0 .. 2 {
-            ret.h[i] = (self.h[i] * other.h[i]) % MD[i];
-        }
-        ret
-    }
 }
 
 /// Refers external ::MOD.
@@ -173,3 +115,29 @@ mod mod_int {
         }
     }
 } // mod mod_int
+
+
+fn solve() {
+    use mod_int::*;
+    let a: i64 = get();
+    let b: ModInt = ModInt::new(get());
+    let c: i64 = get();
+    let mut tot = ModInt::new(0);
+    let mut cur_comb = ModInt::new(1);
+    let mut cur_pow = b ^ (a - 1);
+    let binv = b ^ (MOD - 2);
+    for i in 0 .. a {
+        tot = tot + cur_comb.mul_fast(cur_pow);
+        cur_pow = cur_pow.mul_fast(binv);
+        cur_comb = cur_comb.mul_fast(ModInt::new(c + i));
+        cur_comb = cur_comb.mul_fast(ModInt::new(i + 1) ^ (MOD - 2));
+    }
+    println!("{}", tot.x);
+}
+
+fn main() {
+    // In order to avoid potential stack overflow, spawn a new thread.
+    let stack_size = 104_857_600; // 100 MB
+    let thd = std::thread::Builder::new().stack_size(stack_size);
+    thd.spawn(|| solve()).unwrap().join().unwrap();
+}
