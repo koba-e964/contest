@@ -1,22 +1,4 @@
-#include <algorithm>
-#include <cassert>
-#include <cctype>
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
-#include <deque>
-#include <functional>
-#include <iomanip>
 #include <iostream>
-#include <list>
-#include <map>
-#include <queue>
-#include <random>
-#include <set>
-#include <sstream>
-#include <string>
-#include <utility>
 #include <vector>
 
 #define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
@@ -25,109 +7,38 @@ using namespace std;
 typedef long long int ll;
 typedef vector<int> VI;
 typedef vector<ll> VL;
-typedef pair<int, int> PI;
-const ll mod = 1e9 + 7;
 
-
-ll calc(const VL &a) {
-  int n = a.size();
-  // all 1?
-  bool all_one = true;
-  REP(i, 0, n) {
-    all_one &= a[i] == 1;
-  }
-  if (all_one) {
-    return 0;
-  }
-  VL sub(n);
-  ll tot = 0;
+int log2_int(ll x) {
   int cur = 0;
-  REP(i, 0, n) {
-    sub[i] = (a[i] + 1) / 2;
-    // 0 ... 0 1 -> ok
-    // 1 0 ... 0 1 -> Ok
-    // 1 0 ... 0 -> ok
-    // if it encounters 1, this sector can be completely ignored
-    if (a[i] == 1) {
-      if (cur > 0) {
-	tot += 1;
-	cur = 0;
-      }
-      // else, nothing happens.
-      continue;
+  while (true) {
+    if (x < 1LL << cur) {
+      return cur - 1;
     }
-    if (a[i] % 2 == 1) {
-      if (cur == 0) {
-	cur = 1;
-      } else {
-	tot += 1;
-	cur = 0;
-      }
-    } else {
-      cur += 1;
-    }
+    cur += 1;
   }
-  if (cur > 0) {
-    tot += 1;
-  }
-  return tot + calc(sub);
 }
 
-map<VL, ll> memo;
-
-ll exact(const VL &a, bool path_rec = false) {
+// This solution was implemented after the author read the editorial.
+ll solve(const VL &a) {
   int n = a.size();
-  pair<ll, PI> mi(5e15, PI(-1, -1));
-  bool all_one = true;
+  VI b(n + 2), c(n + 2);
   REP(i, 0, n) {
-    all_one &= a[i] == 1;
+    b[i + 1] = log2_int(a[i]);
+    c[i + 1] = log2_int(a[i] - 1) + 1;
   }
-  if (all_one) {
-    return 0;
-  }
-  if (not path_rec && memo.count(a)) {
-    return memo[a];
-  }
-  REP(i, 0, n) {
-    REP(j, i, n) {
-      VL sub(a);
-      bool ok = true;
-      bool nonone = false;
-      REP(k, i, j + 1) {
-	sub[k] = (sub[k] + 1) / 2;
-	if (k != i && k != j) {
-	  if (a[k] % 2 != 0) {
-	    ok = false;
-	    break;
-	  }
-	}
-	if (a[k] != 1) {
-	  nonone = true;
-	}
+  vector<VI> dp(n + 2, VI(2, 0));
+  REP(i, 1, n + 2) {
+    REP(y, 0, 2) {
+      int next = y ? c[i] : b[i];
+      int mi = 1e8;
+      REP(x, 0, 2) {
+	int prev = x ? b[i - 1] : c[i - 1];
+	mi = min(mi, dp[i - 1][x] + abs(next - prev) + abs(b[i] - c[i]));
       }
-      if (not ok || not nonone) {
-	continue;
-      }
-      ll res = exact(sub);
-      mi = min(mi, make_pair(res, PI(i, j)));
+      dp[i][y] = mi;
     }
   }
-  if (path_rec) {
-    int u = mi.second.first;
-    int v = mi.second.second;
-    cerr << "perform " << u << " " << v << endl;
-    cerr << "a:";
-    REP(i, 0, n) {
-      cerr << " " << a[i];
-    }
-    cerr << endl;
-    VL sub(a);
-    REP(k, u, v + 1) {
-      sub[k] = (sub[k] + 1) / 2;
-    }
-    exact(sub, true);
-  }
-  return memo[a] = mi.first + 1;
+  return min(dp[n + 1][0], dp[n + 1][1]);
 }
 
 
@@ -138,6 +49,5 @@ int main(void) {
   REP(i, 0, n) {
     cin >> a[i];
   }
-  cout << exact(a) << endl;
-  exact(a, true);
+  cout << solve(a) / 2 << endl;
 }
