@@ -126,32 +126,17 @@ int main(void) {
       if (ma.first > two) { continue; }
       int l2 = a3 - a2;
       if (l1 > 2 * l2 || l2 > 2 * l1) { continue; }
-      int l3mi = 1e8;
-      int l3ma = 0;
-      l3mi = max((l1 + 1) / 2, (l2 + 1) / 2);
-      l3ma = min(2 * l1, 2 * l2);
+      int l3mi = max((l1 + 1) / 2, (l2 + 1) / 2);
+      int l3ma = min(2 * l1, 2 * l2);
       int a4mi = a3 + l3mi;
       int a4ma = min(a3 + l3ma, n);
       if (a4mi > a4ma) { continue; }
       assert (a4mi > a3);
       assert (a4ma <= n);
-      if (0) {
-	DEBUGP(a4mi);
-	DEBUGP(a4ma);
-	DEBUGP(a2);
-	DEBUGP(a3);
-      }
       PI res = spt.query(a4mi - 1, a4ma - 1);
-      int idx = -res.second;
-      if (0) {
-	DEBUGP(idx);
-	DEBUGP(two.first);
-	DEBUGP(two.second);
-	DEBUGP(res.first);
-	DEBUGP("\n");
-      }
       if (ma < PIPI(two, res.first)) {
 	ma = PIPI(two, res.first);
+	int idx = -res.second;
 	real = PIPI(PI(a2, a3), idx);
       }
     }
