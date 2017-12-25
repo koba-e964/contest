@@ -20,6 +20,7 @@
 #include <vector>
 
 #define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
+#define DEBUGP(val) cerr << #val << "=" << val << "\n";
 
 using namespace std;
 typedef long long int ll;
@@ -33,5 +34,4 @@ const ll mod = 1e9 + 7;
 int main(void) {
   ios::sync_with_stdio(false);
   cin.tie(0);
-  
 }
