@@ -20,7 +20,7 @@
 #include <vector>
 
 #define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
-#define DEBUGP(val) cerr << #val << "=" << val << "\n";
+#define DEBUGP(val) cerr << #val << "=" << val << "\n"
 
 using namespace std;
 typedef long long int ll;
