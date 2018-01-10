@@ -43,13 +43,13 @@ int main(void) {
     cin >> a[i];
   }
   set<ll> fact;
-  REP(j, 1, 32000) {
+  REP(j, 1, 320000) {
     fact.insert(j);
   }
   REP(i, 0, n) {
-    REP(j, 1, 32000) {
+    REP(j, 1, 3200) {
       ll deck = (a[i] + j - 1) / j;
-      if (deck >= 32000) {
+      if (deck >= 320000) {
 	fact.insert(deck);
       }
     }
@@ -59,9 +59,19 @@ int main(void) {
   sort(fv.begin(), fv.end());
   int fvn = fv.size();
   ll ma = 1;
-  REP(i, 0, fvn - 1) {
+  for (int i = fvn - 2; i >= 0; --i) {
     ll lo = fv[i] - 1;
     ll hi = fv[i + 1];
+    // check if fv[i] is okay
+    {
+      ll tot = 0;
+      REP(j, 0, n) {
+	tot += (fv[i] - (a[j] % fv[i])) % fv[i];
+      }
+      if (tot > k) {
+	continue;
+      }
+    }
     while (hi - lo > 1) {
       ll mid = (hi + lo) / 2;
       // check
@@ -75,10 +85,8 @@ int main(void) {
 	hi = mid;
       }
     }
-    if (lo == fv[i] - 1) {
-      continue;
-    }
     ma = max(ma, lo);
+    break;
   }
   cout << ma << "\n";
 }
