@@ -3,21 +3,25 @@
  * Warning: NO GARBAGE COLLECTION!!!
  * Parameter: B, D (2^(B * D) > (maximum index) should hold)
  * Header Requirement: cassert
- * Verified by: CF358-2D (http://codeforces.com/contest/707/submission/34492976)
+ * Verified by: CF368-2D (http://codeforces.com/contest/707/submission/34504401)
  */
-template<class T>
+template<class T, // int -> T
+	 int B = 3, // parameter
+	 int D = 7 // parameter
+	 >
 class IntMap {
 public:
   IntMap(): root(nullptr) {}
   T get(unsigned int key) const {
     return get_sub(key, this->root, D - 1);
   }
-  void set(unsigned int key, T value) {
-    set_sub(key, this->root, value, D - 1);
+  IntMap<T, B, D> set(unsigned int key, T value) const {
+    IntMap<T, B, D> ret(*this);
+    ret.set_sub(key, ret.root, value, D - 1);
+    return ret;
   }
 private:
-  static const int B=3; // parameter
-  static const int D=7; // parameter
+  static_assert (B * D <= 8 * sizeof(int), "B * D > 8 * sizeof(int)");
   static const int BLOCK_SIZE=1<<B;
   struct node {
     node* child[BLOCK_SIZE];

@@ -27,21 +27,25 @@
  * Warning: NO GARBAGE COLLECTION!!!
  * Parameter: B, D (2^(B * D) > (maximum index) should hold)
  * Header Requirement: cassert
- * Verified by: CF358-2D (http://codeforces.com/contest/707/submission/34492976)
+ * Verified by: CF368-2D (http://codeforces.com/contest/707/submission/34504401)
  */
-template<class T>
+template<class T, // int -> T
+	 int B = 3, // parameter
+	 int D = 7 // parameter
+	 >
 class IntMap {
 public:
   IntMap(): root(nullptr) {}
   T get(unsigned int key) const {
     return get_sub(key, this->root, D - 1);
   }
-  void set(unsigned int key, T value) {
-    set_sub(key, this->root, value, D - 1);
+  IntMap<T, B, D> set(unsigned int key, T value) const {
+    IntMap<T, B, D> ret(*this);
+    ret.set_sub(key, ret.root, value, D - 1);
+    return ret;
   }
 private:
-  static const int B=3; // parameter
-  static const int D=7; // parameter
+  static_assert (B * D <= 8 * sizeof(int), "B * D > 8 * sizeof(int)");
   static const int BLOCK_SIZE=1<<B;
   struct node {
     node* child[BLOCK_SIZE];
@@ -92,7 +96,7 @@ int main(void) {
   int n, m, q;
   cin >> n >> m >> q;
   int tot[100001] = {};
-  IntMap<int> t[100001];
+  IntMap<int, 2, 6> t[100001];
   IntMap<int> shelf[100001];
 
   REP(i, 1, n + 1) {
@@ -123,19 +127,20 @@ int main(void) {
 	int cur = shelf[time].get(i * m + j);
 	if ((flip ^ cur) != goal) {
 	  int nc = flip ^ goal;
-	  shelf[time].set(i * m + j, nc);
-	  t[time].set(i + n, t[time].get(i + n) + 2 * goal - 1);
+	  shelf[time] = shelf[time].set(i * m + j, nc);
+	  t[time] = t[time].set(i + n, t[time].get(i + n) + 2 * goal - 1);
 	  tot[time] += 2 * goal - 1;
 	}
       } else {
 	assert (kind == 3);
 	int i;
 	cin >> i;
-	t[time].set(i, 1 - t[time].get(i));
 	int old = t[time].get(i + n);
-	t[time].set(i + n, m - t[time].get(i + n));
+	t[time] = t[time]
+	  .set(i, 1 - t[time].get(i))
+	  .set(i + n, m - t[time].get(i + n));
 	tot[time] += m - 2 * old;
-      }    
+      }  
     }
     cout << tot[time] << "\n";
     if (0) {
