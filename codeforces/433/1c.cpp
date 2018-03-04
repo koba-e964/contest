@@ -27,184 +27,132 @@ typedef long long int ll;
 typedef vector<int> VI;
 typedef vector<ll> VL;
 typedef pair<int, int> PI;
-
-// http://www.prefield.com/algorithm/container/avl_tree.html
-template <class T>
-struct avl_tree {
-  struct node {
-    T key;
-    int size, height;
-    node *child[2];
-    node(const T &key) : key(key), size(1), height(1) {
-      child[0] = child[1] = 0; }
-  } *root;
-  typedef node *pointer;
-  avl_tree() { root = NULL; }
-  int size() const { return root == NULL ? 0 : root->size; }
-
-  pointer find(const T &key) { return find(root, key); }
-  node *find(node *t, const T &key) {
-    if (t == NULL) return NULL;
-    if (key == t->key) return t;
-    else if (key < t->key) return find(t->child[0], key);
-    else                   return find(t->child[1], key);
-  }
-  void insert(const T &key) { root = insert(root, new node(key)); }
-  node *insert(node *t, node *x) {
-    if (t == NULL) return x;
-    if (x->key <= t->key) t->child[0] = insert(t->child[0], x);
-    else                  t->child[1] = insert(t->child[1], x);
-    t->size += 1;
-    return balance(t);
-  }
-  void erase(const T &key) { root = erase(root, key); }
-  node *erase(node *t, const T &x) {
-    if (t == NULL) return NULL;
-    if (x == t->key) {
-      return move_down(t->child[0], t->child[1]);
-    } else {
-      if (x < t->key) t->child[0] = erase(t->child[0], x);
-      else            t->child[1] = erase(t->child[1], x);
-      t->size -= 1;
-      return balance(t);
-    }
-  }
-  node *move_down(node *t, node *rhs) {
-    if (t == NULL) return rhs;
-    t->child[1] = move_down(t->child[1], rhs);
-    return balance(t);
-  }
-#define sz(t) (t ? t->size : 0)
-#define ht(t) (t ? t->height : 0)
-  node *rotate(node *t, int l, int r) {
-    node *s = t->child[r];
-    t->child[r] = s->child[l];
-    s->child[l] = balance(t);
-    if (t) t->size = sz(t->child[0]) + sz(t->child[1]) + 1;
-    if (s) s->size = sz(s->child[0]) + sz(s->child[1]) + 1;
-    return balance(s);
-  }
-  node *balance(node *t) {
-    for (int i = 0; i < 2; ++i) {
-      if (ht(t->child[!i]) - ht(t->child[i]) < -1) {
-        if (ht(t->child[i]->child[!i]) - ht(t->child[i]->child[i]) > 0)
-          t->child[i] = rotate(t->child[i], i, !i);
-        return rotate(t, !i, i);
-      }
-    }
-    if (t) t->height = max(ht(t->child[0]), ht(t->child[1])) + 1;
-    if (t) t->size = sz(t->child[0]) + sz(t->child[1]) + 1;
-    return t;
-  }
-  pointer rank(int k) const { return rank(root, k); }
-  pointer rank(node *t, int k) const {
-    if (!t) return NULL;
-    int m = sz(t->child[0]);
-    if (k  < m) return rank(t->child[0], k);
-    if (k == m) return t;
-    if (k  > m) return rank(t->child[1], k - m - 1);
-  }
-  int lower_count(T key) const { return lower_count(root, key); }
-  int lower_count(node *t, T x) const {
-    if (t == NULL) return 0;
-    if (x == t->key) {
-      return sz(t->child[0]);
-    }
-    if (x < t->key) {
-      return lower_count(t->child[0], x);
-    }
-    int tmp = sz(t->child[0]) + 1;
-    return tmp + lower_count(t->child[1], x);
-  }
-};
+typedef pair<PI, PI> PPIPI;
 
 const int N = 1 << 18;
-avl_tree<int> seg[N];
-
+int bit[N];
 
 void update(int k, int v) {
-  k += 1;
   while (k < N) {
-    seg[k].insert(v);
+    bit[k] += v;
     k += k & -k;
   }
 }
 
-int get_once(int idx, int d, int u) {
-  if (d <= 0 && u >= N) {
-    return seg[idx].size();
-  }
-  return seg[idx].lower_count(u) - seg[idx].lower_count(d);
-}
 
-int get(int r, int d, int u) {
+int get(int r) {
   int tot = 0;
   while (r > 0) {
-    tot += get_once(r, d, u);
+    tot += bit[r];
     r &= r - 1;
   }
   return tot;
 }
 
+int phase = 0;
+
+int n;
+VI ql, qr, qd, qu;
+VI ans;
+int cnt = 0;
+VI p;
+
+
 int get(int l, int r, int d, int u) {
-  return get(r, d, u) - get(l, d, u);
+  PPIPI key(PI(l, r), PI(d, u));
+  if (phase == 0) {
+    ql.push_back(l);
+    qr.push_back(r);
+    qd.push_back(d);
+    qu.push_back(u);
+    ans.push_back(0);
+    return 0;
+  }
+  int idx = cnt++;
+  return ans[idx];
+}
+
+void answer_to_queries(void) {
+  vector<PPIPI> pool;
+  REP(i, 0, ql.size()) {
+    pool.push_back(PPIPI(PI(ql[i] + 1, 1), PI(i, -1)));
+    pool.push_back(PPIPI(PI(qr[i] + 1, -1), PI(i, 1)));
+  }
+  REP(i, 0, n) {
+    pool.push_back(PPIPI(PI(i + 1, 2), PI(p[i] + 1, 1)));
+  }
+  sort(pool.begin(), pool.end());
+  REP(i, 0, pool.size()) {
+    PPIPI que = pool[i];
+    if (que.first.second == 2) {
+      update(que.second.first, 1);
+    } else {
+      int fac = que.second.second;
+      int idx = que.second.first;
+      ans[idx] += fac * (get(qu[idx]) - get(qd[idx]));
+    }
+  }
 }
 
 int main(void) {
   ios::sync_with_stdio(false);
   cin.tie(0);
-  int n, q;
+  int q;
   cin >> n >> q;
-  VI p(n);
+  p = VI(n);
   REP(i, 0, n) {
     cin >> p[i];
     p[i]--;
-    update(i, p[i]);
   }
+  VI l(q), d(q), r(q), u(q);
   REP(i, 0, q) {
-    int l, d, r, u;
-    cin >> l >> d >> r >> u;
-    l--, d--;
-    ll tot = 0;
-    ll zl0d = get(0, l, 0, d);
-    ll tmp = zl0d;
-    ll lndn = get(l, n, d, n);
-    tmp *= lndn;
-    tot += tmp;
-    ll zldu = get(0, l, d, u);
-    tmp = zldu;
-    ll ln0n = get(l, n, 0, N);
-    tmp *= ln0n;
-    tot += tmp;
-    ll ln0u = get(l, n, 0, u);
-    tmp = get(0, l, 0, N) - zl0d - zldu;
-    tmp *= ln0u;
-    tot += tmp;
-    ll lr0d = get(l, r, 0, d);
-    tmp = lr0d;
-    tmp *= lndn;
-    tot += tmp;
-    ll ln0d = ln0n - lndn;
-    ll rn0d = ln0d - lr0d;
-    ll rndu = get(r, n, d, u);
-    ll lnun = ln0n - ln0u;
-    ll lrun = get(l, r, u, n);
-    ll rnun = lnun - lrun;
-    ll lndu = ln0u + lndn - ln0n;
-    ll lrdu = lndu - rndu;
-    tmp = lrdu;
-    tmp *= (rn0d + rndu + rnun + lrun); // get(r, n, 0, n) + get(l, r, u, n));
-    tot += tmp;
-    tmp = lrun;
-    tmp *= rn0d + rndu;
-    tot += tmp;
-    tmp = lrdu;
-    tot += tmp * (tmp - 1) / 2;
-    if (0) {
-      cerr << get(0, l, 0, d) << " " << lr0d << " " << rn0d << endl;
-      cerr << get(0, l, d, u) << " " << lrdu << " " << rndu << endl;
-      cerr << get(0, l, u, n) << " " << lrun << " " << rnun << endl;
+    cin >> l[i] >> d[i] >> r[i] >> u[i];
+    l[i]--, d[i]--;
+  }
+  for(phase = 0; phase < 2; ++phase){
+    cnt = 0;
+    REP(i, 0, q) {
+      ll tot = 0;
+      ll zl0d = get(0, l[i], 0, d[i]);
+      ll tmp = zl0d;
+      ll lndn = get(l[i], n, d[i], n);
+      tmp *= lndn;
+      tot += tmp;
+      ll zldu = get(0, l[i], d[i], u[i]);
+      tmp = zldu;
+      ll ln0n = get(l[i], n, 0, n);
+      tmp *= ln0n;
+      tot += tmp;
+      ll ln0u = get(l[i], n, 0, u[i]);
+      tmp = get(0, l[i], 0, n) - zl0d - zldu;
+      tmp *= ln0u;
+      tot += tmp;
+      ll lr0d = get(l[i], r[i], 0, d[i]);
+      tmp = lr0d;
+      tmp *= lndn;
+      tot += tmp;
+      ll ln0d = ln0n - lndn;
+      ll rn0d = ln0d - lr0d;
+      ll rndu = get(r[i], n, d[i], u[i]);
+      ll lnun = ln0n - ln0u;
+      ll lrun = get(l[i], r[i], u[i], n);
+      ll rnun = lnun - lrun;
+      ll lndu = ln0u + lndn - ln0n;
+      ll lrdu = lndu - rndu;
+      tmp = lrdu;
+      tmp *= (rn0d + rndu + rnun + lrun); // get(r[i], n, 0, n) + get(l[i], r[i], u[i], n));
+      tot += tmp;
+      tmp = lrun;
+      tmp *= rn0d + rndu;
+      tot += tmp;
+      tmp = lrdu;
+      tot += tmp * (tmp - 1) / 2;
+      if (phase == 1) {
+	cout << tot << "\n";
+      }
     }
-    cout << tot << "\n";
+    if (phase == 0) {
+      answer_to_queries();
+    }
   }
 }
