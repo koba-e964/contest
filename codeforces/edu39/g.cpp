@@ -124,7 +124,10 @@ int main(void) {
   }
   int ma = 0;
   REP(i, 0, n) {
-    ma = max(ma, accum(dec[i]) + dpr[i]);
+    if (i < n - 1) {
+      ma = max(ma, accum(dec[i + 1]) + dpr[i + 1]);
+    }
+    ma = max(ma, dpl[i]);
     add(a[i], dpl[i]);
   }
   cout << max(0, n - 1 - ma) << "\n";
