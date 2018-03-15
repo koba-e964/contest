@@ -1,7 +1,31 @@
+#include <algorithm>
+#include <cassert>
+#include <cctype>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
+#include <deque>
+#include <functional>
+#include <iomanip>
+#include <iostream>
+#include <list>
+#include <map>
+#include <queue>
+#include <random>
+#include <set>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
+
+#define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
+#define DEBUGP(val) cerr << #val << "=" << val << "\n"
+
 /*
  * Suffix Array.
  * Required Headers: algorithm, cassert, string, vector
- * Verified by: https://csacademy.com/submission/1443882/
+ * Verified by: https://csacademy.com/submission/1443859/
  * Reference: http://mayokoex.hatenablog.com/entry/2016/04/03/145845
  */
 class SuffixArray {
@@ -120,3 +144,84 @@ public:
     return inv;
   }
 };
+
+
+using namespace std;
+typedef long long int ll;
+typedef vector<int> VI;
+typedef vector<ll> VL;
+typedef pair<int, int> PI;
+
+
+
+int main(void) {
+    string a, b;
+    cin >> a >> b;
+    int n = a.length();
+    string t = a + "#" + b;
+    SuffixArray sa(t);
+    VI sa_v = sa.suffix_array();
+    VI inv = sa.inverse_array();
+    VI acc(sa_v.size() + 1);
+    REP(i, 0, sa_v.size()) {
+        acc[i + 1] = acc[i] + (sa_v[i] >= n + 1 ? 1 : 0);
+    }
+    ll tot = 0;
+    vector<PI> pool;
+    REP(i, 0, n) {
+        int idx = inv[i];
+        int pass = n - i + 1;
+        int fail = 0;
+        while (pass - fail > 1) {
+            int mid = (pass + fail) / 2;
+            int hi = idx, lo = -1;
+            while (hi - lo > 1) {
+                int x = (hi + lo) / 2;
+                if (sa.get_lcp(x, idx) >= mid) {
+                    hi = x;
+                } else {
+                    lo = x;
+                }
+            }
+            int left = hi;
+            hi = sa_v.size(); lo = idx;
+            while (hi - lo > 1) {
+                int x = (hi + lo) / 2;
+                if (sa.get_lcp(idx, x) >= mid) {
+                    lo = x;
+                } else {
+                    hi = x;
+                }
+            }
+            int right = lo;
+            if (0) {
+                DEBUGP(mid);
+                DEBUGP(left);
+                DEBUGP(right);
+            }
+            if (acc[right + 1] - acc[left] <= 0) {
+                pass = mid;
+            } else {
+                fail = mid;
+            }
+        }
+        if (0) {
+            DEBUGP(i);
+            DEBUGP(pass);
+        }
+        pool.push_back(PI(idx, pass));
+    }
+    sort(pool.begin(), pool.end());
+    REP(i, 0, pool.size()) {
+        int idx = pool[i].first;
+        int len = pool[i].second;
+        tot += n + 1 - sa_v[idx] - len;
+        if (i > 0) {
+            int lcp = sa.get_lcp(pool[i - 1].first, idx);
+            if (lcp >= len) {
+                tot -= lcp - len + 1;
+            }
+        }
+    }
+    cout << tot << endl;
+}
