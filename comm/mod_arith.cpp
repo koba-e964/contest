@@ -10,3 +10,6 @@ ll powmod(ll a, ll e) {
   }
   return sum;
 }
+void add(ll &x, ll y) {
+  x = (x + y) % mod;
+}
