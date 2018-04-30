@@ -1,5 +1,4 @@
 spring-love
 lonely-points
-xor-transform
 count-bst
 generating-set
