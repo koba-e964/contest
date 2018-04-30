@@ -1,4 +1,1 @@
-spring-love
-lonely-points
-count-bst
 generating-set
