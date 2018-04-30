@@ -1,6 +1,5 @@
 spring-love
 lonely-points
-strange-matrix
 xor-transform
 count-bst
 generating-set
