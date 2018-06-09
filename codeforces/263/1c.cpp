@@ -1,3 +1,5 @@
+#include <iostream>
+#include <vector>
 /**
  * Segment Tree. This data structure is useful for fast folding on intervals of an array
  * whose elements are elements of monoid I. Note that constructing this tree requires the identity
@@ -53,3 +55,53 @@ public:
     return querySub(a, b + 1);
   }
 };
+
+#define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
+
+using namespace std;
+
+
+int main(void) {
+  ios::sync_with_stdio(false);
+  cin.tie(0);
+  int n, q;
+  cin >> n >> q;
+  int lft = 0;
+  int rgt = n;
+  bool rev = false;
+  SegTree<int, plus<int> > st(n, plus<int>(), 0);
+  REP(i, 0, n) st.update(i, 1);
+  REP(_, 0, q) {
+    int len = rgt - lft;
+    int ty;
+    cin >> ty;
+    if (ty == 1) {
+      int p;
+      cin >> p;
+      if (2 * p > len) {
+	rev = not rev;
+	p = len - p;
+      }
+      if (rev) {
+	REP(i, 0, p) {
+	  int val = st.query(rgt - 1 - i, rgt - 1 - i);
+	  st.update(rgt - 2 * p + i, st.query(rgt - 2 * p + i, rgt - 2 * p + i) + val);
+	  st.update(rgt - 1 - i, 0);
+	}
+	rgt = rgt - p;
+      } else {
+	REP(i, 0, p) {
+	  int val = st.query(lft + i, lft + i);
+	  st.update(lft + 2 * p - 1 - i, st.query(lft + 2 * p - 1 - i, lft + 2 * p - 1 - i) + val);
+	  st.update(lft + i, 0);
+	}
+	lft = lft + p;
+      }
+    } else {
+      int l, r;
+      cin >> l >> r;
+      int ans = st.query(lft + (rev ? len - r : l), lft + (rev ? len - l : r) - 1);
+      cout << ans << "\n";
+    }
+  }
+}
