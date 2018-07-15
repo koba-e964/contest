@@ -32,29 +32,33 @@ fn get_word<R: std::io::Read>(br: &mut std::io::BufReader<R>) -> String {
 #[allow(dead_code)]
 fn get<R: std::io::Read, T: std::str::FromStr>(br: &mut std::io::BufReader<R>) -> T { get_word(br).parse().ok().unwrap() }
 
-fn dfs(v: usize, par: Option<usize>, g: &[Vec<(usize)>], ans: &mut [usize]) -> (Vec<i32>, usize) {
+fn dfs(v: usize, par: usize, g: &[Vec<usize>], ans: &mut [usize]) -> (Vec<i32>, usize) {
     let mut pool = Vec::new();
     for &w in g[v].iter() {
-        if Some(w) == par { continue; }
-        let sub = dfs(w, Some(v), g, ans);
-        pool.push((sub.0.len(), sub));
+        if w == par { continue; }
+        let sub = dfs(w, v, g, ans);
+        pool.push(sub);
     }
     if pool.is_empty() {
         ans[v] = 0;
         return (vec![1; 1], 0);
     }
-    pool.sort_unstable_by_key(|x| Reverse(x.0));
-    let mut princ = std::mem::replace(&mut (pool[0].1).0, Vec::new());
+    let mut maxlen = (0, 0);
+    for (i, v) in pool.iter().enumerate() {
+        maxlen = max(maxlen, (v.0.len(), i));
+    }
+    let mut princ = std::mem::replace(&mut pool[maxlen.1].0, Vec::new());
     let princlen = princ.len();
-    let midx = (pool[0].1).1;
+    let midx = pool[maxlen.1].1;
     let ma = princ[princlen - 1 - midx]; // reversed!
     let mut auxlen = 0;
     let mut newma = ma;
-    for i in 1 .. pool.len() {
-        let len = pool[i].0;
+    for i in 0 .. pool.len() {
+        let len = pool[i].0.len();
+        if len == 0 { continue; }
         auxlen = max(auxlen, len);
         for j in 0 .. len {
-            princ[princlen - 1 - j] += (pool[i].1).0[len - 1 - j];
+            princ[princlen - 1 - j] += pool[i].0[len - 1 - j];
             newma = max(newma, princ[princlen - 1 - j]);
         }
     }
@@ -82,7 +86,7 @@ fn solve() {
         g[y].push(x);
     }
     let mut ans = vec![0; n];
-    dfs(0, None, &g, &mut ans);
+    dfs(0, n, &g, &mut ans);
     // http://keens.github.io/blog/2017/10/05/rustdekousokunahyoujunshutsuryoku/
     let out = std::io::stdout();
     let mut out = std::io::BufWriter::new(out.lock());
