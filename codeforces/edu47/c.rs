@@ -36,18 +36,18 @@ fn solve() {
     let n: f64 = get();
     let ni = n as i64;
     let m = get();
-    let mut ans = 0.0;
+    let mut ans = 0;
     let half = if ni % 2 == 1 { (ni / 2) * (ni / 2 + 1) } else { ni * ni / 4 };
     for _ in 0 .. m {
-        let x: f64 = get();
-        let d: f64 = get();
-        if d > 0.0 {
-            ans += x * n + d * n * (n - 1.0) / 2.0;
+        let x: i64 = get();
+        let d: i64 = get();
+        if d > 0 {
+            ans += x * ni + d * ni * (ni - 1) / 2;
         } else {
-            ans += x * n + d * half as f64;
+            ans += x * ni + d * half;
         }
     }
-    println!("{:.15}", ans / n);
+    println!("{:.15}", ans as f64 / n);
 }
 
 fn main() {
