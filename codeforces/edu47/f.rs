@@ -41,7 +41,7 @@ fn dfs(v: usize, par: usize, g: &[Vec<usize>], ans: &mut [usize]) -> (Vec<i32>, 
     }
     if pool.is_empty() {
         ans[v] = 0;
-        return (vec![1; 1], 0);
+        return (vec![1], 0);
     }
     let mut maxlen = (0, 0);
     for (i, v) in pool.iter().enumerate() {
@@ -53,13 +53,13 @@ fn dfs(v: usize, par: usize, g: &[Vec<usize>], ans: &mut [usize]) -> (Vec<i32>, 
     let ma = princ[princlen - 1 - midx]; // reversed!
     let mut auxlen = 0;
     let mut newma = ma;
-    for i in 0 .. pool.len() {
-        let len = pool[i].0.len();
+    for (cont, _) in pool {
+        let len = cont.len();
         if len == 0 { continue; }
         auxlen = max(auxlen, len);
-        for j in 0 .. len {
-            princ[princlen - 1 - j] += pool[i].0[len - 1 - j];
-            newma = max(newma, princ[princlen - 1 - j]);
+        for (j, val) in cont.into_iter().enumerate() {
+            princ[princlen - len + j] += val;
+            newma = max(newma, princ[princlen - len + j]);
         }
     }
     princ.push(1);
