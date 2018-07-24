@@ -81,4 +81,9 @@ mod mod_int {
             self.mul_fast(other)
         }
     }
+    impl ::std::fmt::Display for ModInt {
+        fn fmt(&self, f: &mut::std::fmt::Formatter) -> ::std::fmt::Result {
+            self.x.fmt(f)
+        }
+    }
 } // mod mod_int
