@@ -24,6 +24,10 @@ struct ModInt {
   ModInt operator*(ModInt o) const {
     return ModInt((x * o.x) % mod);
   }
+  void operator+=(ModInt o) { *this = *this + o; }
+  void operator-=(ModInt o) { *this = *this - o; }
+  void operator*=(ModInt o) { *this = *this * o; }
+  ModInt operator-(void) const { return ModInt() - *this; }
   ll to_ll() const {
     return x;
   }

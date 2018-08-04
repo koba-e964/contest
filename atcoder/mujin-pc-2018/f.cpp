@@ -57,6 +57,10 @@ struct ModInt {
   ModInt operator*(ModInt o) const {
     return ModInt((x * o.x) % mod);
   }
+  void operator+=(ModInt o) { *this = *this + o; }
+  void operator-=(ModInt o) { *this = *this - o; }
+  void operator*=(ModInt o) { *this = *this * o; }
+  ModInt operator-(void) const { return ModInt(0) - *this; }
   ll to_ll() const {
     return x;
   }
@@ -94,9 +98,9 @@ void init(void) {
   comb[0][0] = 1;
   REP(i, 1, N) {
     REP(j, 0, N) {
-      comb[i][j] = comb[i][j] + comb[i - 1][j];
+      comb[i][j] += comb[i - 1][j];
       if (j > 0) {
-	comb[i][j] = comb[i][j] + comb[i - 1][j - 1];
+	comb[i][j] += comb[i - 1][j - 1];
       }
     }
   }
@@ -116,10 +120,10 @@ int main(void) {
   for (int i = n - 1; i >= 0; --i) {
     dp[i][0] = 1;
     REP(j, 1, n - i + 1) {
-      dp[i][j] = dp[i][j] + dp[i + 1][j];
+      dp[i][j] += dp[i + 1][j];
       REP(l, 1, min(a[i], j) + 1) {
 	ModInt<> nxt = dp[i + 1][j - l];
-	dp[i][j] = dp[i][j] + nxt * comb[n - i - 1 - j + l][l - 1];
+	dp[i][j] += nxt * comb[n - i - 1 - j + l][l - 1];
       }
     }
   }
