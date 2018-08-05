@@ -1,7 +1,7 @@
 mod pollard_rho {
     use std::collections::HashMap;
     /// binary gcd
-    fn gcd(mut x: i64, mut y: i64) -> i64 {
+    pub fn gcd(mut x: i64, mut y: i64) -> i64 {
         if y == 0 { return x; }
         if x == 0 { return y; }
         let mut sh = 0;
