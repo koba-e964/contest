@@ -2,7 +2,7 @@
 use std::cmp::*;
 #[allow(unused_imports)]
 use std::collections::*;
-use std::io::Read;
+use std::io::{Read, Write, BufWriter};
 #[allow(dead_code)]
 fn getline() -> String {
     let mut ret = String::new();
@@ -33,7 +33,8 @@ fn get_word() -> String {
 fn get<T: std::str::FromStr>() -> T { get_word().parse().ok().unwrap() }
 
 fn solve() {
-    
+    let out = std::io::stdout();
+    let mut out = BufWriter::new(out.lock());
 }
 
 fn main() {
