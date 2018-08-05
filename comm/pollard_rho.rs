@@ -28,11 +28,11 @@ mod pollard_rho {
         let mut sum = 0;
         let mut cur = x;
         while y > 0 {
-            if y % 2 == 1 {
+            if (y & 1) == 1 {
                 sum = add_mod(sum, cur, n);
             }
             cur = add_mod(cur, cur, n);
-            y /= 2;
+            y >>= 1;
         }
         sum
     }
@@ -41,11 +41,11 @@ mod pollard_rho {
         let mut prod = if n == 1 { 0 } else { 1 };
         let mut cur = x % n;
         while e > 0 {
-            if e % 2 == 1 {
+            if (e & 1) == 1 {
                 prod = mul_mod(prod, cur, n);
             }
             cur = mul_mod(cur, cur, n);
-            e /= 2;
+            e >>= 1;
         }
         prod
     }
@@ -57,8 +57,8 @@ mod pollard_rho {
         if small.iter().any(|&u| n % u == 0) { return false; }
         let mut d = n - 1;
         let mut e = 0;
-        while d % 2 == 0 {
-            d /= 2;
+        while (d & 1) == 0 {
+            d >>= 1;
             e += 1;
         }
         let a = [2, 325, 9375, 28178, 450775, 9780504, 1795265022];
