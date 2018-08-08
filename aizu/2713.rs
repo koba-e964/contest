@@ -159,7 +159,18 @@ fn solve() {
     loop {
         let mut inv = [0; 8];
         for i in 0 .. 8 { inv[perm[i]] = i; }
-        if inv[4] < inv[5] && inv[4] < inv[6] {
+        let mut ok = true;
+        for i in 0 .. 8 {
+            for j in i + 1 .. 8 {
+                if (i & j) == i {
+                    if inv[i] > inv[j] {
+                        ok = false;
+                        break;
+                    }
+                }
+            }
+        }
+        if ok {
             let ans = dfs(0, n + 1, true, 0, &g, &inv, &kind);
             let mut key = [0; 6];
             key.copy_from_slice(&perm[1..7]);
