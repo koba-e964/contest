@@ -35,6 +35,10 @@ fn get<T: std::str::FromStr>() -> T { get_word().parse().ok().unwrap() }
 fn solve() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
+    macro_rules! puts {
+        ($format:expr) => (write!(out,$format).unwrap());
+        ($format:expr, $($args:expr),+) => (write!(out,$format,$($args),*).unwrap())
+    }
 }
 
 fn main() {
