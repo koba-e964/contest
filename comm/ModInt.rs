@@ -1,4 +1,4 @@
-/// Refers external ::MOD.
+/// Refers to external ::MOD.
 /// Verified by: https://beta.atcoder.jp/contests/arc099/submissions/2893648
 mod mod_int {
     use ::MOD;
