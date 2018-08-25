@@ -1,0 +1,130 @@
+#[allow(unused_imports)]
+use std::cmp::*;
+#[allow(unused_imports)]
+use std::collections::*;
+use std::io::{Read, Write, BufWriter};
+#[allow(dead_code)]
+fn getline() -> String {
+    let mut ret = String::new();
+    std::io::stdin().read_line(&mut ret).ok().unwrap();
+    ret
+}
+fn get_word() -> String {
+    let mut stdin = std::io::stdin();
+    let mut u8b: [u8; 1] = [0];
+    loop {
+        let mut buf: Vec<u8> = Vec::with_capacity(16);
+        loop {
+            let res = stdin.read(&mut u8b);
+            if res.unwrap_or(0) == 0 || u8b[0] <= b' ' {
+                break;
+            } else {
+                buf.push(u8b[0]);
+            }
+        }
+        if buf.len() >= 1 {
+            let ret = String::from_utf8(buf).unwrap();
+            return ret;
+        }
+    }
+}
+
+/**
+ * Segment Tree. This data structure is useful for fast folding on intervals of an array
+ * whose elements are elements of monoid I. Note that constructing this tree requires the identity
+ * element of I and the operation of I.
+ * Verified by: yukicoder No. 259 (http://yukicoder.me/submissions/100581)
+ *              AGC015-E (http://agc015.contest.atcoder.jp/submissions/1461001)
+ */
+struct SegTree<I, BiOp> {
+    n: usize,
+    dat: Vec<I>,
+    op: BiOp,
+    e: I,
+}
+
+impl<I, BiOp> SegTree<I, BiOp>
+    where BiOp: Fn(I, I) -> I,
+          I: Copy {
+    pub fn new(n_: usize, op: BiOp, e: I) -> Self {
+        let mut n = 1;
+        while n < n_ { n *= 2; } // n is a power of 2
+        SegTree {n: n, dat: vec![e; 2 * n - 1], op: op, e: e}
+    }
+    /* ary[k] <- v */
+    pub fn update(&mut self, idx: usize, v: I) {
+        let mut k = idx + self.n - 1;
+        self.dat[k] = v;
+        while k > 0 {
+            k = (k - 1) / 2;
+            self.dat[k] = (self.op)(self.dat[2 * k + 1], self.dat[2 * k + 2]);
+        }
+    }
+    /* [a, b) (note: half-inclusive)
+     * http://proc-cpuinfo.fixstars.com/2017/07/optimize-segment-tree/ */
+    pub fn query(&self, mut a: usize, mut b: usize) -> I {
+        let mut left = self.e;
+        let mut right = self.e;
+        a += self.n - 1;
+        b += self.n - 1;
+        while a < b {
+            if (a & 1) == 0 {
+                left = (self.op)(left, self.dat[a]);
+            }
+            if (b & 1) == 0 {
+                right = (self.op)(self.dat[b - 1], right);
+            }
+            a = a / 2;
+            b = (b - 1) / 2;
+        }
+        (self.op)(left, right)
+    }
+}
+
+
+#[allow(dead_code)]
+fn get<T: std::str::FromStr>() -> T { get_word().parse().ok().unwrap() }
+
+fn solve() {
+    let out = std::io::stdout();
+    let mut out = BufWriter::new(out.lock());
+    macro_rules! puts {
+        ($format:expr) => (write!(out,$format).unwrap());
+        ($format:expr, $($args:expr),+) => (write!(out,$format,$($args),*).unwrap())
+    }
+    let n = get();
+    let a: Vec<i64> = (0 .. n).map(|_| get()).collect();
+    let mut fail: i64 = 1 << 30;
+    let mut pass: i64 = 0;
+    let nn = n as i64;
+    let threshold = (nn * (nn + 1) / 2 + 1) / 2;
+    // Is median >= x hold?
+    while fail - pass > 1 {
+        let mid = (fail + pass) / 2;
+        let mut b = vec![0; n];
+        let mut acc = vec![0; n + 1];
+        for i in 0 .. n {
+            b[i] = if a[i] >= mid { 1 } else { -1 };
+            acc[i + 1] = acc[i] + b[i];
+        }
+        let mut st = SegTree::new(2 * n + 1, |x, y| x + y, 0);
+        let mut count = 0;
+        for i in 0 .. n + 1 {
+            let val = (acc[i] + n as i32) as usize;
+            count += st.query(0, val + 1);
+            let cc = st.query(val, val + 1);
+            st.update(val, cc + 1);
+        }
+        if count >= threshold { pass = mid; }
+        else { fail = mid; }
+    }
+    puts!("{}\n", pass);
+    
+}
+
+fn main() {
+    // In order to avoid potential stack overflow, spawn a new thread.
+    let stack_size = 104_857_600; // 100 MB
+    let thd = std::thread::Builder::new().stack_size(stack_size);
+    thd.spawn(|| solve()).unwrap().join().unwrap();
+}
