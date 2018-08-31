@@ -39,6 +39,7 @@ mod mod_int {
             }
             sum
         }
+        #[allow(dead_code)]
         pub fn pow(self, mut e: i64) -> Self {
             self.check_integrity();
             debug_assert!(e >= 0);
@@ -53,7 +54,7 @@ mod mod_int {
             }
             sum
         }
-        #[allow(unused)]
+        #[allow(dead_code)]
         pub fn inv(self) -> Self { self.pow(MOD - 2) }
     }
     impl Add for ModInt {
