@@ -28,58 +28,33 @@ typedef long long int ll;
 typedef vector<int> VI;
 typedef vector<ll> VL;
 typedef pair<int, int> PI;
-const ll mod = 1e9 + 7;
 
-const double EPS = 1e-8;
-const double INF = 1e12;
-// http://www.prefield.com/algorithm/geometry/geometry.html
-typedef complex<ll> P;
+typedef ll coord;
+typedef complex<coord> P;
 namespace std {
-  bool operator < (const P& a, const P& b) {
+  bool operator<(const P& a, const P& b) {
     return real(a) != real(b) ? real(a) < real(b) : imag(a) < imag(b);
   }
 }
-double cross(const P& a, const P& b) {
-  return imag(conj(a)*b);
-}
-double dot(const P& a, const P& b) {
-  return real(conj(a)*b);
+
+coord det(P a, P b) {
+  return imag(conj(a) * b);
 }
 
-struct L : public vector<P> {
-  L(const P &a, const P &b) {
-    push_back(a); push_back(b);
-  }
-};
-
-typedef vector<P> G;
-
-struct C {
-  P p; double r;
-  C(const P &p, double r) : p(p), r(r) { }
-};
-
-int ccw(P a, P b, P c) {
-  b -= a; c -= a;
-  if (cross(b, c) > 0)   return +1;       // counter clockwise
-  if (cross(b, c) < 0)   return -1;       // clockwise
-  if (dot(b, c) < 0)     return +2;       // c--a--b on line
-  if (norm(b) < norm(c)) return -2;       // a--b--c on line
-  return 0;
-}
-
-typedef P point;
-
-
-
-vector<point> convex_hull(vector<point> ps) {
+vector<P> convex_hull(vector<P> ps) {
   int n = ps.size(), k = 0;
   sort(ps.begin(), ps.end());
-  vector<point> ch(2*n);
-  for (int i = 0; i < n; ch[k++] = ps[i++]) // lower-hull
-    while (k >= 2 && ccw(ch[k-2], ch[k-1], ps[i]) <= 0) --k;
-  for (int i = n-2, t = k+1; i >= 0; ch[k++] = ps[i--]) // upper-hull
-    while (k >= t && ccw(ch[k-2], ch[k-1], ps[i]) <= 0) --k;
+  vector<P> ch(2 * n);
+  // lower
+  for (int i = 0; i < n; k++, i++) {
+    while (k >= 2 && det(ps[i] - ch[k - 2], ch[k - 1] - ch[k - 2]) >= 0) --k;
+    ch[k] = ps[i];
+  }
+  // upper
+  for (int i = n-2, t = k+1; i >= 0; k++, i--) {
+    while (k >= t && det(ps[i] - ch[k - 2], ch[k - 1] - ch[k - 2]) >= 0) --k;
+    ch[k] = ps[i];
+  }
   ch.resize(k-1);
   return ch;
 }
