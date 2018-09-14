@@ -1,5 +1,5 @@
 /*
- * Persistent Union Find tree.
+ * Partially persistent Union Find tree.
  * Reference: https://misteer.hatenablog.com/entry/persistentUF
  * Header requirement: algorithm, utility, vector
  * Verified by https://beta.atcoder.jp/contests/agc002/submissions/3185458
