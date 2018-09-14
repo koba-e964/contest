@@ -1,6 +1,7 @@
 /*
  * Persistent Union Find tree.
  * Reference: https://misteer.hatenablog.com/entry/persistentUF
+ * Verified by https://beta.atcoder.jp/contests/agc002/submissions/3194355
  */
 struct PersistentUnionFind {
     par: Vec<usize>,
