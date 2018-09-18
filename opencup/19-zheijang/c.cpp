@@ -88,7 +88,7 @@ ll garner(vector<Pii> mr, ll mod) {
   REP(i, 0, mr.size() - 1){
     // coffs[i] * v + constants[i] == mr[i].second (mod mr[i].first) を解く
     ll v = mulmod(zmod(mr[i].second - constants[i], mr[i].first),
-		  invmod<ll>(coffs[i], mr[i].first), mr[i].first);
+                  invmod<ll>(coffs[i], mr[i].first), mr[i].first);
     assert (v >= 0);
 
     for (int j = i + 1; j < (int) mr.size(); j++) {
@@ -131,17 +131,18 @@ public:
     for (int m = 1; m < n; m *= 2) {
       const int m2 = 2 * m;
       const ll base = powmod(h, n / m2);
-      ll w = 1;
-      REP(x, 0, m) {
-	for (int s = x; s < n; s += m2) {
-	  ll u = a[s];
-	  ll d = a[s + m] * w % mod;
-	  a[s] = u + d;
-	  if (a[s] >= mod) a[s] -= mod;
-	  a[s + m] = u - d;
-	  if (a[s + m] < 0) a[s + m] += mod;
-	}
-	w = w * base % mod;
+      for (int r = 0; r < n; r += m2) {
+        ll w = 1;
+        for (int x = 0; x < m; ++x) {
+          int s = x + r;
+          ll u = a[s];
+          ll d = a[s + m] * w % mod;
+          a[s] = u + d;
+          if (a[s] >= mod) a[s] -= mod;
+          a[s + m] = u - d;
+          if (a[s + m] < 0) a[s + m] += mod;
+          w = w * base % mod;
+        }
       }
     }
 
@@ -156,7 +157,7 @@ public:
     for (auto& x : input) x = x * n_inv % mod;
   }
 
-	// 畳み込み演算を行う
+  // 畳み込み演算を行う
   vector<ll> convolution(const vector<ll>& a, const vector<ll>& b){
     int ntt_size = 1;
     while (ntt_size < (int) a.size() + (int) b.size()) ntt_size *= 2;
