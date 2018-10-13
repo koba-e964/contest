@@ -8,23 +8,19 @@ using namespace std;
 typedef long long int ll;
 typedef vector<ll> VL;
 
-/**
- * Segment Tree. This data structure is useful for fast folding on intervals of an array
- * whose elements are elements of monoid M. Note that constructing this tree requires the identity
- * element of M and the operation of M.
- * Header requirement: vector, algorithm
- * Verified by AtCoder ABC017-D (http://abc017.contest.atcoder.jp/submissions/660402)
- */
-template<class I, class BiOp = I (*) (I, I)>
-class SegTree {
+template <class I, class BiOp> class SegmentTree {
   int n;
   std::vector<I> dat;
   BiOp op;
   I e;
+
 public:
-  SegTree(int n_, BiOp op, I e) : op(op), e(e) {
+  typedef int size_type;
+  typedef I value_type;
+  SegmentTree(int n_, BiOp op, I e) : op(op), e(e) {
     n = 1;
-    while (n < n_) { n *= 2; } // n is a power of 2
+    while (n < n_)
+      n *= 2; // n is a power of 2
     dat.resize(2 * n);
     for (int i = 0; i < 2 * n - 1; i++) {
       dat[i] = e;
@@ -39,44 +35,32 @@ public:
       dat[k] = op(dat[2 * k + 1], dat[2 * k + 2]);
     }
   }
-  void update_array(int k, int len, const I *vals) {
-    for (int i = 0; i < len; ++i) {
-      update(k + i, vals[i]);
-    }
-  }
-  /*
-    Updates all elements. O(n)
+  /* http://proc-cpuinfo.fixstars.com/2017/07/optimize-segment-tree/
+   * [a, b)
    */
-  void update_all(const I *vals, int len) {
-    for (int k = 0; k < std::min(n, len); ++k) {
-      dat[k + n - 1] = vals[k];
-    }
-    for (int k = std::min(n, len); k < n; ++k) {
-      dat[k + n - 1] = e;
-    }
-    for (int b = n / 2; b >= 1; b /= 2) {
-      for (int k = 0; k < b; ++k) {
-	dat[k + b - 1] = op(dat[k * 2 + b * 2 - 1], dat[k * 2 + b * 2]);
-      }
-    }
-  }
-  /* l,r are for simplicity */
-  I querySub(int a, int b, int k, int l, int r) const {
-    // [a,b) and  [l,r) intersects?
-    if (r <= a || b <= l) return e;
-    if (a <= l && r <= b) return dat[k];
-    I vl = querySub(a, b, 2 * k + 1, l, (l + r) / 2);
-    I vr = querySub(a, b, 2 * k + 2, (l + r) / 2, r);
-    return op(vl, vr);
-  }
-  /* [a, b] (note: inclusive) */
   I query(int a, int b) const {
-    return querySub(a, b + 1, 0, 0, n);
+    I left = e;
+    I right = e;
+    a += n - 1;
+    b += n - 1;
+    while (a < b) {
+      if ((a & 1) == 0) {
+        left = op(left, dat[a]);
+      }
+      if ((b & 1) == 0) {
+        right = op(dat[b - 1], right);
+      }
+      a = a / 2;
+      b = (b - 1) / 2;
+    }
+    return op(left, right);
+  }
+  I operator[](int idx) const {
+    return dat[idx + n - 1];
   }
 };
 
 
-const int N = 200100;
 const ll inf = 1e16;
 
 struct min_fun {
@@ -90,8 +74,8 @@ int main(void){
   ll e, t;
   cin >> n >> e >> t;
   VL x(n);
-  SegTree<ll, min_fun> raw(n + 1, min_fun(), inf); // dp[i]
-  SegTree<ll, min_fun> boiled(n + 1, min_fun(), inf); // dp[i] - 2 * x[i]
+  SegmentTree<ll, min_fun> raw(n + 1, min_fun(), inf); // dp[i]
+  SegmentTree<ll, min_fun> boiled(n + 1, min_fun(), inf); // dp[i] - 2 * x[i]
   REP(i, 0, n) {
     cin >> x[i];
   }
@@ -102,12 +86,12 @@ int main(void){
     int j_boundary =
       upper_bound(x.begin(), x.begin() + i + 1, x[i] - (t+1)/2) - x.begin();
     ll ret = inf;
-    ret = min(ret, boiled.query(0, j_boundary - 1) + 2 * x[i]);
-    ret = min(ret, raw.query(j_boundary, i) + t);
+    ret = min(ret, boiled.query(0, j_boundary) + 2 * x[i]);
+    ret = min(ret, raw.query(j_boundary, i + 1) + t);
     raw.update(i + 1, ret);
     if (i < n - 1) {
       boiled.update(i + 1, ret - 2 * x[i + 1]);
     }
   }
-  cout << raw.query(n, n) + e << endl; 
+  cout << raw[n] + e << endl;
 }
