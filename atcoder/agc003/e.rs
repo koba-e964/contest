@@ -104,7 +104,7 @@ fn solve() {
     let mut ans = vec![0; n + 1];
     ans[0] += cur;
     ans[curlen as usize] -= cur;
-    while let Some((x, mul)) = que.pop() {
+    for (x, mul) in que {
         ans[0] += mul;
         ans[x as usize] -= mul;
     }
