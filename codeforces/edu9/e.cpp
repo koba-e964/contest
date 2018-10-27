@@ -31,7 +31,11 @@ typedef unsigned long long int ull;
 typedef vector<int> VI;
 typedef vector<ll> VL;
 typedef pair<int, int> PI;
-const ull mod = 1012924417;
+const ll mod1 = 998244353;
+const ll g1 = 3;
+const ll mod2 = 1012924417;
+const ll g2 = 5;
+template<ll mod>
 ll powmod(ll a, ll n) {
   ll ret = 1, p = a % mod;
   while (n) {
@@ -124,7 +128,8 @@ public:
   }
 };
 
-typedef NTT<mod, 5> NTTInst;
+NTT<mod1, g1> ntt1;
+NTT<mod2, g2> ntt2;
 
 const int N = 1024;
 const int NN = N * N;
@@ -146,17 +151,20 @@ int main(void) {
 #else
   REP(i, 0, n) cin >> a[i];
 #endif
-  vector<ll> val(NN);
+  vector<ll> val1(NN);
   for (unsigned int j = 0; j < (unsigned int) n; ++j) {
-    val[a[j]] += 1;
+    val1[a[j]] += 1;
   }
-  NTTInst ntt;
-  ntt.ntt(val);
-  REP(i, 0, NN) val[i] = powmod(val[i], k);
-  ntt.intt(val);
+  VL val2 = val1;
+  ntt1.ntt(val1);
+  ntt2.ntt(val2);
+  REP(i, 0, NN) val1[i] = powmod<mod1>(val1[i], k);
+  REP(i, 0, NN) val2[i] = powmod<mod2>(val2[i], k);
+  ntt1.intt(val1);
+  ntt2.intt(val2);
   VI ans;
   REP(i, 0, NN) {
-    if (val[i]) {
+    if (val1[i] || val2[i]) {
       ans.push_back(i);
     }
   }
