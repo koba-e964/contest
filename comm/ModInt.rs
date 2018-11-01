@@ -1,22 +1,24 @@
-/// Refers to external ::MOD.
-/// Verified by: https://beta.atcoder.jp/contests/arc099/submissions/2893648
+/// Verified by: https://beta.atcoder.jp/contests/arc099/submissions/3515280
 mod mod_int {
-    use ::MOD;
     use std::ops::*;
+    pub trait Mod: Copy + Clone {
+        fn m() -> i64;
+    }
     #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-    pub struct ModInt { pub x: i64 }
-    impl ModInt {
+    pub struct ModInt<M: Mod> { pub x: i64, phantom: ::std::marker::PhantomData<*const M> }
+    impl<M: Mod> ModInt<M> {
         fn check_integrity(self) {
             debug_assert!(self.x >= 0);
-            debug_assert!(self.x < MOD);
+            debug_assert!(self.x < M::m());
         }
         // x >= 0
-        pub fn new<T: Into<i64>>(x: T) -> Self { ModInt { x: x.into() % MOD } }
+        pub fn new(x: i64) -> Self { ModInt::new_internal(x % M::m()) }
+        fn new_internal(x: i64) -> Self { ModInt { x: x % M::m(), phantom: ::std::marker::PhantomData } }
         #[allow(dead_code)]
         pub fn mul_fast(self, other: Self) -> Self {
             self.check_integrity();
             other.check_integrity();
-            ModInt { x: self.x * other.x % MOD }
+            ModInt::new_internal(self.x * other.x % M::m())
         }
         #[allow(dead_code)]
         pub fn mul_slow(self, other: Self) -> Self {
@@ -39,7 +41,6 @@ mod mod_int {
             }
             sum
         }
-        #[allow(dead_code)]
         pub fn pow(self, mut e: i64) -> Self {
             self.check_integrity();
             debug_assert!(e >= 0);
@@ -55,46 +56,43 @@ mod mod_int {
             sum
         }
         #[allow(dead_code)]
-        pub fn inv(self) -> Self { self.pow(MOD - 2) }
+        pub fn inv(self) -> Self { self.pow(M::m() - 2) }
     }
-    impl Add for ModInt {
+    impl<M: Mod> Add for ModInt<M> {
         type Output = Self;
         fn add(self, other: Self) -> Self {
             self.check_integrity();
             other.check_integrity();
             let mut sum = self.x + other.x;
-            if sum >= MOD { sum -= MOD; }
-            ModInt { x: sum }
+            if sum >= M::m() { sum -= M::m(); }
+            ModInt::new(sum)
         }
     }
-    impl Sub for ModInt {
+    impl<M: Mod> Sub for ModInt<M> {
         type Output = Self;
         fn sub(self, other: Self) -> Self {
             self.check_integrity();
             other.check_integrity();
             let mut sum = self.x - other.x;
-            if sum < 0 { sum += MOD; }
-            ModInt { x: sum }
+            if sum < 0 { sum += M::m(); }
+            ModInt::new(sum)
         }
     }
-    impl Mul for ModInt {
+    impl<M: Mod> Mul for ModInt<M> {
         type Output = Self;
         fn mul(self, other: Self) -> Self {
             self.mul_fast(other)
         }
     }
-    impl AddAssign for ModInt {
-        fn add_assign(&mut self, rhs: ModInt) { *self = *self + rhs; }
-    }
-    impl SubAssign for ModInt {
-        fn sub_assign(&mut self, rhs: ModInt) { *self = *self - rhs; }
-    }
-    impl MulAssign for ModInt {
-        fn mul_assign(&mut self, rhs: ModInt) { *self = *self * rhs; }
-    }
-    impl ::std::fmt::Display for ModInt {
-        fn fmt(&self, f: &mut::std::fmt::Formatter) -> ::std::fmt::Result {
-            self.x.fmt(f)
-        }
-    }
 } // mod mod_int
+
+macro_rules! define_mod {
+    ($struct_name: ident, $modulo: expr) => {
+        #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        struct $struct_name {}
+        impl mod_int::Mod for $struct_name { fn m() -> i64 { $modulo } }
+    }
+}
+const MOD: i64 = 1_000_000_007;
+define_mod!(P, MOD);
+type ModInt = mod_int::ModInt<P>;
