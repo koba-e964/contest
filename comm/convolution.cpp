@@ -8,7 +8,7 @@ template<class T> T zmod(T a, T b) {
 }
 
 template<class T> T invmod(T a, T m) {
-  ll x, y;
+  T x, y;
   ext_gcd(a, m, x, y);
   return zmod(x, m);
 }
