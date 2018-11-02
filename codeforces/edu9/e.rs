@@ -143,6 +143,21 @@ mod mod_int {
             self.mul_fast(other)
         }
     }
+    impl<M: Mod> AddAssign for ModInt<M> {
+        fn add_assign(&mut self, other: Self) {
+            *self = *self + other;
+        }
+    }
+    impl<M: Mod> SubAssign for ModInt<M> {
+        fn sub_assign(&mut self, other: Self) {
+            *self = *self - other;
+        }
+    }
+    impl<M: Mod> MulAssign for ModInt<M> {
+        fn mul_assign(&mut self, other: Self) {
+            *self = *self * other;
+        }
+    }
     impl<M: Mod> ::std::fmt::Display for ModInt<M> {
         fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
             self.x.fmt(f)
@@ -192,7 +207,7 @@ mod ntt_mod {
                     let d = a[s + m] * w;
                     a[s] = u + d;
                     a[s + m] = u - d;
-                    w = w * base;
+                    w *= base;
                 }
                 r += m2;
             }
@@ -208,7 +223,7 @@ mod ntt_mod {
         ntt_internal(a, g.inv());
         let n = a.len() as i64;
         let factor = ModInt::new(n).inv();
-        for val in a.iter_mut() { *val = *val * factor; }
+        for val in a.iter_mut() { *val *= factor; }
     }
 } // mod ntt_mod
 
@@ -234,8 +249,8 @@ fn solve() {
     let mut val2 = vec![ModInt::new(0); NN];
     for a in a {
         hasher.write_usize(a);
-        val1[a] = val1[a] + ModInt::new(hasher.finish() as u32 as i64);
-        val2[a] = val2[a] + ModInt::new(1);
+        val1[a] += ModInt::new(hasher.finish() as u32 as i64);
+        val2[a] += ModInt::new(1);
     }
     let g = ModInt::new(3);
     ntt(&mut val1, g); ntt(&mut val2, g);

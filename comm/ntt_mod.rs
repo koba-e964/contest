@@ -1,4 +1,7 @@
-// Dependencies: ModInt.rs
+/*
+ * Dependencies: ModInt.rs
+ * Verified by http://codeforces.com/contest/632/submission/45214346
+ */
 mod ntt_mod {
     use ::mod_int::*;
     fn ntt_internal<M: Mod>(a: &mut [ModInt<M>], g: ModInt<M>) {
@@ -30,7 +33,7 @@ mod ntt_mod {
                     let d = a[s + m] * w;
                     a[s] = u + d;
                     a[s + m] = u - d;
-                    w = w * base;
+                    w *= base;
                 }
                 r += m2;
             }
@@ -46,6 +49,6 @@ mod ntt_mod {
         ntt_internal(a, g.inv());
         let n = a.len() as i64;
         let factor = ModInt::new(n).inv();
-        for val in a.iter_mut() { *val = *val * factor; }
+        for val in a.iter_mut() { *val *= factor; }
     }
 } // mod ntt_mod

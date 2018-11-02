@@ -84,6 +84,21 @@ mod mod_int {
             self.mul_fast(other)
         }
     }
+    impl<M: Mod> AddAssign for ModInt<M> {
+        fn add_assign(&mut self, other: Self) {
+            *self = *self + other;
+        }
+    }
+    impl<M: Mod> SubAssign for ModInt<M> {
+        fn sub_assign(&mut self, other: Self) {
+            *self = *self - other;
+        }
+    }
+    impl<M: Mod> MulAssign for ModInt<M> {
+        fn mul_assign(&mut self, other: Self) {
+            *self = *self * other;
+        }
+    }
     impl<M: Mod> ::std::fmt::Display for ModInt<M> {
         fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
             self.x.fmt(f)
