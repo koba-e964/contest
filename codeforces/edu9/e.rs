@@ -84,7 +84,7 @@ mod mod_int {
             // Naive multiplication in order to avoid overflow
             self.check_integrity();
             other.check_integrity();
-            let mut sum = ModInt::new(0);
+            let mut sum = ModInt::new_internal(0);
             let mut cur = self;
             let mut e = other.x;
             if self.x < other.x {
@@ -93,9 +93,9 @@ mod mod_int {
             }
             while e > 0 {
                 if e % 2 == 1 {
-                    sum = sum + cur;
+                    sum += cur;
                 }
-                cur = cur + cur;
+                cur += cur;
                 e /= 2;
             }
             sum
@@ -103,13 +103,13 @@ mod mod_int {
         pub fn pow(self, mut e: i64) -> Self {
             self.check_integrity();
             debug_assert!(e >= 0);
-            let mut sum = ModInt::new(1);
-            let mut cur = ModInt::new(self.x);
+            let mut sum = ModInt::new_internal(1);
+            let mut cur = self;
             while e > 0 {
                 if e % 2 != 0 {
-                    sum = sum * cur;
+                    sum *= cur;
                 }
-                cur = cur * cur;
+                cur *= cur;
                 e /= 2;
             }
             sum
