@@ -13,7 +13,7 @@ mod mod_int {
         }
         // x >= 0
         pub fn new(x: i64) -> Self { ModInt::new_internal(x % M::m()) }
-        fn new_internal(x: i64) -> Self { ModInt { x: x % M::m(), phantom: ::std::marker::PhantomData } }
+        fn new_internal(x: i64) -> Self { ModInt { x: x, phantom: ::std::marker::PhantomData } }
         #[allow(dead_code)]
         pub fn mul_fast(self, other: Self) -> Self {
             self.check_integrity();
@@ -65,7 +65,7 @@ mod mod_int {
             other.check_integrity();
             let mut sum = self.x + other.x;
             if sum >= M::m() { sum -= M::m(); }
-            ModInt::new(sum)
+            ModInt::new_internal(sum)
         }
     }
     impl<M: Mod> Sub for ModInt<M> {
@@ -75,13 +75,18 @@ mod mod_int {
             other.check_integrity();
             let mut sum = self.x - other.x;
             if sum < 0 { sum += M::m(); }
-            ModInt::new(sum)
+            ModInt::new_internal(sum)
         }
     }
     impl<M: Mod> Mul for ModInt<M> {
         type Output = Self;
         fn mul(self, other: Self) -> Self {
             self.mul_fast(other)
+        }
+    }
+    impl<M: Mod> ::std::fmt::Display for ModInt<M> {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+            self.x.fmt(f)
         }
     }
 } // mod mod_int
