@@ -41,6 +41,8 @@ fn gauss_elim_gf2_i64(basis: &[i64], mut b: i64) -> Option<Vec<bool>> {
     let n = basis.len();
     let mut a = basis.to_vec();
     let mut c = 0;
+    let mut orig = vec![0; n];
+    for i in 0 .. n { orig[i] = i; }
     let mut revmap = Vec::new();
     let w = 64; // i64's size
     for r in 0 .. w {
@@ -58,7 +60,9 @@ fn gauss_elim_gf2_i64(basis: &[i64], mut b: i64) -> Option<Vec<bool>> {
             revmap.push(None);
             continue;
         }
-        a.swap(c, c2.unwrap());
+        let c2 = c2.unwrap();
+        a.swap(c, c2);
+        orig.swap(c, c2);
         let rm = a[c] & -(1 << r) << 1;
         a[c] ^= rm;
         for k in c + 1 .. n {
@@ -81,7 +85,7 @@ fn gauss_elim_gf2_i64(basis: &[i64], mut b: i64) -> Option<Vec<bool>> {
                 None => return None,
                 Some(c) => {
                     b ^= a[c];
-                    result[c] = true;
+                    result[orig[c]] = true;
                 },
             }
         }
@@ -126,6 +130,14 @@ fn solve(board: i64, m: usize, n: usize) -> Option<usize> {
             }
         }
         if let Some(x) = gauss_elim_gf2_i64(&basis, bd) {
+            // verify
+            {
+                let mut sum = 0;
+                for i in 0 .. x.len() {
+                    if x[i] { sum ^= basis[i]; }
+                }
+                assert_eq!(bd, sum);
+            }
             mi = min(mi, x.into_iter().filter(|&a| a).count()
                      + bits.count_ones() as usize);
         }

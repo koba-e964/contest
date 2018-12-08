@@ -1,11 +1,13 @@
 /*
  * Find an assignment (result) s.t. xor_i a[i] * result[i] = b (in GF(2))
  * Returns true if such an assignment was found.
- * Verified by: yukicoder No.460 (http://yukicoder.me/submissions/150485)
+ * Verified by: yukicoder No.460 (https://yukicoder.me/submissions/302616)
  */
 bool gauss_elim_gf2_i64(vector<ll> a, ll b, vector<bool> &result) {
   int n = a.size();
   int c = 0;
+  vector<int> orig(n);
+  REP(i, 0, n) orig[i] = i;
   vector<int> revmap;
   REP(r, 0, 64) {
     if (c >= n) {
@@ -14,8 +16,8 @@ bool gauss_elim_gf2_i64(vector<ll> a, ll b, vector<bool> &result) {
     int c2 = -1;
     REP(i, c, n) {
       if (a[i] & (1LL << r)) {
-	c2 = i;
-	break;
+        c2 = i;
+        break;
       }
     }
     if (c2 < 0) {
@@ -24,12 +26,13 @@ bool gauss_elim_gf2_i64(vector<ll> a, ll b, vector<bool> &result) {
     }
     if (c != c2) {
       swap(a[c], a[c2]);
+      swap(orig[c], orig[c2]);
     }
-    ll rm = a[c] & -(1LL << r) << 1;
+    ll rm = a[c] & -((1LL << r) << 1);
     a[c] ^= rm;
     REP(k, c + 1, n) {
       if (a[k] & (1LL << r)) {
-	a[k] ^= rm;
+        a[k] ^= rm;
       }
     }
     if (b & (1LL << r)) {
@@ -45,10 +48,10 @@ bool gauss_elim_gf2_i64(vector<ll> a, ll b, vector<bool> &result) {
     if (b & 1LL << i) {
       int c = revmap[i];
       if (c < 0) {
-	return false;
+        return false;
       }
       b ^= a[c];
-      result[c] = true;
+      result[orig[c]] = true;
     }
   }
   return b == 0;
