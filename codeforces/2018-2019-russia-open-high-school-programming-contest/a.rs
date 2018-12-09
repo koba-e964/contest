@@ -52,9 +52,9 @@ macro_rules! read_value {
         read_value!($next, usize) - 1
     };
 
-    ($next:expr, i64s) => {{
+    ($next:expr, [ $t:tt ]) => {{
         let len = read_value!($next, usize);
-        (0..len).map(|_| read_value!($next, i64)).collect::<Vec<_>>()
+        (0..len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
     }};
     ($next:expr, $t:ty) => {
         $next().parse::<$t>().expect("Parse error")
@@ -72,7 +72,7 @@ fn solve() {
     }
     input! {
         n: usize,
-        m: [i64s; n],
+        m: [[i64]; n],
     }
     let mut ma = 0;
     for i in 0 .. n {
