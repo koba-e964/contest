@@ -275,6 +275,16 @@ fn calc<M: Mod>(n: usize, pr: &[bool], zeta: ModInt<M>) -> ModInt<M> {
     tot
 }
 
+/// Depends on ModInt.rs
+fn garner2<M1: mod_int::Mod, M2: mod_int::Mod>(a: mod_int::ModInt<M1>,
+                                               b: mod_int::ModInt<M2>)
+                                               -> i64 {
+    let factor2 = mod_int::ModInt::new(M1::m()).inv();
+    let factor1 = mod_int::ModInt::new(M2::m()).inv();
+    ((b * factor2).x * M1::m() + (a * factor1).x * M2::m()) % (M1::m() * M2::m())
+}
+
+
 fn solve() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
@@ -294,9 +304,7 @@ fn solve() {
     }
     let a: ModInt1 = calc(n, &pr, ModInt::new(3));
     let b: ModInt2 = calc(n, &pr, ModInt::new(3));
-    let factor2 = ModInt2::new(P1::m()).inv();
-    let factor1 = ModInt1::new(P2::m()).inv();
-    puts!("{}\n", ((b * factor2).x * P1::m() + (a * factor1).x * P2::m()) % (P1::m() * P2::m()));
+    puts!("{}\n", garner2(a, b));
 }
 
 fn main() {
