@@ -4,7 +4,7 @@ mod mod_int {
     pub trait Mod: Copy + Clone {
         fn m() -> i64;
     }
-    #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
     pub struct ModInt<M: Mod> { pub x: i64, phantom: ::std::marker::PhantomData<*const M> }
     impl<M: Mod> ModInt<M> {
         fn check_integrity(self) {
@@ -100,6 +100,11 @@ mod mod_int {
         }
     }
     impl<M: Mod> ::std::fmt::Display for ModInt<M> {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+            self.x.fmt(f)
+        }
+    }
+    impl<M: Mod> ::std::fmt::Debug for ModInt<M> {
         fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
             self.x.fmt(f)
         }
