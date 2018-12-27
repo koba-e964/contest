@@ -62,11 +62,91 @@ macro_rules! read_value {
     };
 }
 
+#[derive(Clone)]
+struct Trie {
+    ch: Vec<Option<Box<Trie>>>,
+    count: i32,
+    level: usize,
+}
+
+impl Trie {
+    fn new(level: usize) -> Trie {
+        Trie {
+            ch: vec![None; 2],
+            count: 0,
+            level: level,
+        }
+    }
+    fn add(&mut self, a: i32) {
+        self.count += 1;
+        let level = self.level;
+        if level == 0 {
+            return;
+        }
+        let bit = (a >> (level - 1) & 1) as usize;
+        if self.ch[bit].is_none() {
+            self.ch[bit] = Some(Box::new(Trie::new(level - 1)));
+        }
+        self.ch[bit].as_mut().unwrap().add(a);
+    }
+    fn min(&self, a: i32, acc: i32) -> i32 {
+        assert!(self.count > 0);
+        let level = self.level;
+        if level == 0 {
+            return acc;
+        }
+        let mut bit = (a >> (level - 1) & 1) as usize;
+        let first_count = match self.ch[bit] {
+            None => 0,
+            Some(ref ch) => ch.count,
+        };
+        if first_count == 0 {
+            bit = 1 - bit;
+        }
+        self.ch[bit].as_ref().unwrap().min(a, acc ^ (bit as i32) << (level - 1))
+    }
+    fn remove(&mut self, a: i32) {
+        self.count -= 1;
+        let level = self.level;
+        if level == 0 {
+            return;
+        }
+        let bit = (a >> (level - 1) & 1) as usize;
+        assert!(self.ch[bit].is_some());
+        self.ch[bit].as_mut().unwrap().remove(a);
+    }
+}
+
 fn solve() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
     macro_rules! puts {
         ($($format:tt)*) => (write!(out,$($format)*).unwrap());
+    }
+    input! {
+        n: usize,
+        a: [i32; n],
+    }
+    let mut b = vec![0; n + 1];
+    for i in 0 .. n {
+        b[i + 1] = b[i] ^ a[i];
+    }
+    let mut trie = Trie::new(31);
+    for i in 1 .. n {
+        trie.add(b[i]);
+    }
+    let mut ans = vec![0; n + 1];
+    for i in 1 .. n {
+        let next = trie.min(ans[i - 1], 0);
+        ans[i] = next;
+        trie.remove(next);
+    }
+    ans[n] = b[n];
+    for i in (0 .. n).rev() {
+        ans[i + 1] ^= ans[i];
+    }
+    for i in 0 .. n {
+        puts!("{}{}", ans[i + 1], if i == n - 1 { "\n" } else { " " });
     }
 }
 
