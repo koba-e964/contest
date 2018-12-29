@@ -1,51 +1,56 @@
-/// FFT (in-place)
+/// FFT (in-place, verified as NTT only)
 /// R: Ring + Copy
-/// Verified by: ATC001-C (http://atc001.contest.atcoder.jp/submissions/1175827)
+/// Verified by: https://codeforces.com/contest/1096/submission/47672373
 mod fft {
     use std::ops::*;
-    fn inplace_internal_fft<R>(
-        f: &[R], output: &mut [R], pztbl: &[R], one: R,
-        x: usize, fstart: usize, fstep: usize,
-        n: usize, ostart: usize)
-        where R: Copy +
-        Add<Output = R> +
-        Sub<Output = R> +
-        Mul<Output = R> {
-        if n == 1 {
-            output[ostart] = f[fstart];
-            return;
-        }
-        inplace_internal_fft(f, output, pztbl, one, x + 1,
-                             fstart, 2 * fstep, n / 2, ostart);
-        inplace_internal_fft(f, output, pztbl, one, x + 1,
-			     fstart + fstep, 2 * fstep, n / 2, ostart + n / 2);
-        let mut cnt = 0;
-        for i in 0 .. n / 2 {
-            let pzeta = pztbl[cnt];
-            let f0 = output[ostart + i];
-            let f1 = output[ostart + i + n / 2];
-            let tmp = pzeta * f1;
-            output[ostart + i] = f0 + tmp;
-            output[ostart + i + n / 2] = f0 - tmp;
-            cnt += 1 << x;
-        }
-    }
     /// n should be a power of 2. zeta is a primitive n-th root of unity.
     /// one is unity
     /// Note that the result should be multiplied by 1/sqrt(n).
-    pub fn transform<R>(f: &[R], zeta: R, one: R) -> Vec<R>
+    pub fn transform<R>(f: &mut [R], zeta: R, one: R)
         where R: Copy +
         Add<Output = R> +
         Sub<Output = R> +
         Mul<Output = R> {
         let n = f.len();
         assert!(n.is_power_of_two());
-        let mut pztbl = vec![one; n];
-        for i in 1 .. n {
-            pztbl[i] = pztbl[i - 1] * zeta;
+        {
+            let mut i = 0;
+            for j in 1 .. n - 1 {
+                let mut k = n >> 1;
+                loop {
+                    i ^= k;
+                    if k <= i { break; }
+                    k >>= 1;
+                }
+                if j < i { f.swap(i, j); }
+            }
         }
-        let mut output = vec![zeta; n];
-        inplace_internal_fft(&f, &mut output, &pztbl, one, 0, 0, 1, n, 0);
-        output
+        let mut zetapow = Vec::new();
+        {
+            let mut m = 1;
+            let mut cur = zeta;
+            while m < n {
+                zetapow.push(cur);
+                cur = cur * cur;
+                m *= 2;
+            }
+        }
+        let mut m = 1;
+        while m < n {
+            let base = zetapow.pop().unwrap();
+            let mut r = 0;
+            while r < n {
+                let mut w = one;
+                for s in r .. r + m {
+                    let u = f[s];
+                    let d = f[s + m] * w;
+                    f[s] = u + d;
+                    f[s + m] = u - d;
+                    w = w * base;
+                }
+                r += 2 * m;
+            }
+            m *= 2;
+        }
     }
 }
