@@ -5,11 +5,6 @@ use std::collections::*;
 use std::io::{Write, BufWriter};
 // https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
 macro_rules! input {
-    (source = $s:expr, $($r:tt)*) => {
-        let mut iter = $s.split_whitespace();
-        let mut next = || { iter.next().unwrap() };
-        input_inner!{next, $($r)*}
-    };
     ($($r:tt)*) => {
         let stdin = std::io::stdin();
         let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
