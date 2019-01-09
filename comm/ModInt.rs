@@ -1,9 +1,9 @@
-/// Verified by: https://atcoder.jp/contests/pakencamp-2018-day3/submissions/3878249
+/// Verified by https://atcoder.jp/contests/arc093/submissions/3968098
 mod mod_int {
     use std::ops::*;
-    pub trait Mod: Copy + Clone { fn m() -> i64; }
+    pub trait Mod: Copy { fn m() -> i64; }
     #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-    pub struct ModInt<M> { pub x: i64, phantom: ::std::marker::PhantomData<*const M> }
+    pub struct ModInt<M> { pub x: i64, phantom: ::std::marker::PhantomData<M> }
     impl<M: Mod> ModInt<M> {
         fn check_integrity(self) {
             debug_assert!(self.x >= 0);
@@ -54,9 +54,10 @@ mod mod_int {
         #[allow(dead_code)]
         pub fn inv(self) -> Self { self.pow(M::m() - 2) }
     }
-    impl<M: Mod> Add for ModInt<M> {
+    impl<M: Mod, T: Into<ModInt<M>>> Add<T> for ModInt<M> {
         type Output = Self;
-        fn add(self, other: Self) -> Self {
+        fn add(self, other: T) -> Self {
+            let other = other.into();
             self.check_integrity();
             other.check_integrity();
             let mut sum = self.x + other.x;
@@ -64,9 +65,10 @@ mod mod_int {
             ModInt::new_internal(sum)
         }
     }
-    impl<M: Mod> Sub for ModInt<M> {
+    impl<M: Mod, T: Into<ModInt<M>>> Sub<T> for ModInt<M> {
         type Output = Self;
-        fn sub(self, other: Self) -> Self {
+        fn sub(self, other: T) -> Self {
+            let other = other.into();
             self.check_integrity();
             other.check_integrity();
             let mut sum = self.x - other.x;
@@ -74,18 +76,22 @@ mod mod_int {
             ModInt::new_internal(sum)
         }
     }
-    impl<M: Mod> Mul for ModInt<M> {
+    impl<M: Mod, T: Into<ModInt<M>>> Mul<T> for ModInt<M> {
         type Output = Self;
-        fn mul(self, other: Self) -> Self { self.mul_fast(other) }
+        fn mul(self, other: T) -> Self { self.mul_fast(other.into()) }
     }
-    impl<M: Mod> AddAssign for ModInt<M> {
-        fn add_assign(&mut self, other: Self) { *self = *self + other; }
+    impl<M: Mod, T: Into<ModInt<M>>> AddAssign<T> for ModInt<M> {
+        fn add_assign(&mut self, other: T) { *self = *self + other; }
     }
-    impl<M: Mod> SubAssign for ModInt<M> {
-        fn sub_assign(&mut self, other: Self) { *self = *self - other; }
+    impl<M: Mod, T: Into<ModInt<M>>> SubAssign<T> for ModInt<M> {
+        fn sub_assign(&mut self, other: T) { *self = *self - other; }
     }
-    impl<M: Mod> MulAssign for ModInt<M> {
-        fn mul_assign(&mut self, other: Self) { *self = *self * other; }
+    impl<M: Mod, T: Into<ModInt<M>>> MulAssign<T> for ModInt<M> {
+        fn mul_assign(&mut self, other: T) { *self = *self * other; }
+    }
+    impl<M: Mod> Neg for ModInt<M> {
+        type Output = Self;
+        fn neg(self) -> Self { ModInt::new(0) - self }
     }
     impl<M> ::std::fmt::Display for ModInt<M> {
         fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
@@ -96,6 +102,9 @@ mod mod_int {
         fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
             self.x.fmt(f)
         }
+    }
+    impl<M: Mod> From<i64> for ModInt<M> {
+        fn from(x: i64) -> Self { Self::new(x) }
     }
 } // mod mod_int
 

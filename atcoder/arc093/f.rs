@@ -5,11 +5,6 @@ use std::collections::*;
 use std::io::{Write, BufWriter};
 // https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
 macro_rules! input {
-    (source = $s:expr, $($r:tt)*) => {
-        let mut iter = $s.split_whitespace();
-        let mut next = || { iter.next().unwrap() };
-        input_inner!{next, $($r)*}
-    };
     ($($r:tt)*) => {
         let stdin = std::io::stdin();
         let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
@@ -62,12 +57,12 @@ macro_rules! read_value {
     };
 }
 
-/// Verified by: https://atcoder.jp/contests/pakencamp-2018-day3/submissions/3878249
+/// Verified by https://atcoder.jp/contests/arc093/submissions/3968098
 mod mod_int {
     use std::ops::*;
-    pub trait Mod: Copy + Clone { fn m() -> i64; }
+    pub trait Mod: Copy { fn m() -> i64; }
     #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-    pub struct ModInt<M> { pub x: i64, phantom: ::std::marker::PhantomData<*const M> }
+    pub struct ModInt<M> { pub x: i64, phantom: ::std::marker::PhantomData<M> }
     impl<M: Mod> ModInt<M> {
         fn check_integrity(self) {
             debug_assert!(self.x >= 0);
@@ -118,9 +113,10 @@ mod mod_int {
         #[allow(dead_code)]
         pub fn inv(self) -> Self { self.pow(M::m() - 2) }
     }
-    impl<M: Mod> Add for ModInt<M> {
+    impl<M: Mod, T: Into<ModInt<M>>> Add<T> for ModInt<M> {
         type Output = Self;
-        fn add(self, other: Self) -> Self {
+        fn add(self, other: T) -> Self {
+            let other = other.into();
             self.check_integrity();
             other.check_integrity();
             let mut sum = self.x + other.x;
@@ -128,9 +124,10 @@ mod mod_int {
             ModInt::new_internal(sum)
         }
     }
-    impl<M: Mod> Sub for ModInt<M> {
+    impl<M: Mod, T: Into<ModInt<M>>> Sub<T> for ModInt<M> {
         type Output = Self;
-        fn sub(self, other: Self) -> Self {
+        fn sub(self, other: T) -> Self {
+            let other = other.into();
             self.check_integrity();
             other.check_integrity();
             let mut sum = self.x - other.x;
@@ -138,18 +135,22 @@ mod mod_int {
             ModInt::new_internal(sum)
         }
     }
-    impl<M: Mod> Mul for ModInt<M> {
+    impl<M: Mod, T: Into<ModInt<M>>> Mul<T> for ModInt<M> {
         type Output = Self;
-        fn mul(self, other: Self) -> Self { self.mul_fast(other) }
+        fn mul(self, other: T) -> Self { self.mul_fast(other.into()) }
     }
-    impl<M: Mod> AddAssign for ModInt<M> {
-        fn add_assign(&mut self, other: Self) { *self = *self + other; }
+    impl<M: Mod, T: Into<ModInt<M>>> AddAssign<T> for ModInt<M> {
+        fn add_assign(&mut self, other: T) { *self = *self + other; }
     }
-    impl<M: Mod> SubAssign for ModInt<M> {
-        fn sub_assign(&mut self, other: Self) { *self = *self - other; }
+    impl<M: Mod, T: Into<ModInt<M>>> SubAssign<T> for ModInt<M> {
+        fn sub_assign(&mut self, other: T) { *self = *self - other; }
     }
-    impl<M: Mod> MulAssign for ModInt<M> {
-        fn mul_assign(&mut self, other: Self) { *self = *self * other; }
+    impl<M: Mod, T: Into<ModInt<M>>> MulAssign<T> for ModInt<M> {
+        fn mul_assign(&mut self, other: T) { *self = *self * other; }
+    }
+    impl<M: Mod> Neg for ModInt<M> {
+        type Output = Self;
+        fn neg(self) -> Self { ModInt::new(0) - self }
     }
     impl<M> ::std::fmt::Display for ModInt<M> {
         fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
@@ -160,6 +161,9 @@ mod mod_int {
         fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
             self.x.fmt(f)
         }
+    }
+    impl<M: Mod> From<i64> for ModInt<M> {
+        fn from(x: i64) -> Self { Self::new(x) }
     }
 } // mod mod_int
 
@@ -174,6 +178,19 @@ const MOD: i64 = 1_000_000_007;
 define_mod!(P, MOD);
 type ModInt = mod_int::ModInt<P>;
 
+fn fact_init(w: usize) -> (Vec<ModInt>, Vec<ModInt>) {
+    let mut fac = vec![ModInt::new(1); w];
+    let mut invfac = vec![0.into(); w];
+    for i in 1 .. w {
+        fac[i] = fac[i - 1] * i as i64;
+    }
+    invfac[w - 1] = fac[w - 1].inv();
+    for i in (0 .. w - 1).rev() {
+        invfac[i] = invfac[i + 1] * (i as i64 + 1);
+    }
+    (fac, invfac)
+}
+
 fn solve() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
@@ -185,18 +202,9 @@ fn solve() {
         m: usize,
         a: [usize1; m],
     }
-    const W: usize = 1 << 17;
-    let mut fac = vec![ModInt::new(1); W];
-    let mut invfac = vec![ModInt::new(1); W];
-    for i in 1 .. W {
-        fac[i] = fac[i - 1] * ModInt::new(i as i64);
-    }
-    invfac[W - 1] = fac[W - 1].inv();
-    for i in (0 .. W - 1).rev() {
-        invfac[i] = invfac[i + 1] * ModInt::new(i as i64 + 1);
-    }
+    let (fac, invfac) = fact_init(200100);
     let mut dp = vec![vec![ModInt::new(0); 1 << n]; m + 1];
-    dp[m][0] = ModInt::new(1);
+    dp[m][0] = 1.into();
     for bits in 0 .. 1 << n {
         for i in 0 .. n {
             if (bits & 1 << i) == 0 { continue; }
@@ -206,7 +214,7 @@ fn solve() {
                     let y = (1 << i) - 1;
                     fac[x + y] * invfac[x] * invfac[y]
                 } else {
-                    ModInt::new(0)
+                    0.into()
                 };
                 for j in k + 1 .. m + 1 {
                     dp[k][bits] += dp[j][bits ^ 1 << i] * factor;
@@ -214,9 +222,9 @@ fn solve() {
             }
         }
     }
-    let mut inex = ModInt::new(0);
+    let mut inex: ModInt = 0.into();
     for bits in 0 .. 1 << n {
-        let mut sum = ModInt::new(0);
+        let mut sum: ModInt = 0.into();
         for i in 0 .. m + 1 {
             sum += dp[i][bits];
         }
@@ -227,11 +235,11 @@ fn solve() {
             }
         }
         if bits.count_ones() % 2 == 1 {
-            sum = ModInt::new(0) - sum;
+            sum = -sum;
         }
         inex += sum;
     }
-    inex *= ModInt::new(1 << n);
+    inex *= 1 << n;
     for i in 0 .. n {
         inex *= fac[1 << i];
     }
