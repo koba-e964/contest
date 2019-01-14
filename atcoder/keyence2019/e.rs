@@ -61,8 +61,7 @@ macro_rules! read_value {
  * Union-Find tree.
  * Verified by yukicoder No.94 (http://yukicoder.me/submissions/82111)
  */
-struct UnionFind { disj: Vec<usize>,
-rank: Vec<usize> }
+struct UnionFind { disj: Vec<usize>, rank: Vec<usize> }
 
 impl UnionFind {
     fn new(n: usize) -> Self {
