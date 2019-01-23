@@ -1,35 +1,34 @@
 /**
  * Union-Find tree.
- * Verified by https://atcoder.jp/contests/keyence2019/submissions/4011936
+ * Verified by https://atcoder.jp/contests/keyence2019/submissions/4071067
  */
 struct UnionFind { disj: Vec<usize>, rank: Vec<usize> }
 
 impl UnionFind {
     fn new(n: usize) -> Self {
-        let mut disj = vec![0; n];
-        for i in 0 .. n {
-            disj[i] = i;
-        }
+        let disj = (0..n).collect();
         UnionFind { disj: disj, rank: vec![0; n] }
     }
-    fn root(self: &mut Self, x: usize) -> usize {
+    fn root(&mut self, x: usize) -> usize {
         if x != self.disj[x] {
             let par = self.disj[x];
             let r = self.root(par);
             self.disj[x] = r;
         }
-        return self.disj[x];
+        self.disj[x]
     }
-    fn unite(self: &mut Self, x: usize, y: usize) {
-        let mut xr = self.root(x);
-        let mut yr = self.root(y);
-        if self.rank[xr] > self.rank[yr] {
-            std::mem::swap(&mut xr, &mut yr);
+    fn unite(&mut self, x: usize, y: usize) {
+        let mut x = self.root(x);
+        let mut y = self.root(y);
+        if x == y { return }
+        if self.rank[x] > self.rank[y] {
+            std::mem::swap(&mut x, &mut y);
         }
-        self.disj[xr] = yr;
-        self.rank[yr] = std::cmp::max(self.rank[yr], self.rank[xr] + 1);
+        self.disj[x] = y;
+        self.rank[y] = std::cmp::max(self.rank[y], self.rank[x] + 1);
     }
-    fn is_same_set(self: &mut Self, x: usize, y: usize) -> bool {
-        return self.root(x) == self.root(y);
+    #[allow(unused)]
+    fn is_same_set(&mut self, x: usize, y: usize) -> bool {
+        self.root(x) == self.root(y)
     }
 }
