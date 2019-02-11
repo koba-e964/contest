@@ -5,42 +5,12 @@ mod mod_int {
     #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
     pub struct ModInt<M> { pub x: i64, phantom: ::std::marker::PhantomData<M> }
     impl<M: Mod> ModInt<M> {
-        fn check_integrity(self) {
-            debug_assert!(self.x >= 0);
-            debug_assert!(self.x < M::m());
-        }
         // x >= 0
         pub fn new(x: i64) -> Self { ModInt::new_internal(x % M::m()) }
         fn new_internal(x: i64) -> Self {
             ModInt { x: x, phantom: ::std::marker::PhantomData }
         }
-        #[allow(dead_code)]
-        pub fn mul_fast(self, other: Self) -> Self {
-            self.check_integrity();
-            other.check_integrity();
-            ModInt::new_internal(self.x * other.x % M::m())
-        }
-        #[allow(dead_code)]
-        pub fn mul_slow(self, other: Self) -> Self {
-            // Naive multiplication in order to avoid overflow
-            self.check_integrity();
-            other.check_integrity();
-            let mut sum = ModInt::new_internal(0);
-            let mut cur = self;
-            let mut e = other.x;
-            if self.x < other.x {
-                cur = other;
-                e = self.x;
-            }
-            while e > 0 {
-                if e % 2 == 1 { sum += cur; }
-                cur += cur;
-                e /= 2;
-            }
-            sum
-        }
         pub fn pow(self, mut e: i64) -> Self {
-            self.check_integrity();
             debug_assert!(e >= 0);
             let mut sum = ModInt::new_internal(1);
             let mut cur = self;
@@ -58,8 +28,6 @@ mod mod_int {
         type Output = Self;
         fn add(self, other: T) -> Self {
             let other = other.into();
-            self.check_integrity();
-            other.check_integrity();
             let mut sum = self.x + other.x;
             if sum >= M::m() { sum -= M::m(); }
             ModInt::new_internal(sum)
@@ -69,8 +37,6 @@ mod mod_int {
         type Output = Self;
         fn sub(self, other: T) -> Self {
             let other = other.into();
-            self.check_integrity();
-            other.check_integrity();
             let mut sum = self.x - other.x;
             if sum < 0 { sum += M::m(); }
             ModInt::new_internal(sum)
@@ -78,7 +44,7 @@ mod mod_int {
     }
     impl<M: Mod, T: Into<ModInt<M>>> Mul<T> for ModInt<M> {
         type Output = Self;
-        fn mul(self, other: T) -> Self { self.mul_fast(other.into()) }
+        fn mul(self, other: T) -> Self { ModInt::new(self.x * other.into().x % M::m()) }
     }
     impl<M: Mod, T: Into<ModInt<M>>> AddAssign<T> for ModInt<M> {
         fn add_assign(&mut self, other: T) { *self = *self + other; }
