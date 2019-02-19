@@ -1,3 +1,62 @@
+#[allow(unused_imports)]
+use std::cmp::*;
+#[allow(unused_imports)]
+use std::collections::*;
+use std::io::{Write, BufWriter};
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    (source = $s:expr, $($r:tt)*) => {
+        let mut iter = $s.split_whitespace();
+        let mut next = || { iter.next().unwrap() };
+        input_inner!{next, $($r)*}
+    };
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes
+                .by_ref()
+                .map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr, ) => {};
+
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, ( $($t:tt),* )) => {
+        ( $(read_value!($next, $t)),* )
+    };
+
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+
+    ($next:expr, chars) => {
+        read_value!($next, String).chars().collect::<Vec<char>>()
+    };
+
+    ($next:expr, usize1) => {
+        read_value!($next, usize) - 1
+    };
+
+    ($next:expr, $t:ty) => {
+        $next().parse::<$t>().expect("Parse error")
+    };
+}
+
 /// Treap (balanced binary search tree)
 /// Reference: https://www.slideshare.net/iwiwi/2-12188757
 /// Verified by: ARC061-D (http://arc061.contest.atcoder.jp/submissions/1172709)
@@ -206,4 +265,66 @@ impl<T: Ord> Treap<T> {
         self.into_vec_sub(&mut ret);
         ret
     }
+}
+
+// This solution was implemented after the author read the editorial.
+fn solve() {
+    let out = std::io::stdout();
+    let mut out = BufWriter::new(out.lock());
+    macro_rules! puts {
+        ($format:expr) => (write!(out,$format).unwrap());
+        ($format:expr, $($args:expr),+) => (write!(out,$format,$($args),*).unwrap())
+    }
+    input! {
+        n: usize,
+        k: usize,
+        ta: [(i32, i64); n],
+    }
+    let mut x: i64 = 0x16437;
+    let a = 0x152470;
+    let b = 0x1331;
+    let mut next = || {
+        x = x.wrapping_mul(a).wrapping_add(b);
+        x
+    };
+    let mut tot = 0;
+    let mut inc = Treap::new();
+    let mut dec = Treap::new();
+    const INF: i64 = 1 << 50;
+    for i in 0..k {
+        dec = dec.insert((INF, n + i), next());
+    }
+    for i in 0..n {
+        let (t, a) = ta[i];
+        tot += a;
+        if t == 0 {
+            dec = dec.insert((a, i), next());
+            if inc.size() == 0 {
+                let p = *dec.at(0).unwrap();
+                tot -= p.0;
+                dec = dec.erase_at(0);
+            } else {
+                let sz = inc.size();
+                inc = inc.erase_at(sz - 1);
+            }
+        } else {
+            inc = inc.insert((a, i), next());
+            if dec.size() == 0 {
+                let p = *inc.at(0).unwrap();
+                tot -= p.0;
+                inc = inc.erase_at(0);
+            } else {
+                let sz = dec.size();
+                dec = dec.erase_at(sz - 1);
+            }
+        }
+    }
+    puts!("{}\n", tot);
+}
+
+fn main() {
+    // In order to avoid potential stack overflow, spawn a new thread.
+    let stack_size = 104_857_600; // 100 MB
+    let thd = std::thread::Builder::new().stack_size(stack_size);
+    thd.spawn(|| solve()).unwrap().join().unwrap();
 }
