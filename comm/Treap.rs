@@ -206,4 +206,22 @@ impl<T: Ord> Treap<T> {
         self.into_vec_sub(&mut ret);
         ret
     }
+    #[allow(dead_code)]
+    fn erase_at_mut(&mut self, k: usize) {
+        let tmp = std::mem::replace(self, Treap::Tip);
+        let tmp = tmp.erase_at(k);
+        std::mem::replace(self, tmp);
+    }
+    #[allow(dead_code)]
+    fn insert_mut(&mut self, v: T, pri: i64) {
+        let tmp = std::mem::replace(self, Treap::Tip);
+        let tmp = tmp.insert(v, pri);
+        std::mem::replace(self, tmp);
+    }
+    #[allow(dead_code)]
+    fn erase_mut(&mut self, v: &T) {
+        let tmp = std::mem::replace(self, Treap::Tip);
+        let tmp = tmp.erase(v);
+        std::mem::replace(self, tmp);
+    }
 }
