@@ -60,43 +60,34 @@ macro_rules! read_value {
 fn naive(a: &[i32]) -> Option<Vec<(usize, usize)>> {
     const INF: i32 = 1 << 25;
     let n = a.len();
-    let mut dp = vec![vec![INF; 1 << n]];
     let mut init = 0;
     for i in 0..n {
         init |= (a[i] as usize) << i;
     }
-    let mut pats = vec![];
-    dp[0][init] = 0;
-    for i in 0..n {
-        for s in 1..(n - i - 1) / 2 + 1 {
-            let pat = 1 << i | 1 << (i + s) | 1 << (i + 2 * s);
-            let last = dp.len() - 1;
-            let mut ep = vec![INF; 1 << n];
-            for bits in 0..1 << n {
-                ep[pat ^ bits] = min(ep[pat ^ bits], dp[last][bits] + 1);
-                ep[bits] = min(ep[bits], dp[last][bits]);
+    let mut dist = vec![INF; 1 << n];
+    let mut pre = vec![(0, 0, 0); 1 << n];
+    let mut que = VecDeque::new();
+    que.push_back((0, 0, 0, 0, 0));
+    while let Some((d, v, k, s, pat)) = que.pop_front() {
+        if dist[v] <= d { continue; }
+        dist[v] = d;
+        pre[v] = (k, s, pat);
+        for i in 0..n {
+            for s in 1..(n - i - 1) / 2 + 1 {
+                let pat = 1 << i | 1 << (i + s) | 1 << (i + 2 * s);
+                que.push_back((d + 1, v ^ pat, i, s, pat));
             }
-            dp.push(ep);
-            pats.push((pat, i, s));
         }
     }
-    if dp[dp.len() - 1][0] >= INF {
+    if dist[init] >= INF {
         return None;
     }
-    let mut pos = dp.len() - 1;
-    let mut cur = 0;
+    let mut cur = init;
     let mut ops = vec![];
-    while pos > 0 {
-        if dp[pos][cur] == dp[pos - 1][cur] {
-            // nop
-            pos -= 1;
-            continue;
-        }
-        let (pat, i, s) = pats[pos - 1];
-        assert_eq!(dp[pos][cur], dp[pos - 1][cur ^ pat] + 1);
+    while dist[cur] > 0 {
+        let (k, s, pat) = pre[cur];
+        ops.push((k, s));
         cur ^= pat;
-        ops.push((i, s));
-        pos -= 1;
     }
     Some(ops)
 }
@@ -121,21 +112,17 @@ fn solve() {
         }
         if pos + 12 > n { break; }
         if a[pos + 1] == 0 {
-            if a[pos + 2] == 0 {
-                op.push((pos, 3));
-                a[pos] ^= 1;
-                a[pos + 3] ^= 1;
-                a[pos + 6] ^= 1;
-                pos += 3;
-                continue;
+            let idx = if a[pos + 2] == 0 {
+                3
             } else {
-                op.push((pos, 2));
-                a[pos] ^= 1;
-                a[pos + 2] ^= 1;
-                a[pos + 4] ^= 1;
-                pos += 3;
-                continue;
-            }
+                2
+            };
+            op.push((pos, idx));
+            a[pos] ^= 1;
+            a[pos + idx] ^= 1;
+            a[pos + 2 * idx] ^= 1;
+            pos += 3;
+            continue;
         }
         if a[pos + 2] == 1 {
             op.push((pos, 1));
@@ -166,14 +153,10 @@ fn solve() {
             a[k + 2 * s] ^= 1;
         }
         for j in 0..6 {
-            if a[pos + j] != 0 {
-                puts!("pos = {}, j = {}, not zero\n", pos, j);
-            }
             assert_eq!(a[pos + j], 0);
         }
         pos += 6;
     }
-    //eprintln!("a = {:?}", a);
     let rest = naive(&a[pos..]);
     if rest == None {
         puts!("NO\n");
