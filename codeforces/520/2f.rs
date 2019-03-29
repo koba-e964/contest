@@ -62,7 +62,7 @@ fn calc(g: &[Vec<usize>], revg: &[Vec<usize>], cnt: &mut [usize]) {
     let mut outdeg = vec![0; n];
     let mut zeroback = vec![0; n]; // zeroback[v] = #{w | (v -> u) in g, deg[v] = 1}
     let mut zero = 0;
-    let mut zs = HashSet::new();
+    let mut zs = BTreeSet::new();
     for v in 0..n {
         for &w in &revg[v] {
             if outdeg[w] == 0 {
