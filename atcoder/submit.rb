@@ -14,10 +14,28 @@ if ARGV.size == 0
   exit 1
 end
 
+class Config
+  def initialize(mod)
+    @mod = mod
+  end
+  # Load configuration from a file. Config file should be a valid ruby script.
+  def self.load_from_config_file(config_path)
+    mod = Module.new
+    mod.module_eval File.read(config_path)
+    Config.new(mod)
+  end
+  def user_name
+    @mod::USERNAME
+  end
+  def password
+    @mod::PASSWORD
+  end
+end
+
 # Configuration of submission
 config_path = File.dirname(File.absolute_path($0)) + "/atcoder_config"
-mod = Module.new
-mod.module_eval File.read(config_path)
+config = Config.load_from_config_file(config_path)
+
 source_name = ARGV[0]
 contest_name = File.basename(FileUtils.pwd)
 task_name = source_name.split(".")[0] # x.cpp --> x
@@ -36,15 +54,18 @@ source_language = extension_language_table[source_ext]
 puts "Run in \e[32m#{contest_name}\e[0m"
 agent = Mechanize.new
 
-agent.get("https://#{contest_name}.contest.atcoder.jp/login") do |page|
+agent.get("https://atcoder.jp/login") do |page|
   page.form_with(:class => 'form-horizontal') do |form|
-    form.field_with(:name => "name").value = mod::USERNAME
-    form.password = mod::PASSWORD
+    form.field_with(:id => "username").value = config.user_name
+    form.password = config.password
   end.submit
 end
-agent.get("https://#{contest_name}.contest.atcoder.jp/submit") do |page|
+
+
+
+agent.get("https://atcoder.jp/contests/#{contest_name}/submit") do |page|
   doc = Nokogiri::HTML(page.content.toutf8)
-  problems = doc.xpath('//select[@name="task_id"]/option')
+  problems = doc.xpath('//select[@id="select-task"]/option')
   for pr in problems
     pr_split = pr.text.split
     cur_task_name = ""
@@ -61,9 +82,9 @@ agent.get("https://#{contest_name}.contest.atcoder.jp/submit") do |page|
   if task_id == "" # A proper task_id was not found
     raise "Task name \e[32m#{task_name}\e[0m was not found"
   end
-  languages = doc.xpath("//select[@name=\"language_id_#{task_id}\"]/option")
+  languages = doc.xpath("//div[@id=\"select-lang-#{task_id}\"]/select/option")
   for lang in languages
-    if lang.text.index(source_language) # look for C++ in available languages
+    if lang.text.index(source_language) # look for source_language in available languages
       language_name = lang.text
       language_id = lang.attribute("value").value
       break
@@ -73,12 +94,20 @@ agent.get("https://#{contest_name}.contest.atcoder.jp/submit") do |page|
     raise "#{source_language} was not found"
   end
 
+  csrf_token = ''
   page.form_with(:class => 'form-horizontal') do |form|
-    form.task_id = task_id
-    form.field_with(:name => "language_id_#{task_id}").value = language_id
-    form.source_code = source
-    puts "Submitting \e[34m#{source_name}\e[0m as \e[34m#{language_name}\e[0m (id = #{language_id})"
-    puts "\tto \e[32m#{task_full_name}\e[0m (id = #{task_id}) in \e[32m#{contest_name}\e[0m"
-  end.submit
+    csrf_token = form.field_with(:name => 'csrf_token').value
+  end
+  query = {
+    'data.TaskScreenName' => task_id,
+    'data.LanguageId' => language_id,
+    'sourceCode' => source,
+    'csrf_token' => csrf_token,
+  }
+  puts "Submitting \e[34m#{source_name}\e[0m as \e[34m#{language_name}\e[0m (id = #{language_id})"
+  puts "\tto \e[32m#{task_full_name}\e[0m (id = #{task_id}) in \e[32m#{contest_name}\e[0m"
+  agent.post("https://atcoder.jp/contests/#{contest_name}/submit", query)
 end
-agent.get("https://#{contest_name}.contest.atcoder.jp/logout") # logout
+agent.get("https://atcoder.jp") do |page|
+  page.form_with(:name => 'form_logout').submit
+end
