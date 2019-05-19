@@ -64,13 +64,37 @@ mod mod_int {
             self.x.fmt(f)
         }
     }
-    impl<M> ::std::fmt::Debug for ModInt<M> {
+    impl<M: Mod> ::std::fmt::Debug for ModInt<M> {
         fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-            self.x.fmt(f)
+            let (mut a, mut b, _) = red(self.x, M::m());
+            if b < 0 {
+                a = -a;
+                b = -b;
+            }
+            write!(f, "{}/{}", a, b)
         }
     }
     impl<M: Mod> From<i64> for ModInt<M> {
         fn from(x: i64) -> Self { Self::new(x) }
+    }
+    // Finds the simplest fraction x/y congruent to r mod p.
+    // The return value (x, y, z) satisfies x = y * r + z * p.
+    fn red(r: i64, p: i64) -> (i64, i64, i64) {
+        if r.abs() <= 10000 {
+            return (r, 1, 0);
+        }
+        let mut nxt_r = p % r;
+        let mut q = p / r;
+        if 2 * nxt_r >= r {
+            nxt_r -= r;
+            q += 1;
+        }
+        if 2 * nxt_r <= -r {
+            nxt_r += r;
+            q -= 1;
+        }
+        let (x, z, y) = red(nxt_r, r);
+        (x, y - q * z, z)
     }
 } // mod mod_int
 
