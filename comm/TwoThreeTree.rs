@@ -454,6 +454,35 @@ impl<T: Ord> TwoThreeTree<T> {
             }
         }
     }
+    // Verified by https://atcoder.jp/contests/abc128/submissions/5654911
+    pub fn at(&self, nth: usize) -> Option<&T> {
+        use TwoThreeTree::*;
+        match *self {
+            Tip => None,
+            Two(_size, ref v, ref left, ref right) => {
+                if nth < left.size() {
+                    left.at(nth)
+                } else if nth == left.size() {
+                    Some(v)
+                } else {
+                    right.at(nth - left.size() - 1)
+                }
+            },
+            Three(_size, ref v1, ref v2, ref left, ref middle, ref right) => {
+                if nth < left.size() {
+                    left.at(nth)
+                } else if nth == left.size() {
+                    Some(v1)
+                } else if nth < left.size() + 1 + middle.size() {
+                    middle.at(nth - left.size() - 1)
+                } else if nth == left.size() + 1 + middle.size() {
+                    Some(v2)
+                } else {
+                    right.at(nth - left.size() - 1 - middle.size() - 1)
+                }
+            }
+        }
+    }
     pub fn into_vec(self) -> Vec<T> {
         let mut ret = Vec::with_capacity(self.size());
         self.into_vec_sub(&mut ret);
