@@ -1,16 +1,18 @@
 /*
+ * Convex hull trick for max queries.
  * Manages multiple linear graphs.
  * Lines that are not necessary to calculate maximum values are deleted.
  * Verified by: yukicoder No.409 (http://yukicoder.me/submissions/143613)
+ * https://codeforces.com/gym/101982/submission/55311987
  */
-struct ConvexHullTrick {
+struct CHTIncr {
     dat: Vec<(i64, i64)>, // (a,b) -> y = a * x + b
     cur_idx: usize, // current index (in 0 .. dat.len())
 }
 
-impl ConvexHullTrick {
+impl CHTIncr {
     fn new() -> Self {
-        ConvexHullTrick { dat: Vec::new(), cur_idx: 0, }
+        CHTIncr { dat: Vec::new(), cur_idx: 0, }
     }
     fn check(a: (i64, i64), b: (i64, i64), c: (i64, i64)) -> bool {
         (b.0 - a.0) * (c.1 - b.1) >= (b.1 - a.1) * (c.0 - b.0)
@@ -36,10 +38,14 @@ impl ConvexHullTrick {
     fn get(&self) -> Vec<(i64, i64)> {
         self.dat.clone()
     }
-    // The caller must ensure that x is increasing,
+    // Returns max(line.0 * x + line.1).
+    // The caller must ensure that x is non-decreasing,
     // when calls are sorted in chronological order.
-    fn query(&mut self, x: i64) -> i64 {
+    fn query(&mut self, x: i64) -> Option<i64> {
         let n = self.dat.len();
+        if n == 0 {
+            return None;
+        }
         while self.cur_idx < n - 1 {
             let line = self.dat[self.cur_idx];
             let line2 = self.dat[self.cur_idx + 1];
@@ -50,6 +56,6 @@ impl ConvexHullTrick {
             }
         }
         let line = self.dat[self.cur_idx];
-        line.0 * x + line.1
+        Some(line.0 * x + line.1)
     }
 }
