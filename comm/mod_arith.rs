@@ -13,6 +13,93 @@ fn powmod(x: i64, mut e: i64, m: i64) -> i64 {
     sum
 }
 
+fn ext_gcd(a: i64, b: i64) -> (i64, i64, i64) {
+    if b == 0 {
+        return (a, 1, 0);
+    }
+    let r = a % b;
+    let q = a / b;
+    let (g, x, y) = ext_gcd(b, r);
+    (g, y, x - q * y)
+}
+
+fn phi(mut x: i64) -> i64 {
+    let mut p = 2;
+    let mut ret = 1;
+    while p * p <= x {
+        let mut e = 0;
+        while x % p == 0 {
+            x /= p;
+            e += 1;
+        }
+        if e > 0 {
+            ret *= p - 1;
+            for _ in 1..e { ret *= p; }
+        }
+        p += 1;
+    }
+    if x > 1 {
+        ret *= x - 1;
+    }
+    ret
+}
+
+const THRESHOLD: i64 = 60;
+
+fn garner_thresh((a, m): (i64, i64), (b, n): (i64, i64)) -> i64 {
+    assert!(0 <= a);
+    assert!(0 <= b);
+    if a == b {
+        return a;
+    }
+    let (g, mut x, mut y) = ext_gcd(m, n);
+    assert_eq!(a % g, b % g);
+    let m = m / g;
+    let n = n / g;
+    let q0 = a / g;
+    let q1 = b / g;
+    x %= n;
+    if x < 0 {
+        x += n;
+    }
+    y %= m;
+    if y < 0 {
+        y += m;
+    }
+    let val = (q0 * y) % m * n + (q1 * x) % n * m;
+    let mut ret = val * g + (a % g);
+    let l = m * n * g;
+    let least = (THRESHOLD + l - 1) / l * l;
+    if ret < least {
+        ret = least + ret % l;
+    }
+    assert_eq!(ret % m, a % m);
+    assert_eq!(ret % n, b % n);
+    assert!(ret >= THRESHOLD);
+    ret
+}
+
+fn powmod_thresh(x: i64, e: i64, mo: i64) -> i64 {
+    let least = (THRESHOLD + mo - 1) / mo * mo;
+    if x == 0 {
+        return if e == 0 { 1 } else { 0 };
+    }
+    if x == 1 {
+        return 1;
+    }
+    if e <= 7 {
+        let mut v = 1;
+        for _ in 0..e { v *= x; }
+        return if v >= least { (v - least) % mo + least } else { v };
+    }
+    let v = powmod(x, e, mo);
+    if v < THRESHOLD {
+        v + least
+    } else {
+        v
+    }
+}
+
 /**
  * Calculates x s.t. x^2 = a (mod p)
  * p is prime
