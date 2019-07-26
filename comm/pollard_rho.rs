@@ -61,9 +61,10 @@ mod pollard_rho {
             d >>= 1;
             e += 1;
         }
+        // https://miller-rabin.appspot.com/
         let a = [2, 325, 9375, 28178, 450775, 9780504, 1795265022];
         a.iter().all(|&a| {
-            if a >= n { return true; }
+            if a % n == 0 { return true; }
             let mut x = mod_pow(a, d, n);
             if x == 1 { return true; }
             for _ in 0 .. e {
