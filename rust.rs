@@ -57,6 +57,15 @@ macro_rules! read_value {
     };
 }
 
+#[allow(unused)]
+macro_rules! debug {
+    ($($format:tt)*) => (write!(std::io::stderr(), $($format)*).unwrap());
+}
+#[allow(unused)]
+macro_rules! debugln {
+    ($($format:tt)*) => (writeln!(std::io::stderr(), $($format)*).unwrap());
+}
+
 fn solve() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
