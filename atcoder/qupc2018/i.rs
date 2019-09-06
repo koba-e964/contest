@@ -1,0 +1,159 @@
+#[allow(unused_imports)]
+use std::cmp::*;
+#[allow(unused_imports)]
+use std::collections::*;
+use std::io::{Write, BufWriter};
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes
+                .by_ref()
+                .map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr, ) => {};
+
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, ( $($t:tt),* )) => {
+        ( $(read_value!($next, $t)),* )
+    };
+
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+
+    ($next:expr, chars) => {
+        read_value!($next, String).chars().collect::<Vec<char>>()
+    };
+
+    ($next:expr, usize1) => {
+        read_value!($next, usize) - 1
+    };
+
+    ($next:expr, [ $t:tt ]) => {{
+        let len = read_value!($next, usize);
+        (0..len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    }};
+
+    ($next:expr, $t:ty) => {
+        $next().parse::<$t>().expect("Parse error")
+    };
+}
+
+#[allow(unused)]
+macro_rules! debug {
+    ($($format:tt)*) => (write!(std::io::stderr(), $($format)*).unwrap());
+}
+#[allow(unused)]
+macro_rules! debugln {
+    ($($format:tt)*) => (writeln!(std::io::stderr(), $($format)*).unwrap());
+}
+
+trait Bisect<T> {
+    fn lower_bound(&self, val: &T) -> usize;
+    fn upper_bound(&self, val: &T) -> usize;
+}
+
+impl<T: Ord> Bisect<T> for [T] {
+    fn lower_bound(&self, val: &T) -> usize {
+        let mut pass = self.len() + 1;
+        let mut fail = 0;
+        while pass - fail > 1 {
+            let mid = (pass + fail) / 2;
+            if &self[mid - 1] >= val {
+                pass = mid;
+            } else {
+                fail = mid;
+            }
+        }
+        pass - 1
+    }
+    fn upper_bound(&self, val: &T) -> usize {
+        let mut pass = self.len() + 1;
+        let mut fail = 0;
+        while pass - fail > 1 {
+            let mid = (pass + fail) / 2;
+            if &self[mid - 1] > val {
+                pass = mid;
+            } else {
+                fail = mid;
+            }
+        }
+        pass - 1
+    }
+}
+
+fn solve() {
+    let out = std::io::stdout();
+    let mut out = BufWriter::new(out.lock());
+    macro_rules! puts {
+        ($($format:tt)*) => (write!(out,$($format)*).unwrap());
+    }
+    input! {
+        n: usize, k: usize,
+        a: [usize; n],
+    }
+    const W: usize = 1_000_100;
+    let mut freq = vec![0; W];
+    for &a in &a {
+        freq[a] += 1;
+    }
+    let mut dp = vec![0i64; W];
+    for i in 1..W {
+        let m = (W + i - 1) / i;
+        let mut tmp = vec![0; m];
+        let mut acc = vec![0; m + 1];
+        for j in 0..m {
+            tmp[j] = freq[i * j];
+        }
+        for j in (0..m).rev() {
+            acc[j] = acc[j + 1] + tmp[j];
+        }
+        let mut cnt = 0;
+        let k = (k + i - 1) / i;
+        for i in 0..m {
+            let from = if i >= k { 0 } else { min(m, k - i) };
+            cnt += acc[max(i + 1, from)] * tmp[i];
+            if 2 * i >= k {
+                cnt += tmp[i] * (tmp[i] - 1) / 2;
+            }
+        }
+        dp[i] = cnt;
+    }
+    for i in (1..W).rev() {
+        for j in 2..(W + i - 1) / i {
+            dp[i] -= dp[i * j];
+        }
+    }
+    let mut tot = 0;
+    for i in 1..W {
+        if k % i == 0 {
+            tot += dp[i];
+        }
+    }
+    puts!("{}\n", tot);
+}
+
+fn main() {
+    // In order to avoid potential stack overflow, spawn a new thread.
+    let stack_size = 104_857_600; // 100 MB
+    let thd = std::thread::Builder::new().stack_size(stack_size);
+    thd.spawn(|| solve()).unwrap().join().unwrap();
+}
