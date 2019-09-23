@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-const int DEBUG = 1;
+const int DEBUG = 0;
 
 #define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
 #define DEBUGP(val) cerr << #val << "=" << val << "\n"
@@ -153,12 +153,13 @@ public:
   }
 };
 
-const int N = 2100;
+const int N = 30100;
+const int SQN = 250;
 
 const int inf = 1e8;
 
-int dp[N][N];
-int dp_mi[N][N];
+int dp[N][SQN];
+int dp_mi[N][SQN];
 string s;
 
 bool cmp(int a, int b, int c, int d, const VI &inv, const SuffixArray &sa) {
@@ -181,33 +182,36 @@ int main(void) {
     REP(i, 0, n) s += to_string(a[i]);
     SuffixArray sa(s);
     VI inv = sa.inverse_array();
-    REP(i, 0, N) REP(j, 0, N) dp[i][j] = dp_mi[i][j] = inf;
+    REP(i, 0, N) REP(j, 0, SQN) dp[i][j] = dp_mi[i][j] = inf;
     dp[n][0] = 0;
     for (int i = n - 1; i >= 0; --i) {
-      dp[i][n - i] = n - i - 1;
-      REP(j, i + 1, n) {
+      if (n - i < SQN) {
+        dp[i][n - i] = n - i - 1;
+      }
+      REP(j, i + 1, min(i + SQN, n)) {
         // k = j - i
         if (j - i > n - j) continue;
         if (cmp(i, j - i, j, j - i, inv, sa)) {
           dp[i][j - i] = min(dp[i][j - i], dp[j][j - i] + (j - i - 1));
         }
         // k > j - i
-        dp[i][j - i] = min(dp[i][j - i], dp_mi[j][j - i + 1] + (j - i - 1));
+        if (j - i + 1 < SQN)
+          dp[i][j - i] = min(dp[i][j - i], dp_mi[j][j - i + 1] + (j - i - 1));
       }
-      for (int j = n - i; j >= 0; j--) {
-        dp_mi[i][j] = min(dp_mi[i][j + 1], dp[i][j]);
+      for (int j = min(SQN - 1, n - i); j >= 0; j--) {
+        dp_mi[i][j] = min(j == SQN - 1 ? inf : dp_mi[i][j + 1], dp[i][j]);
       }
     }
     if (DEBUG) {
       REP(i, 0, n + 1) {
-        REP(j, 0, n + 1) {
+        REP(j, 0, min(n + 1, SQN)) {
           cerr << " " << dp[i][j];
         }
         cerr << endl;
       }
     }
     int mi = inf;
-    REP(i, 0, n + 1) {
+    REP(i, 0, SQN) {
       mi = min(mi, dp[0][i]);
     }
     cout << mi << endl;
