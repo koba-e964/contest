@@ -94,21 +94,13 @@ public:
 const int N = 200000;
 
 set<PI> ranges;
-vector<PI> lr;
 
 //[l, r]がencloseする区間の個数を知りたい。
 //l,r, どこにaffectするか,係数
 vector<PPIPI> reqs;
-VI ans;
 
-VI terms[N];
-VI asks[N];
-
-
-// add 0
-void add(int v, int idx) {
-  int l = v;
-  int r = v;
+// 区間 [l, r] を加える。元の区間と重複しないことが必要。
+void add(int l, int r, int idx) {
   auto it = ranges.lower_bound(PI(l, 1e8));
   if (it != ranges.begin()) {
     it--;
@@ -134,6 +126,7 @@ void add(int v, int idx) {
   reqs.push_back(PPIPI(PI(l, r), PI(idx, 1)));
 }
 
+// {v} を取り除く。元の区間に含まれることが必要。
 void del(int v, int idx) {
   auto it = ranges.lower_bound(PI(v, 1e9));
   assert (it != ranges.begin());
@@ -158,6 +151,15 @@ bool has(int v) {
   PI t = *it;
   return t.first <= v && v <= t.second;
 }
+
+
+vector<PI> lr;
+VI ans;
+
+VI terms[N];
+VI asks[N];
+
+
 
 void dump(void) {
   if (DEBUG) {
@@ -247,7 +249,7 @@ int main(void) {
     if (has(x[i])) {
       del(x[i], i);
     } else {
-      add(x[i], i);
+      add(x[i], x[i], i);
     }
     if (DEBUG) {
       cerr << i << endl;
