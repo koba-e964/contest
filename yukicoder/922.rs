@@ -107,6 +107,8 @@ impl UnionFind {
 }
 
 /// Lowest Common Ancestor. Call lca(x, y) to get the lca of them.
+/// Many-rooted version.
+/// Verified by: https://yukicoder.me/submissions/413634
 pub struct LowestCommonAncestor {
     n: usize,
     bn: usize,

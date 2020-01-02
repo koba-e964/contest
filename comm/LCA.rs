@@ -1,9 +1,10 @@
 /// Lowest Common Ancestor. Call lca(x, y) to get the lca of them.
-/// Verified by: yukicoder No.399 (http://yukicoder.me/submissions/155569)
+/// Many-rooted version.
+/// Verified by: https://yukicoder.me/submissions/413634
 pub struct LowestCommonAncestor {
     n: usize,
     bn: usize,
-    parent: Vec<usize>, // 0 is root, parent[0] = 0
+    parent: Vec<usize>, // r is root <=> parent[r] = r
     dep: Vec<usize>,
     lca_tbl: Vec<Vec<usize>>
 }
@@ -64,13 +65,15 @@ impl LowestCommonAncestor {
     pub fn parent(&self, a: usize) -> usize {
         self.parent[a]
     }
-    pub fn new(edges: &[Vec<usize>]) -> Self {
+    pub fn new(edges: &[Vec<usize>], roots: &[usize]) -> Self {
         let n = edges.len();
         let bn = (n.next_power_of_two() - 1).count_ones() as usize;
         let mut ret = LowestCommonAncestor {
             n: n, bn: bn, parent: vec![0; n], dep: vec![0; n],
             lca_tbl: vec![Vec::new(); n] };
-        ret.dfs(edges, 0, 0, 0);
+        for &r in roots {
+            ret.dfs(edges, r, r, 0);
+        }
         ret.lca_init();
         ret
     }
