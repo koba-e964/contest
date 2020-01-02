@@ -40,16 +40,18 @@ fn solve(a: &[i64]) -> i64 {
     if n == 1 {
         return a[0];
     }
-    let mut dp = vec![vec![vec![INF; 2]; n + 1]; n];
+    let mut dp = vec![vec![vec![INF; 2]; n + 1]; n + 1];
     dp[1][n][0] = a[0];
     dp[0][n - 1][1] = a[n - 1];
     for s in (0 .. n - 1).rev() {
-        for i in 0 .. min(n - s + 1, n) {
+        for i in 0..n - s + 1 {
             // dp[i][i + s][0], goes to i - 1
             let mut res = INF;
-            if i >= 1 {
+            // i + s -> i - 1
+            if i >= 1 && i + s < n {
                 res = min(res, dp[i - 1][i + s][1] + s as i64 + 1);
             }
+            // i - 2 -> i - 1
             if i >= 2 {
                 res = min(res, dp[i - 1][i + s][0] + 1);
             }
@@ -57,15 +59,17 @@ fn solve(a: &[i64]) -> i64 {
                 res = max(res, a[i - 1]);
             }
             dp[i][i + s][0] = res;
-            // dp[i][i + s][1], goes to i + s + 1
+            // dp[i][i + s][1], goes to i + s
             let mut res = INF;
-            if i + s + 1 <= n {
+            // i - 1 -> i + s
+            if i >= 1 && i + s < n {
                 res = min(res, dp[i][i + s + 1][0] + s as i64 + 1);
             }
-            if i + s + 1 <= n - 1 {
+            // i + s + 1 -> i + s
+            if i + s + 1 < n {
                 res = min(res, dp[i][i + s + 1][1] + 1);
             }
-            if i + s + 1 < n {
+            if i + s < n {
                 res = max(res, a[i + s]);
             }
             dp[i][i + s][1] = res;
@@ -73,7 +77,7 @@ fn solve(a: &[i64]) -> i64 {
         }
     }
     let mut mi = 1 << 58;
-    for i in 0 .. n {
+    for i in 0 .. n + 1 {
         mi = min(mi, min(dp[i][i][0], dp[i][i][1]));
     }
     mi
@@ -83,6 +87,6 @@ fn solve(a: &[i64]) -> i64 {
 // Solved after reading the editorial
 fn main() {
     let n = get();
-    let a: Vec<i64> = (0.. n).map(|_| get()).collect();
+    let a: Vec<i64> = (0..n).map(|_| get()).collect();
     println!("{}", solve(&a));
 }
