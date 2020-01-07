@@ -264,31 +264,44 @@ fn rec(lo: usize, hi: usize, dp: &mut [ModInt], ep: &mut [ModInt],
     }
     let mid = (lo + hi) / 2;
     rec(lo, mid, dp, ep, fac, invfac);
-    // FFT
-    let zeta = ModInt::new(5).pow((MOD - 1) / n as i64);
-    let mut tmp = vec![ModInt::new(0); n];
-    let mut tmp2 = vec![ModInt::new(0); n];
-    for i in lo..mid {
-        tmp[i - lo] = ep[i];
-    }
-    // Difference can be anything in [1, n - 1].
-    for i in 0..n {
-        tmp2[i] = ep[i];
-    }
-    fft::transform(&mut tmp, zeta, 1.into());
-    fft::transform(&mut tmp2, zeta, 1.into());
-    let mut invn = ModInt::new(n as i64).inv();
-    // If not overlapping, multiply by two.
-    if lo != 0 {
-        invn *= 2;
-    }
-    for i in 0..n {
-        tmp[i] = tmp[i] * tmp2[i] * invn;
-    }
-    fft::transform(&mut tmp, zeta.inv(), 1.into());
-    for i in mid..hi {
-        dp[i] += tmp[i - lo - 1] * fac[i - 1];
-        ep[i] += tmp[i - lo - 1] * fac[i - 1] * invfac[i] * invfac[2];
+    if n <= 16 {
+        for i in lo..mid {
+            for j in mid - i - 1..hi - i - 1 {
+                let tmp = ep[i] * ep[j] * if lo != 0 { 2 } else { 1 };
+                let tmp = tmp * fac[i + j];
+                dp[i + j + 1] += tmp;
+            }
+        }
+        for i in mid..hi {
+            ep[i] = dp[i] * invfac[i] * invfac[2];
+        }
+    } else {
+        // FFT
+        let zeta = ModInt::new(5).pow((MOD - 1) / n as i64);
+        let mut tmp = vec![ModInt::new(0); n];
+        let mut tmp2 = vec![ModInt::new(0); n];
+        for i in lo..mid {
+            tmp[i - lo] = ep[i];
+        }
+        // Difference can be anything in [1, n - 1].
+        for i in 0..n {
+            tmp2[i] = ep[i];
+        }
+        fft::transform(&mut tmp, zeta, 1.into());
+        fft::transform(&mut tmp2, zeta, 1.into());
+        let mut invn = ModInt::new(n as i64).inv();
+        // If not overlapping, multiply by two.
+        if lo != 0 {
+            invn *= 2;
+        }
+        for i in 0..n {
+            tmp[i] = tmp[i] * tmp2[i] * invn;
+        }
+        fft::transform(&mut tmp, zeta.inv(), 1.into());
+        for i in mid..hi {
+            dp[i] += tmp[i - lo - 1] * fac[i - 1];
+            ep[i] += tmp[i - lo - 1] * fac[i - 1] * invfac[i] * invfac[2];
+        }
     }
     rec(mid, hi, dp, ep, fac, invfac);
 }
