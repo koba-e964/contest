@@ -95,7 +95,7 @@ agent.get("https://atcoder.jp/contests/#{contest_name}/submit") do |page|
   end
 
   csrf_token = ''
-  page.form_with(:class => 'form-horizontal') do |form|
+  page.form_with(:class => 'form-horizontal form-code-submit') do |form|
     csrf_token = form.field_with(:name => 'csrf_token').value
   end
   query = {
