@@ -89,9 +89,9 @@ fn solve() {
             plain[v] = true;
             for d in 0..4 {
                 let (dx, dy) = dxy[d];
-                let nx = i as i32 + dx;
-                let ny = j as i32 + dy;
-                if nx < 0 || nx >= h as i32 || ny < 0 || ny >= w as i32 {
+                let nx = i.wrapping_add(dx as usize);
+                let ny = j.wrapping_add(dy as usize);
+                if nx >= h || ny >= w {
                     continue;
                 }
                 let nx = nx as usize;
