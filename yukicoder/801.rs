@@ -168,7 +168,8 @@ fn solve() {
             tmp[l] += bulk;
         }
         for j in 0..n {
-            tmp[j + 1] += tmp[j];
+            let val = tmp[j];
+            tmp[j + 1] += val;
         }
         for j in 0..n {
             dp[i + 1][j + 1] = dp[i + 1][j] + tmp[j];
