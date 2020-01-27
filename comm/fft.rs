@@ -6,6 +6,7 @@ mod fft {
     /// n should be a power of 2. zeta is a primitive n-th root of unity.
     /// one is unity
     /// Note that the result should be multiplied by 1/sqrt(n).
+    #[inline(always)]
     pub fn transform<R>(f: &mut [R], zeta: R, one: R)
         where R: Copy +
         Add<Output = R> +
@@ -22,10 +23,12 @@ mod fft {
                     if k <= i { break; }
                     k >>= 1;
                 }
-                if j < i { f.swap(i, j); }
+                if j < i {
+                    f.swap(i, j);
+                }
             }
         }
-        let mut zetapow = Vec::new();
+        let mut zetapow = Vec::with_capacity(20);
         {
             let mut m = 1;
             let mut cur = zeta;
@@ -36,21 +39,23 @@ mod fft {
             }
         }
         let mut m = 1;
-        while m < n {
-            let base = zetapow.pop().unwrap();
-            let mut r = 0;
-            while r < n {
-                let mut w = one;
-                for s in r .. r + m {
-                    let u = f[s];
-                    let d = f[s + m] * w;
-                    f[s] = u + d;
-                    f[s + m] = u - d;
-                    w = w * base;
+        unsafe {
+            while m < n {
+                let base = zetapow.pop().unwrap();
+                let mut r = 0;
+                while r < n {
+                    let mut w = one;
+                    for s in r..r + m {
+                        let &u = f.get_unchecked(s);
+                        let d = *f.get_unchecked(s + m) * w;
+                        *f.get_unchecked_mut(s) = u + d;
+                        *f.get_unchecked_mut(s + m) = u - d;
+                        w = w * base;
+                    }
+                    r += 2 * m;
                 }
-                r += 2 * m;
+                m *= 2;
             }
-            m *= 2;
         }
     }
 }
