@@ -160,68 +160,121 @@ fn offline_lca(
     out
 }
 
-#[derive(Copy, Clone, Debug)]
-struct D {
-    cnt: i64, sum: i64,
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Kind {
+    Cut,
+    Block,
 }
 
-impl D {
-    fn new(cnt: i64, sum: i64) -> D {
-        D {
-            cnt: cnt,
-            sum: sum,
+// Reference: https://codeforces.com/blog/entry/73910 (A)
+fn block_cut_tree(
+    g: &[Vec<usize>]
+) -> (Vec<Vec<usize>>, Vec<(usize, usize)>, usize, Vec<bool>, Vec<usize>, Vec<Kind>) {
+    let n = g.len();
+    // for 1-vertex-0-edge graphs, handle manually.
+    if n == 1 {
+        return (vec![vec![0]], vec![], 1, vec![false], vec![0], vec![Kind::Block]);
+    }
+    let mut dep = vec![0; n];
+    let mut low = vec![0; n];
+    let mut vis = vec![false; n];
+    let mut art = vec![false; n];
+    let mut comps = vec![];
+    let mut stk = vec![];
+    let mut ch = vec![vec![]; n];
+    fn dfs1(v: usize, g: &[Vec<usize>], par: usize,
+            vis: &mut [bool], dep: &mut [i32], low: &mut [i32], art: &mut [bool],
+            ch: &mut [Vec<usize>],
+            cnt: &mut i32) {
+        assert!(!vis[v]);
+        dep[v] = *cnt;
+        vis[v] = true;
+        *cnt += 1;
+        let mut mi = *cnt;
+        let mut has_art = false;
+        for &w in &g[v] {
+            if w == par { continue; }
+            if vis[w] {
+                mi = min(mi, dep[w]);
+            } else {
+                ch[v].push(w);
+                dfs1(w, g, v, vis, dep, low, art, ch, cnt);
+                mi = std::cmp::min(mi, low[w]);
+                if low[w] >= dep[v] {
+                    has_art = true;
+                }
+            }
+        }
+        art[v] = if par >= g.len() { ch[v].len() >= 2 } else { has_art };
+        low[v] = mi;
+    }
+    fn dfs2(v: usize, g: &[Vec<usize>],
+            ch: &[Vec<usize>],
+            dep: &[i32], low: &[i32], art: &[bool],
+            comps: &mut Vec<Vec<usize>>, stk: &mut Vec<usize>,
+    ) {
+        stk.push(v);
+        for &w in &ch[v] {
+            dfs2(w, g, ch, dep, low, art, comps, stk);
+            if low[w] >= dep[v] {
+                let mut last = vec![v];
+                while last.last() != Some(&w) {
+                    last.push(stk.pop().unwrap());
+                }
+                comps.push(last);
+            }
         }
     }
-    fn mv(self, dist: i64) -> D {
-        D {
-            cnt: self.cnt,
-            sum: self.sum + self.cnt * dist,
+    let mut cnt = 0;
+    for v in 0..n {
+        if !vis[v] {
+            dfs1(
+                v, g, n,
+                &mut vis, &mut dep, &mut low, &mut art,
+                &mut ch,
+                &mut cnt,
+            );
+            dfs2(
+                v, g, &ch,
+                &dep, &low, &art,
+                &mut comps, &mut stk,
+            );
+            stk.clear();
         }
     }
-    fn add(self, x: D) -> D {
-        D {
-            cnt: self.cnt + x.cnt,
-            sum: self.sum + x.sum,
+
+    // build the block cut tree
+    let mut tree = vec![];
+    let mut id = vec![0; n];
+    let mut treenode = 0;
+    let mut ty = vec![];
+    for v in 0..n {
+        if art[v] {
+            id[v] = treenode;
+            treenode += 1;
+            ty.push(Kind::Cut);
         }
     }
-    fn sub(self, x: D) -> D {
-        D {
-            cnt: self.cnt - x.cnt,
-            sum: self.sum - x.sum,
+    for comp in &comps {
+        let node = treenode;
+        treenode += 1;
+        ty.push(Kind::Block);
+        for &v in comp {
+            if art[v] {
+                tree.push((id[v], node));
+            } else {
+                id[v] = node;
+            }
         }
     }
+    (comps, tree, treenode, art, id, ty)
 }
 
-fn dfs1(v: usize, vis: &mut [bool], g: &[Vec<usize>], qs: &[i64], ds: &mut [D]) -> D {
-    if vis[v] { return D::new(0, 0); }
-    vis[v] = true;
-    let mut cur = D::new(qs[v], 0);
-    for &w in &g[v] {
-        let sub = dfs1(w, vis, g, qs, ds);
-        cur = cur.add(sub.mv(1));
-    }
-    ds[v] = cur;
-    cur
-}
-
-fn dfs2(v: usize, par: usize, g: &[Vec<usize>], qs: &[i64],
-        ds: &[D], cur_par: D) -> i64 {
-    let mut mi = ds[v].sum + cur_par.sum;
-    for &w in &g[v] {
-        if w == par { continue; }
-        let sub_cur_par = cur_par.add(ds[v]).sub(ds[w].mv(1)).mv(1);
-        let sub = dfs2(w, v, g, qs, ds, sub_cur_par);
-        mi = min(mi, sub);
-    }
-    mi
-}
-
-fn dfs3(v: usize, par: usize, g: &[Vec<usize>], dep: &mut [usize], d: usize) {
+fn dfs(g: &[Vec<usize>], v: usize, par: usize, ty: &[Kind], dep: &mut [i32], d: i32) {
     dep[v] = d;
     for &w in &g[v] {
-        if w != par {
-            dfs3(w, v, g, dep, d + 1);
-        }
+        if par == w { continue; }
+        dfs(g, w, v, ty, dep, d + if ty[v] == Kind::Cut { 1 } else { 0 });
     }
 }
 
@@ -232,60 +285,42 @@ fn solve() {
         ($($format:tt)*) => (write!(out,$($format)*).unwrap());
     }
     input! {
-        n: usize, m: usize, q: usize,
-        uv: [(usize1, usize1); m],
-        ab: [(usize1, usize1); q],
+        n: usize,
+        uv: [(usize1, usize1)],
+        cd: [(usize1, usize1)],
     }
-    let mut uf = UnionFind::new(n);
     let mut g = vec![vec![]; n];
     for &(u, v) in &uv {
-        uf.unite(u, v);
         g[u].push(v);
         g[v].push(u);
     }
-    let mut qs = vec![0; n];
-    let mut same_set = vec![];
-    for &(a, b) in &ab {
-        if uf.is_same_set(a, b) {
-            same_set.push((a, b));
+    let (_comps, tree, nodecount, _art, id, ty) = block_cut_tree(&g);
+
+    let mut queries = vec![];
+    for &(c, d) in &cd {
+        let idc = id[c];
+        let idd = id[d];
+        queries.push((idc, idd));
+    }
+    assert_eq!(nodecount - 1, tree.len());
+    let mut g = vec![vec![]; nodecount];
+    for &(a, b) in &tree {
+        g[a].push(b);
+        g[b].push(a);
+    }
+    let mut dep = vec![0; nodecount];
+    dfs(&g, 0, nodecount, &ty, &mut dep, 0);
+    let lcas = offline_lca(&g, &[0], &queries);
+    for i in 0..lcas.len() {
+        let (c, d) = queries[i];
+        let a;
+        if c == d {
+            a = 0;
         } else {
-            qs[a] += 1;
-            qs[b] += 1;
+            a = dep[c] + dep[d] - 2 * dep[lcas[i]] - if ty[lcas[i]] == Kind::Cut { 1 } else { 0 };
         }
+        puts!("{}\n", a);
     }
-    let mut vis = vec![false; n];
-    let mut ds = vec![D::new(0, 0); n];
-    let mut tot = 0;
-    let mut roots = vec![];
-    for i in 0..n {
-        if !vis[i] {
-            dfs1(i, &mut vis, &g, &qs, &mut ds);
-            tot += dfs2(i, n, &g, &qs, &ds, D::new(0, 0));
-            roots.push(i);
-        }
-    }
-    let mut has = vec![false; n];
-    for &(a, _b) in &same_set {
-        let r = uf.root(a);
-        has[r] = true;
-    }
-    let mut roots = vec![];
-    for i in 0..n {
-        if has[i] {
-            roots.push(i);
-        }
-    }
-    let lcas = offline_lca(&g, &roots, &same_set);
-    let mut dep = vec![0; n];
-    for r in roots {
-        dfs3(r, n, &g, &mut dep, 0);
-    }
-    for i in 0..same_set.len() {
-        let (a, b) = same_set[i];
-        let dist = dep[a] + dep[b] - 2 * dep[lcas[i]];
-        tot += dist as i64;
-    }
-    puts!("{}\n", tot);
 }
 
 fn main() {

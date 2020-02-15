@@ -8,7 +8,7 @@
 /// This function returns out: Vec<usize>,
 /// i-th of which contains the output for qs[i].
 /// Depends on: UnionFind.rs
-/// Verified by: https://yukicoder.me/submissions/413752
+/// Verified by: https://yukicoder.me/submissions/430909
 fn offline_lca(
     g: &[Vec<usize>],
     roots: &[usize],
@@ -30,19 +30,22 @@ fn offline_lca(
                 out[idx] = anc[uf.root(target)]
             }
         }
-        anc[uf.root(u)] = u;
     }
     let n = g.len();
     let mut uf = UnionFind::new(n);
     let mut col = vec![false; n];
     let mut anc = vec![0; n];
     let mut q_map = vec![vec![]; n];
+    let mut out = vec![usize::max_value(); qs.len()];
     for i in 0..qs.len() {
         let (a, b) = qs[i];
-        q_map[a].push((b, i));
-        q_map[b].push((a, i));
+        if a != b {
+            q_map[a].push((b, i));
+            q_map[b].push((a, i));
+        } else {
+            out[i] = a;
+        }
     }
-    let mut out = vec![usize::max_value(); qs.len()];
     for &r in roots {
         visit(g, r, n, &q_map, &mut col, &mut out, &mut anc, &mut uf);
     }
