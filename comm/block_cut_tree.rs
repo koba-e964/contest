@@ -24,14 +24,16 @@ fn block_cut_tree(
     let mut comps = vec![];
     let mut stk = vec![];
     let mut ch = vec![vec![]; n];
-    fn dfs1(v: usize, g: &[Vec<usize>], par: usize,
-            vis: &mut [bool], dep: &mut [i32], low: &mut [i32], art: &mut [bool],
-            ch: &mut [Vec<usize>],
-            cnt: &mut i32) {
+    fn dfs(v: usize, g: &[Vec<usize>], par: usize,
+           vis: &mut [bool], dep: &mut [i32], low: &mut [i32], art: &mut [bool],
+           ch: &mut [Vec<usize>],
+           comps: &mut Vec<Vec<usize>>, stk: &mut Vec<usize>,
+           cnt: &mut i32) {
         assert!(!vis[v]);
         dep[v] = *cnt;
         vis[v] = true;
         *cnt += 1;
+        stk.push(v);
         let mut mi = *cnt;
         let mut has_art = false;
         for &w in &g[v] {
@@ -40,46 +42,30 @@ fn block_cut_tree(
                 mi = std::cmp::min(mi, dep[w]);
             } else {
                 ch[v].push(w);
-                dfs1(w, g, v, vis, dep, low, art, ch, cnt);
+                dfs(w, g, v, vis, dep, low, art, ch, comps, stk, cnt);
                 mi = std::cmp::min(mi, low[w]);
                 if low[w] >= dep[v] {
                     has_art = true;
+                    let mut last = vec![v];
+                    while last.last() != Some(&w) {
+                        last.push(stk.pop().unwrap());
+                    }
+                    comps.push(last);
                 }
             }
         }
         art[v] = if par >= g.len() { ch[v].len() >= 2 } else { has_art };
         low[v] = mi;
     }
-    fn dfs2(v: usize, g: &[Vec<usize>],
-            ch: &[Vec<usize>],
-            dep: &[i32], low: &[i32], art: &[bool],
-            comps: &mut Vec<Vec<usize>>, stk: &mut Vec<usize>,
-    ) {
-        stk.push(v);
-        for &w in &ch[v] {
-            dfs2(w, g, ch, dep, low, art, comps, stk);
-            if low[w] >= dep[v] {
-                let mut last = vec![v];
-                while last.last() != Some(&w) {
-                    last.push(stk.pop().unwrap());
-                }
-                comps.push(last);
-            }
-        }
-    }
     let mut cnt = 0;
     for v in 0..n {
         if !vis[v] {
-            dfs1(
+            dfs(
                 v, g, n,
                 &mut vis, &mut dep, &mut low, &mut art,
                 &mut ch,
-                &mut cnt,
-            );
-            dfs2(
-                v, g, &ch,
-                &dep, &low, &art,
                 &mut comps, &mut stk,
+                &mut cnt,
             );
             stk.clear();
         }
