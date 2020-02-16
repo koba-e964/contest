@@ -6,7 +6,7 @@
  * Reference: http://snuke.hatenablog.com/entry/2014/12/03/214243
  * Verified by: AtCoder ARC055-C (http://arc055.contest.atcoder.jp/submissions/1061771)
  */
-fn z_algorithm(s: &[char]) -> Vec<usize> {
+fn z_algorithm<T: PartialEq>(s: &[T]) -> Vec<usize> {
     let n = s.len();
     let mut ret = vec![0; n + 1];
     ret[0] = n;

@@ -67,7 +67,7 @@ impl Diameter {
         self.dfs(self.x, &mut ret, None, 0);
         self.dfs(self.y, &mut tmp, None, 0);
         for i in 0 .. n {
-            ret[i] = max(ret[i], tmp[i]);
+            ret[i] = std::cmp::max(ret[i], tmp[i]);
         }
         ret
     }

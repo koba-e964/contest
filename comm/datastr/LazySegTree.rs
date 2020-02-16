@@ -10,7 +10,7 @@ pub trait ActionRing {
     type U: Clone + Copy + PartialEq + Eq; // action
     fn biop(Self::T, Self::T) -> Self::T;
     fn update(Self::T, Self::U, height: usize) -> Self::T;
-    fn upop(Self::U, Self::U) -> Self::U;
+    fn upop(fst: Self::U, snd: Self::U) -> Self::U;
     fn e() -> Self::T;
     fn upe() -> Self::U; // identity for upop
 }

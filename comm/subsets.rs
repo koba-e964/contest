@@ -17,5 +17,5 @@ impl Iterator for SubsetIter {
     }
 }
 fn subsets(univ: usize) -> SubsetIter {
-    SubsetIter { bits: Some(univ), univ }
+    SubsetIter { bits: Some(univ), univ: univ }
 }
