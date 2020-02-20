@@ -70,7 +70,59 @@ fn solve() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
     macro_rules! puts {
-        ($($format:tt)*) => (let _ = write!(out,$($format)*););
+        ($($format:tt)*) => (write!(out,$($format)*).unwrap());
+    }
+    input! {
+        n: usize, m: usize, k: i64,
+    }
+    let lim = 4 * n * m - 2 * n - 2 * m;
+    if k > lim as i64 {
+        puts!("NO\n");
+        return;
+    }
+    puts!("YES\n");
+    let mut ans = vec![];
+    // row 0
+    ans.push((m - 1, "R"));
+    ans.push((m - 1, "L"));
+    // row i
+    for _ in 1..n {
+        ans.push((1, "D"));
+        ans.push((m - 1, "RUD"));
+        ans.push((m - 1, "L"));
+    }
+    ans.push((n - 1, "U"));
+    // trim
+    let mut out = vec![];
+    let mut rem = k as usize;
+    for i in 0..ans.len() {
+        let m = ans[i].0;
+        let l = ans[i].1.len();
+        if rem >= m * l {
+            if m > 0 {
+                out.push(ans[i]);
+            }
+            rem -= m * l;
+        } else if rem > 0 {
+            let q = rem / l;
+            if q > 0 {
+                out.push((q, ans[i].1));
+            }
+            rem -= q * l;
+            if rem > 0 {
+                out.push((1, &ans[i].1[..rem]));
+                rem = 0;
+            }
+            break;
+        } else {
+            break;
+        }
+    }
+    assert_eq!(rem, 0);
+    assert!(out.len() <= 3000);
+    puts!("{}\n", out.len());
+    for i in 0..out.len() {
+        puts!("{} {}\n", out[i].0, out[i].1);
     }
 }
 

@@ -70,7 +70,16 @@ fn solve() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
     macro_rules! puts {
-        ($($format:tt)*) => (let _ = write!(out,$($format)*););
+        ($($format:tt)*) => (write!(out,$($format)*).unwrap());
+    }
+    input! {
+        nm: [(i64, i64)],
+    }
+    for (n, m) in nm {
+        let q = (n - m) / (m + 1);
+        let r = n - m - q * (m + 1);
+        let sub = q * (q + 1) / 2 * (m + 1 - r) + (q + 1) * (q + 2) / 2 * r;
+        puts!("{}\n", n * (n + 1) / 2 - sub);
     }
 }
 

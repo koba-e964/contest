@@ -70,7 +70,43 @@ fn solve() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
     macro_rules! puts {
-        ($($format:tt)*) => (let _ = write!(out,$($format)*););
+        ($($format:tt)*) => (write!(out,$($format)*).unwrap());
+    }
+    input! {
+        a: [[i64]],
+    }
+    const INF: i64 = 1 << 50;
+    for mut a in a {
+        let n = a.len();
+        let mut ma = -INF;
+        let mut mi = INF;
+        for i in 0..n {
+            if a[i] == -1 {
+                if i > 0 && a[i - 1] != -1 {
+                    ma = max(ma, a[i - 1]);
+                    mi = min(mi, a[i - 1]);
+                }
+                if i + 1 < n && a[i + 1] != -1 {
+                    ma = max(ma, a[i + 1]);
+                    mi = min(mi, a[i + 1]);
+                }
+            }
+        }
+        if ma <= -INF {
+            puts!("0 0\n");
+        } else {
+            let mid = mi + (ma - mi) / 2;
+            let mut ans = -INF;
+            for i in 0..n {
+                if a[i] == -1 {
+                    a[i] = mid;
+                }
+            }
+            for i in 0..n - 1 {
+                ans = max(ans, (a[i + 1] - a[i]).abs());
+            }
+            puts!("{} {}\n", ans, mid);
+        }
     }
 }
 
