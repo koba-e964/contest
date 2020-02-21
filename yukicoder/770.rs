@@ -209,8 +209,9 @@ fn solve() {
         for j in 0 .. n - 1 {
             let turn = n - 1 - j;
             if i >= turn {
-                dp2[i][j] += dp[i - turn][j + 1]
+                let added = dp[i - turn][j + 1]
                     + dp2[i - 1][j + 1] + dp2[i - 1][j];
+                dp2[i][j] += added;
             }
         }
     }

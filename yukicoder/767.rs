@@ -237,7 +237,8 @@ fn solve() {
         for j in 0 .. hi {
             if (bits & 1 << j) == 0 { continue; }
             let prev = bits & (1 << (j + 1)) - 1;
-            dp[bits] -= dp[prev] * trans[j][hi];
+            let val = dp[prev];
+            dp[bits] -= val * trans[j][hi];
         }
     }
     let mut ans = vec![ModInt::new(0); 1 << k];
