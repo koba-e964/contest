@@ -1,0 +1,24 @@
+- name: C++
+  file: wiz.cpp
+  extension: cpp
+- name: Rust
+  file: rust.rs
+  extension: rs
+- name: Go
+  file: go.go
+  extension: go
+- name: Scala
+  file: scala.scala
+  extension: scala
+- name: Ruby
+  file:
+  extension: rb
+- name: Python3
+  file:
+  extension: py
+- name: Text
+  file:
+  extension: txt
+- name: Java
+  file:
+  extension: java

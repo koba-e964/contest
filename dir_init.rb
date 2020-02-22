@@ -1,5 +1,7 @@
 #!/usr/bin/ruby
-require "fileutils"
+require 'fileutils'
+require 'yaml'
+
 if ARGV.size == 0
   puts "Directory initializer (\e[34mdir_init.rb\e[0m)"
   puts "This tool makes copies of a template file (\e[34mwiz.cpp\e[0m by default) in \e[34mTARGET_DIR\e[0m."
@@ -9,14 +11,23 @@ if ARGV.size == 0
   exit 1
 end
 
+script_dir = File.dirname($0) # The directory where this script is placed
+lang_file = script_dir + "/languages.yml" # Available languages
+langs = YAML.load_file(lang_file)
+
 target_dir = ARGV[0]
 target_names = ARGV[1..-1]
 source_lang = ENV["SOURCE"] || "C++"
-source_file = {"C++" => "wiz.cpp", "Rust" => "rust.rs", "Go" => "go.go",
-               "Scala" => "scala.scala"}[source_lang]
-target_ext =  {"C++" => "cpp", "Rust" => "rs", "Go" => "go",
-               "Scala" => "scala"}[source_lang]
-script_dir = File.dirname($0) # The directory where this script is placed
+entries = langs.select{|entry| entry['name'] == source_lang}
+if entries.size != 1
+  puts 'not found: ' + source_lang
+  exit 1
+end
+
+entry = entries[0]
+
+source_file = entry['file']
+target_ext = entry['extension']
 FileUtils.mkdir_p(target_dir)
 for n in target_names
   target_file = target_dir + "/" + n + "." + target_ext
