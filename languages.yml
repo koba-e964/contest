@@ -1,9 +1,11 @@
 - name: C++
   file: wiz.cpp
   extension: cpp
+  yukicoder_name: cpp17
 - name: Rust
   file: rust.rs
   extension: rs
+  yukicoder_name: rust
 - name: Go
   file: go.go
   extension: go
