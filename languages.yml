@@ -9,18 +9,24 @@
 - name: Go
   file: go.go
   extension: go
+  yukicoder_name: go
 - name: Scala
   file: scala.scala
   extension: scala
+  yukicoder_name: scala
 - name: Ruby
   file:
   extension: rb
+  yukicoder_name: ruby
 - name: Python3
   file:
   extension: py
+  yukicoder_name: pypy3
 - name: Text
   file:
   extension: txt
+  yukicoder_name: text
 - name: Java
-  file:
+  file: java.java
   extension: java
+  yukicoder_name: java8
