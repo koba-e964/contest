@@ -1,0 +1,8 @@
+yurufuwa-division 1
+coupons 2
+new-comers 3
+books-rotation 4
+median-permutation 5
+bananas-multiplier-easy 6
+bananas-multiplier-hard 7
+sweets-distribution-easy 8
