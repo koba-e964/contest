@@ -1,81 +1,23 @@
-#[allow(unused_imports)]
-use std::cmp::*;
-#[allow(unused_imports)]
-use std::collections::*;
 use std::io::{Write, BufWriter};
-// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
-macro_rules! input {
-    ($($r:tt)*) => {
-        let stdin = std::io::stdin();
-        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
-        let mut next = move || -> String{
-            bytes
-                .by_ref()
-                .map(|r|r.unwrap() as char)
-                .skip_while(|c|c.is_whitespace())
-                .take_while(|c|!c.is_whitespace())
-                .collect()
-        };
-        input_inner!{next, $($r)*}
-    };
-}
 
-macro_rules! input_inner {
-    ($next:expr) => {};
-    ($next:expr, ) => {};
-
-    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
-        let $var = read_value!($next, $t);
-        input_inner!{$next $($r)*}
-    };
-}
-
-macro_rules! read_value {
-    ($next:expr, ( $($t:tt),* )) => {
-        ( $(read_value!($next, $t)),* )
-    };
-
-    ($next:expr, [ $t:tt ; $len:expr ]) => {
-        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
-    };
-
-    ($next:expr, chars) => {
-        read_value!($next, String).chars().collect::<Vec<char>>()
-    };
-
-    ($next:expr, usize1) => {
-        read_value!($next, usize) - 1
-    };
-
-    ($next:expr, [ $t:tt ]) => {{
-        let len = read_value!($next, usize);
-        (0..len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
-    }};
-
-    ($next:expr, $t:ty) => {
-        $next().parse::<$t>().expect("Parse error")
-    };
-}
-
-#[allow(unused)]
-macro_rules! debug {
-    ($($format:tt)*) => (write!(std::io::stderr(), $($format)*).unwrap());
-}
-#[allow(unused)]
-macro_rules! debugln {
-    ($($format:tt)*) => (writeln!(std::io::stderr(), $($format)*).unwrap());
+fn read_nonneg_i64<I: Iterator<Item = u8>>(iter: &mut I) -> i64 {
+    // non-neg only
+    let mut v: i64 = 0;
+    for c in iter.skip_while(|&c|c <= 0x20)
+        .take_while(|&c|c > 0x20) {
+            v = 10 * v + c as i64 - b'0' as i64;
+        }
+    v
 }
 
 mod pollard_rho {
-    use std::collections::HashMap;
     /// binary gcd
     pub fn gcd(mut x: i64, mut y: i64) -> i64 {
         if y == 0 { return x; }
         if x == 0 { return y; }
         let k = (x | y).trailing_zeros();
-        x >>= k;
         y >>= k;
-        while (x & 1) == 0 { x >>= 1; }
+        x >>= x.trailing_zeros();
         while y != 0 {
             y >>= y.trailing_zeros();
             if x > y { let t = x; x = y; y = t; }
@@ -156,25 +98,24 @@ mod pollard_rho {
     }
 
     /// Outputs (p, e) in p's ascending order.
-    pub fn factorize(x: i64) -> Vec<(i64, usize)> {
+    pub fn factorize(x: i64) -> Vec<i64> {
         if x <= 1 {
             return Vec::new();
         }
-        let mut hm = HashMap::new();
         let mut pool = vec![x];
         let mut c = 1;
+        let mut ans = vec![];
         while let Some(u) = pool.pop() {
             if is_prime(u) {
-                *hm.entry(u).or_insert(0) += 1;
+                ans.push(u);
                 continue;
             }
             let p = pollard_rho(u, &mut c);
             pool.push(p);
             pool.push(u / p);
         }
-        let mut v: Vec<_> = hm.into_iter().collect();
-        v.sort();
-        v
+        ans.sort();
+        ans
     }
 } // mod pollard_rho
 
@@ -184,15 +125,13 @@ fn main() {
     macro_rules! puts {
         ($($format:tt)*) => (let _ = write!(out,$($format)*););
     }
-    input!(a: [i64]);
-    for a in a {
-        let fac = pollard_rho::factorize(a);
-        let mut ps = vec![];
-        for (p, e) in fac {
-            for _ in 0..e {
-                ps.push(p);
-            }
-        }
+    let stdin = std::io::stdin();
+    let bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+    let mut bytes = bytes.map(|x| x.unwrap());
+    let n = read_nonneg_i64(&mut bytes);
+    for _ in 0..n {
+        let a = read_nonneg_i64(&mut bytes);
+        let ps = pollard_rho::factorize(a);
         puts!("{}", ps.len());
         for p in ps {
             puts!(" {}", p);

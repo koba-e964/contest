@@ -5,9 +5,8 @@ mod pollard_rho {
         if y == 0 { return x; }
         if x == 0 { return y; }
         let k = (x | y).trailing_zeros();
-        x >>= k;
         y >>= k;
-        while (x & 1) == 0 { x >>= 1; }
+        x >>= x.trailing_zeros();
         while y != 0 {
             y >>= y.trailing_zeros();
             if x > y { let t = x; x = y; y = t; }
