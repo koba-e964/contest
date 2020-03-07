@@ -77,17 +77,29 @@ mod pollard_rho {
     }
 
     fn pollard_rho(n: i64, c: &mut i64) -> i64 {
+        // An improvement with Brent's cycle detection algorithm is performed.
+        // https://maths-people.anu.edu.au/~brent/pub/pub051.html
         if n % 2 == 0 { return 2; }
         loop {
-            let mut x: i64 = 2;
-            let mut y = 2;
+            let mut x: i64; // tortoise
+            let mut y = 2; // hare
             let mut d = 1;
             let cc = *c;
             let f = |i| add_mod(mul_mod(i, i, n), cc, n);
+            let mut r = 1;
+            // We don't perform the gcd-once-in-a-while optimization
+            // because the plain gcd-every-time algorithm appears to
+            // outperform, at least on judge.yosupo.jp :)
             while d == 1 {
-                x = f(x);
-                y = f(f(y));
-                d = gcd((x - y).abs(), n);
+                x = y;
+                for _ in 0..r {
+                    y = f(y);
+                    d = gcd((x - y).abs(), n);
+                    if d != 1 {
+                        break;
+                    }
+                }
+                r *= 2;
             }
             if d == n {
                 *c += 1;
