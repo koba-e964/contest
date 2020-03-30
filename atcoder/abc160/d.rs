@@ -57,17 +57,8 @@ macro_rules! read_value {
     };
 }
 
-#[allow(unused)]
-macro_rules! debug {
-    ($($format:tt)*) => (write!(std::io::stderr(), $($format)*).unwrap());
-}
-#[allow(unused)]
-macro_rules! debugln {
-    ($($format:tt)*) => (writeln!(std::io::stderr(), $($format)*).unwrap());
-}
-
 fn bfs(v: usize,
-       g: &[Vec<usize>], dist: &mut [usize], d: usize) {
+       g: &[Vec<usize>], dist: &mut [usize]) {
     let mut que = VecDeque::new();
     que.push_back((v, 0));
     while let Some((v, d)) = que.pop_front() {
@@ -99,7 +90,7 @@ fn solve() {
     g[y].push(x);
     let mut dist = vec![vec![1 << 20; n]; n];
     for i in 0..n {
-        bfs(i, &g, &mut dist[i], 0);
+        bfs(i, &g, &mut dist[i]);
     }
     let mut ans = vec![0; n];
     for i in 0..n {

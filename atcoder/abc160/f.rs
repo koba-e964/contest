@@ -191,6 +191,7 @@ fn fact_init(w: usize) -> (Vec<ModInt>, Vec<ModInt>) {
     (fac, invfac)
 }
 
+// Rerooting
 fn dfs1(v: usize, par: usize, g: &[Vec<usize>], dp1: &mut [ModInt],
         sz: &mut [usize],
         fac: &[ModInt], invfac: &[ModInt]) -> usize {
