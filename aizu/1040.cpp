@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iomanip>
+#include <queue>
 #include <iostream>
 #include <vector>
 
@@ -16,44 +17,40 @@ typedef pair<int, int> PI;
 
 const int inf = 1e9;
 // Dreyfus-Wagner. O(4^k)
+// https://kopricky.github.io/code/Academic/steiner_tree.html
 int steiner_tree(const vector<vector<PI> > &g, const VI &term) {
   int n = g.size();
   int k = term.size();
-  vector<vector<int> > dist(n, vector<int>(n, inf));
-  REP(i, 0, n) {
-    REP(j, 0, g[i].size()) {
-      PI wc = g[i][j];
-      int w = wc.first, c = wc.second;
-      dist[i][w] = min(dist[i][w], c);
-    }
-  }
-  REP(i, 0, n) dist[i][i] = 0;
-  REP(l, 0, n) {
-    REP(i, 0, n) {
-      REP(j, 0, n) {
-        dist[i][j] = min(dist[i][j], dist[i][l] + dist[l][j]);
-      }
-    }
-  }
   vector<vector<int> > dp(n, vector<int>(1 << k, inf));
   // base case: |bits| = 1
   REP(i, 0, k) {
-    REP(j, 0, n) {
-      dp[j][1 << i] = min(dp[j][1 << i], dist[term[i]][j]);
-    }
+    dp[term[i]][1 << i] = 0;
   }
   REP(bits, 1, 1 << k) {
-    // if popcount(bits) == 1 then skip
-    if ((bits & -bits) == bits) continue;
     REP(i, 0, n) {
       REP(sub, 1, bits) {
         if ((sub & bits) != sub) continue;
         dp[i][bits] = min(dp[i][bits], dp[i][sub] + dp[i][bits - sub]);
       }
     }
+    priority_queue<PI, vector<PI>, greater<PI> > que;
     REP(i, 0, n) {
-      REP(j, 0, n) {
-        dp[i][bits] = min(dp[i][bits], dp[j][bits] + dist[i][j]);
+      if (dp[i][bits] < inf) {
+        que.push(PI(dp[i][bits], i));
+        dp[i][bits] = inf;
+      }
+    }
+    while (not que.empty()) {
+      PI dv = que.top(); que.pop();
+      int d = dv.first;
+      int v = dv.second;
+      if (dp[v][bits] <= d) continue;
+      dp[v][bits] = d;
+      REP(j, 0, g[v].size()) {
+        PI wc = g[v][j];
+        int w = wc.first;
+        int c = wc.second;
+        que.push(PI(d + c, w));
       }
     }
   }
@@ -86,10 +83,9 @@ int main(void) {
         REP(d, 0, 4) {
           int nx = i + dx[d];
           int ny = j + dy[d];
-          if (nx < 0 || nx >= h || ny < 0 || ny >= h) continue;
+          if (nx < 0 || nx >= h || ny < 0 || ny >= w) continue;
           int u = nx * w + ny;
           g[v].push_back(PI(u, 1));
-          g[u].push_back(PI(v, 1));
         }
       }
     }
