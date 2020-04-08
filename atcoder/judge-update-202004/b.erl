@@ -23,7 +23,7 @@ solve() ->
 
 main(_) ->
 	solve(),
-	init:stop().
+	halt().
 
 input(Pat) ->
 	{ok, L} = io:fread("", Pat),
