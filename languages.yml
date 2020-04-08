@@ -2,6 +2,9 @@
   file: wiz.cpp
   extension: cpp
   yukicoder_name: cpp17
+- name: Erlang
+  file: erl.erl
+  extension: erl
 - name: Rust
   file: rust.rs
   extension: rs

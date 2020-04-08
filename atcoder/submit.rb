@@ -48,8 +48,17 @@ source = ""
 open(source_name, "r") {|fp|
   source = fp.read
 }
-extension_language_table = {"cpp" => "C++", "rb" => "Ruby", "py" => "Python3", "java" => "Java", "rs" => "Rust", "txt" => "Text"}
-source_language = extension_language_table[source_ext]
+
+# Reads languages.yml and find the language.
+script_dir = File.dirname($0) # The directory where this script is placed
+lang_file = script_dir + "/../languages.yml" # Available languages
+langs = YAML.load_file(lang_file)
+entries = langs.select{|entry| entry['extension'] == source_ext}
+if entries.size != 1
+  puts 'Extension not found: ' + source_ext
+  exit 1
+end
+source_language = entries[0]['name']
 
 puts "Run in \e[32m#{contest_name}\e[0m"
 agent = Mechanize.new
