@@ -57,5 +57,5 @@ resp = requests.post(post_url, {
 
 submission_successful = '提出しました。'
 if not re.search(submission_successful, resp.text):
-    print("\x1b[34submission unsuccessful\x1b[0m")
+    print("\x1b[34mSubmission unsuccessful\x1b[0m")
     exit(1)
