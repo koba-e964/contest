@@ -104,11 +104,7 @@ impl<T, BiOp> SparseTable<T, BiOp>
         SparseTable {biop: biop, st: st}
     }
     fn top_bit(t: usize) -> usize {
-        let mut h = 0;
-        while 1 << h <= t {
-            h += 1;
-        }
-        h - 1
+        8 * std::mem::size_of::<usize>() - 1 - t.leading_zeros() as usize
     }
     pub fn query(&self, f: usize, s: usize) -> T {
         assert!(f <= s);
@@ -139,18 +135,17 @@ fn solve() {
     }
     let spt = SparseTable::new(&a, gcd);
     let mut tot: i64 = 0;
+    let mut pos = 0;
     for i in 0..n {
-        let mut pass = n + 1;
-        let mut fail = i;
-        while pass - fail > 1 {
-            let mid = (pass + fail) / 2;
-            if spt.query(i, mid - 1) == 1 {
-                pass = mid;
+        pos = max(pos, i);
+        while pos < n {
+            if spt.query(i, pos) != 1 {
+                pos += 1;
             } else {
-                fail = mid;
+                break;
             }
         }
-        tot += (n + 1 - pass) as i64;
+        tot += (n - pos) as i64;
     }
     puts!("{}\n", tot);
 }

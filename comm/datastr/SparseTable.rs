@@ -36,11 +36,7 @@ impl<T, BiOp> SparseTable<T, BiOp>
         SparseTable {biop: biop, st: st}
     }
     fn top_bit(t: usize) -> usize {
-        let mut h = 0;
-        while 1 << h <= t {
-            h += 1;
-        }
-        h - 1
+        8 * std::mem::size_of::<usize>() - 1 - t.leading_zeros() as usize
     }
     pub fn query(&self, f: usize, s: usize) -> T {
         assert!(f <= s);
