@@ -90,7 +90,7 @@ fn subsets(univ: usize) -> SubsetIter {
 
 const INF: i32 = 1 << 27;
 
-// Tags: 3^n dp key-value-exchange
+// Tags: 3^n dp key-value-exchange optimization
 fn solve() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
@@ -114,6 +114,9 @@ fn solve() {
         dp[0][0][0] = (0, 0, 0, 0);
         for v in 0..n {
             for w in v..n {
+                // [v, w) is banned
+                // editorial's optimization: O(3^n n^3) -> O(3^n n^2)
+                let banned_mask = (1 << w) - (1 << v);
                 for c in 0..n {
                     for bits in 0..1 << n {
                         let old = dp[v][c][bits].0;
@@ -123,7 +126,7 @@ fn solve() {
                         if (bits & 1 << w) != 0 {
                             continue;
                         }
-                        for sub in subsets((1 << n) - 1 - bits - (1 << w)) {
+                        for sub in subsets(((1 << n) - 1 - bits - (1 << w)) & !banned_mask) {
                             if old >= sum[sub] + a[w] {
                                 continue;
                             }
