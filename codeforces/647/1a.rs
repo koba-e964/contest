@@ -71,6 +71,46 @@ fn solve() {
     macro_rules! puts {
         ($($format:tt)*) => (let _ = write!(out,$($format)*););
     }
+    input! {
+        n: usize,
+        g: [graph1; n],
+        t: [usize1; n],
+    }
+    let mut occ = vec![vec![]; n];
+    for i in 0..n {
+        occ[t[i]].push(i);
+    }
+    let mut ans = vec![0; n];
+    let mut ansinv = vec![0; n];
+    let mut pos = 0;
+    for i in 0..n {
+        for &v in &occ[i] {
+            ans[pos] = v;
+            ansinv[v] = pos;
+            pos += 1;
+        }
+    }
+    // Check validity of ans
+    for i in 0..n {
+        let v = ans[i];
+        let mut seen = HashSet::new();
+        for &w in &g[v] {
+            if ansinv[w] <= ansinv[v] {
+                seen.insert(t[w]);
+            }
+        }
+        let mut mex = 0;
+        while seen.contains(&mex) {
+            mex += 1;
+        }
+        if t[v] != mex {
+            puts!("-1\n");
+            return;
+        }
+    }
+    for i in 0..n {
+        puts!("{}{}", ans[i] + 1, if i + 1 == n { "\n" } else { " " });
+    }
 }
 
 fn main() {
