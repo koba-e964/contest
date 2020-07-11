@@ -21,4 +21,8 @@ fn main() {
         );
         assert_eq!(ans, expected[i].into());
     }
+    // u and v are 0. The resulting sequence is [0, 0, ...].
+    let a = vec![vec![ModInt::new(2)]];
+    let ans = eval_matpow(&a, e, &[ModInt::new(0)], &[ModInt::new(0)]);
+    assert_eq!(ans, 0.into());
 }

@@ -1,6 +1,7 @@
 // Verified by: yukicoder No.1112
 // https://yukicoder.me/submissions/510746
 // https://en.wikipedia.org/wiki/Berlekamp%E2%80%93Massey_algorithm
+// Complexity: O(n^2)
 // Depends on ModInt.rs
 fn berlekamp_massey<P: mod_int::Mod + PartialEq>(
     n: usize,
@@ -105,6 +106,13 @@ fn eval_matpow(a: &[Vec<ModInt>], e: i64, u: &[ModInt], v: &[ModInt]) -> ModInt 
     }
     let mut poly = berlekamp_massey(k, &terms);
     poly.reverse();
+    // If terms' minimal polynomial is 1, then terms == 0.
+    if poly.len() == 1 {
+        return ModInt::new(0);
+    }
+    // If terms' minimal polynomial is x + r,
+    // then terms is a gemetric progression with common ratio -r.
+    // terms[i] = a * (-r)^i.
     if poly.len() == 2 {
         let r = -poly[0];
         return terms[0] * r.pow(e);
