@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+import sys
+import json
 import os
 import re
 import requests
-import sys
 import yaml
 
 if len(sys.argv) != 2:
@@ -16,7 +17,7 @@ yukicoder_config_path = os.path.join(script_dir, 'yukicoder_config')
 language_config_path = os.path.join(script_dir, '..', 'languages.yml')
 
 with open(yukicoder_config_path) as file:
-    info = yaml.safe_load(file)
+    yukicoder_config = yaml.safe_load(file)
 
 with open(language_config_path) as file:
     languages = yaml.safe_load(file)
@@ -31,7 +32,8 @@ lang = next(x for x in languages if x['extension'] == extension[1:])['yukicoder_
 with open(filename) as file:
     source = file.read()
 
-cookies = info['cookies']
+cookies = yukicoder_config['cookies']
+api_key = yukicoder_config['api_key']
 
 url = "https://yukicoder.me/problems/no/{}".format(problem_name)
 response = requests.get(url, cookies=cookies)
@@ -39,23 +41,29 @@ response = requests.get(url, cookies=cookies)
 # Find a javascript code fragment of the following form:
 # ```
 # var csrf_token = "xxxx";
+# var csrf_token = null
 #
-csrf_token = re.search("var csrf_token = \"(.*)\"", response.text).group(1)
 
-# Find `/problems/{}/submit`.
+# Find problem_id.
 problem_id = re.search("/problems/([0-9]*)/submit", response.text).group(1)
 
-post_url = "https://yukicoder.me/problems/{}/submit".format(problem_id)
-
+post_url = "https://yukicoder.me/api/v1/problems/{}/submit".format(problem_id)
 
 print("Submitting \x1b[34m{}\x1b[0m as \x1b[34m{}\x1b[0m".format(filename, lang))
 print("\tto \x1b[32m{}\x1b[0m (problem_id = {})".format(problem_name, problem_id))
 
 resp = requests.post(post_url, {
-    'csrf_token': csrf_token, 'lang': lang, '': 'on', 'source': source,
-}, cookies=cookies)
+    'lang': lang, 'source': source,
+}, headers={
+    'Authorization': "bearer " + api_key,
+    'Accept': 'application/json'
+})
 
-submission_successful = '提出しました。'
-if not re.search(submission_successful, resp.text):
+response = json.loads(resp.text)
+
+print(response)
+
+if 'SubmissionId' not in response:
+    print(response)
     print("\x1b[34mSubmission unsuccessful\x1b[0m")
     exit(1)
