@@ -32,20 +32,20 @@ lang = next(x for x in languages if x['extension'] == extension[1:])['yukicoder_
 with open(filename) as file:
     source = file.read()
 
-cookies = yukicoder_config['cookies']
 api_key = yukicoder_config['api_key']
 
-url = "https://yukicoder.me/problems/no/{}".format(problem_name)
-response = requests.get(url, cookies=cookies)
-
-# Find a javascript code fragment of the following form:
-# ```
-# var csrf_token = "xxxx";
-# var csrf_token = null
-#
+url = "https://yukicoder.me/api/v1/problems/no/{}".format(problem_name)
+resp = requests.get(url, headers={
+    'Authorization': "bearer " + api_key,
+    'Accept': 'application/json'
+})
+response = json.loads(resp.text)
 
 # Find problem_id.
-problem_id = re.search("/problems/([0-9]*)/submit", response.text).group(1)
+if 'ProblemId' not in response:
+    print('Invalid response: {}', response)
+    sys.exit(2)
+problem_id = response['ProblemId']
 
 post_url = "https://yukicoder.me/api/v1/problems/{}/submit".format(problem_id)
 
@@ -66,4 +66,4 @@ print(response)
 if 'SubmissionId' not in response:
     print(response)
     print("\x1b[34mSubmission unsuccessful\x1b[0m")
-    exit(1)
+    sys.exit(1)
