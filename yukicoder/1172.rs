@@ -190,8 +190,7 @@ fn solve() {
     }
     let mut dp = vec![vec![ModInt::new(0); k]; n + 1];
     let a: Vec<_> = a.into_iter().map(ModInt::new).collect();
-    let mut p = vec![ModInt::new(0); k + 1];
-    p[k] += 1;
+    let mut p = vec![ModInt::new(0); k];
     for i in 0..k {
         p[k - i - 1] = c[i].into();
     }
@@ -207,31 +206,24 @@ fn solve() {
         }
     }
     for &(l, r) in &lr {
-        for i in 0..k {
-            dp[l][i] += pw[0][i];
-        }
+        dp[l][0] += 1;
         for i in 0..k {
             dp[r][i] -= pw[r - l][i];
         }
     }
     for i in 0..n {
+        let mut ans = ModInt::new(0);
         for j in 0..k - 1 {
             let val = dp[i][j];
             dp[i + 1][j + 1] += val;
+            ans += val * a[j];
         }
         let coef = dp[i][k - 1];
+        ans += coef * a[k - 1];
         for j in 0..k {
             dp[i + 1][j] += coef * p[j];
         }
-    }
-    let mut ans = vec![ModInt::new(0); n];
-    for i in 0..n {
-        for j in 0..k {
-            ans[i] += dp[i][j] * a[j];
-        }
-    }
-    for i in 0..n {
-        puts!("{}\n", ans[i]);
+        puts!("{}\n", ans);
     }
 }
 
