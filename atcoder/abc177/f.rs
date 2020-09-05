@@ -1,7 +1,5 @@
-#[allow(unused_imports)]
-use std::cmp::*;
-#[allow(unused_imports)]
-use std::collections::*;
+use std::cmp::{max, min};
+use std::collections::BTreeSet;
 use std::io::{Write, BufWriter};
 // https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
 macro_rules! input {
@@ -45,24 +43,12 @@ macro_rules! read_value {
     ($next:expr, [ $t:tt ; $len:expr ]) => {
         (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
     };
-    ($next:expr, chars) => {
-        read_value!($next, String).chars().collect::<Vec<char>>()
-    };
     ($next:expr, usize1) => (read_value!($next, usize) - 1);
     ($next:expr, [ $t:tt ]) => {{
         let len = read_value!($next, usize);
         read_value!($next, [$t; len])
     }};
     ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
-}
-
-#[allow(unused)]
-macro_rules! debug {
-    ($($format:tt)*) => (write!(std::io::stderr(), $($format)*).unwrap());
-}
-#[allow(unused)]
-macro_rules! debugln {
-    ($($format:tt)*) => (writeln!(std::io::stderr(), $($format)*).unwrap());
 }
 
 fn cost(w: usize, dpval: usize, st: usize, len: usize) -> usize {
@@ -73,7 +59,7 @@ fn cost(w: usize, dpval: usize, st: usize, len: usize) -> usize {
     }
 }
 
-fn solve() {
+fn main() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
     macro_rules! puts {
@@ -85,41 +71,34 @@ fn solve() {
     }
     // (dp, st, len)
     let mut dp = BTreeSet::new();
-    // (val, dp, st, len)
+    // (val, dp)
     let mut vals = BTreeSet::new();
     for i in 0..w {
         dp.insert((i, i, 1));
-        vals.insert((0, i, i, 1));
+        vals.insert((0, i));
     }
     for i in 0..h {
         let (a, b) = ab[i];
         let rng = dp.range((a, 0, 0)..(b + 1, 0, 0));
-        let rng: Vec<_> = rng.into_iter().cloned().collect();
+        let rng: Vec<_> = rng.cloned().collect();
         let mut mist = w;
         let mut maen = 0;
         for ent in rng {
             let (dpval, st, len) = ent;
             dp.remove(&ent);
-            vals.remove(&(cost(w, dpval, st, len), dpval, st, len));
+            vals.remove(&(cost(w, dpval, st, len), dpval));
             mist = min(mist, st);
             maen = max(maen, st + len);
         }
         if mist < maen {
             dp.insert((b + 1, mist, maen - mist));
-            vals.insert((cost(w, b + 1, mist, maen - mist), b + 1, mist, maen - mist));
+            vals.insert((cost(w, b + 1, mist, maen - mist), b + 1));
         }
-        let &(mi, _, _, _) = vals.iter().next().unwrap();
+        let &(mi, _) = vals.iter().next().unwrap();
         if mi >= w {
             puts!("-1\n");
         } else {
             puts!("{}\n", mi + i + 1);
         }
     }
-}
-
-fn main() {
-    // In order to avoid potential stack overflow, spawn a new thread.
-    let stack_size = 104_857_600; // 100 MB
-    let thd = std::thread::Builder::new().stack_size(stack_size);
-    thd.spawn(|| solve()).unwrap().join().unwrap();
 }
