@@ -1,0 +1,30 @@
+time_limit = 2.0
+
+[[generators]]
+language_name = "C++"
+path = "etc/generator.cpp"
+
+[[languages]]
+language_name = "C++"
+target_ext = ".cpp"
+compile = ["g++", "-O2", "-std=gnu++11", "-o", "$OUT", "$IN"]
+run = ["$OUT"]
+
+[[languages]]
+language_name = "C++-O3"
+target_ext = ".cpp"
+compile = ["g++", "-O3", "-std=gnu++11", "-o", "$OUT", "$IN"]
+run = ["$OUT"]
+
+[[solutions]]
+language_name = "C++-O3"
+path = "answer.cpp"
+
+[[solutions]]
+language_name = "C++-O3"
+path = "sol-lazyseg.cpp"
+is_reference_solution = true
+
+[[validators]]
+language_name = "C++"
+path = "etc/validator.cpp"
