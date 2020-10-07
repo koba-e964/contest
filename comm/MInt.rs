@@ -107,4 +107,4 @@ macro_rules! define_mod {
 }
 const MOD: i64 = 1_000_000_007;
 define_mod!(P, MOD);
-type ModInt = mod_int::ModInt<P>;
+type MInt = mod_int::ModInt<P>;
