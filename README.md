@@ -3,7 +3,7 @@
 ### Author
 kobae964
 - AtCoder: [![kobae964](https://img.shields.io/endpoint?url=https%3A%2F%2Fatcoder-badges.now.sh%2Fapi%2Fatcoder%2Fjson%2Fkobae964)](https://atcoder.jp/users/kobae964)
-- Codeforces: [kobae964](https://codeforces.com/profile/kobae964)
+- Codeforces: [![kobae964](https://img.shields.io/endpoint?url=https%3A%2F%2Fatcoder-badges.now.sh%2Fapi%2Fcodeforces%2Fjson%2Fkobae964)](https://codeforces.com/profile/kobae964)
 - Topcoder: [koba2adc](https://www.topcoder.com/members/koba2adc/)
 
 ### Library
