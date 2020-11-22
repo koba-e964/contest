@@ -7,12 +7,15 @@ struct LazySegTree {
   T e;
   U upe; // upe: identity for upop
   static T biop(const T &a, const T &b) {
+    // TODO modify here
     return min(a, b);
   }
   static void upop(T &a, const U &b) {
+    // TODO modify here
     a += b;
   }
   static U upbiop(const U &a, const U &b) {
+    // TODO modify here
     return a + b;
   }
   LazySegTree(int n_, T e, U upe): e(e), upe(upe) {
