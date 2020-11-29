@@ -97,6 +97,7 @@ impl<T: Ord> Bisect<T> for [T] {
     }
 }
 
+// Tags: knapsack, sqrt-decomposition, half-brute-force
 fn solve() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());

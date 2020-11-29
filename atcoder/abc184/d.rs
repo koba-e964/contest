@@ -63,6 +63,7 @@ macro_rules! debugln {
     ($($format:tt)*) => (writeln!(std::io::stderr(), $($format)*).unwrap());
 }
 
+// Tags: probability-dp
 fn solve() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
