@@ -1,0 +1,15 @@
+score
+factorial
+mall
+building
+salt
+anagram
+route
+circuit
+fiber
+lines
+packing1
+packing2
+packing3
+packing4
+packing5
