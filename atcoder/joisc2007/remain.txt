@@ -1,6 +1,3 @@
-score
-factorial
-mall
 building
 salt
 anagram
