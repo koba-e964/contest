@@ -54,6 +54,23 @@ macro_rules! read_value {
     ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
 }
 
+trait Change {
+    fn chmax(&mut self, x: Self);
+    fn chmin(&mut self, x: Self);
+}
+impl<T: PartialOrd> Change for T {
+    fn chmax(&mut self, x: T) {
+        if *self < x {
+            *self = x;
+        }
+    }
+    fn chmin(&mut self, x: T) {
+        if *self > x {
+            *self = x;
+        }
+    }
+}
+
 #[allow(unused)]
 macro_rules! debug {
     ($($format:tt)*) => (write!(std::io::stderr(), $($format)*).unwrap());
@@ -343,9 +360,7 @@ fn solve() {
             }
         }
         let res = calc(sub);
-        if ma < res {
-            ma = res;
-        }
+        ma.chmax(res);
     }
     if ma.0 == 0 {
         puts!("-1\n");

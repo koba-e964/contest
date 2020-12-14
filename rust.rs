@@ -9,9 +9,7 @@ macro_rules! input {
         let stdin = std::io::stdin();
         let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
         let mut next = move || -> String{
-            bytes
-                .by_ref()
-                .map(|r|r.unwrap() as char)
+            bytes.by_ref().map(|r|r.unwrap() as char)
                 .skip_while(|c|c.is_whitespace())
                 .take_while(|c|!c.is_whitespace())
                 .collect()
@@ -56,6 +54,19 @@ macro_rules! read_value {
     ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
 }
 
+trait Change {
+    fn chmax(&mut self, x: Self);
+    fn chmin(&mut self, x: Self);
+}
+impl<T: PartialOrd> Change for T {
+    fn chmax(&mut self, x: T) {
+        if *self < x { *self = x; }
+    }
+    fn chmin(&mut self, x: T) {
+        if *self > x { *self = x; }
+    }
+}
+
 #[allow(unused)]
 macro_rules! debug {
     ($($format:tt)*) => (write!(std::io::stderr(), $($format)*).unwrap());
@@ -70,6 +81,14 @@ fn solve() {
     let mut out = BufWriter::new(out.lock());
     macro_rules! puts {
         ($($format:tt)*) => (let _ = write!(out,$($format)*););
+    }
+    #[allow(unused)]
+    macro_rules! putvec {
+        ($v:expr) => {
+            for i in 0..$v.len() {
+                puts!("{}{}", $v[i], if i + 1 == $v.len() {"\n"} else {" "});
+            }
+        }
     }
 }
 
