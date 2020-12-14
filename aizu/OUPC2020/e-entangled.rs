@@ -99,21 +99,28 @@ impl<T: Ord> Bisect<T> for [T] {
 
 const INF: i64 = 1 << 50;
 
+// A kind of coordinate compression.
+fn comp_max<T: PartialEq, M: Ord + Copy>(v: &mut Vec<(T, M)>) {
+    let mut w = 0;
+    let n = v.len();
+    for r in 0..n {
+        if w > 0 && v[w - 1].0 == v[r].0 {
+            v[w - 1].1 = max(v[w - 1].1, v[r].1);
+        } else {
+            v.swap(w, r);
+            w += 1;
+        }
+    }
+    v.truncate(w);
+}
+
 // Tags: divide-into-entangled-ranges, trie, trie-less, vec-halving
 // Editorial: https://refine-p.hatenablog.com/entry/2020/12/12/164350
-fn solve() {
+fn main() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
     macro_rules! puts {
         ($($format:tt)*) => (let _ = write!(out,$($format)*););
-    }
-    #[allow(unused)]
-    macro_rules! putvec {
-        ($v:expr) => {
-            for i in 0..$v.len() {
-                puts!("{}{}", $v[i], if i + 1 == $v.len() {"\n"} else {" "});
-            }
-        }
     }
     input! {
         n: usize, m: i64,
@@ -134,42 +141,14 @@ fn solve() {
         rng.push((ax, bs));
     }
     rng.sort();
-    let mut ent = vec![];
-    // A kind of coordinate compression.
-    {
-        let mut nxt = vec![];
-        let mut cur = -1;
-        let mut ma = -1;
-        for (a, b) in rng {
-            if cur == a {
-                ma = max(ma, b);
-            } else {
-                if cur >= 0 {
-                    nxt.push((cur, ma));
-                }
-                cur = a;
-                ma = b;
-            }
-        }
-        if cur >= 0 {
-            nxt.push((cur, ma));
-        }
-        ent.push(nxt);
-    }
+    comp_max(&mut rng);
+    let mut ent = vec![rng];
     for i in 0..B {
-        let mut nxt = vec![];
-        let mut pos = 0;
-        while pos < ent[i].len() {
-            if pos + 1 < ent[i].len() &&
-                (ent[i][pos].0 ^ ent[i][pos + 1].0) == (1 << i) {
-                    nxt.push((ent[i][pos].0, max(ent[i][pos].1, ent[i][pos + 1].1)));
-                    pos += 2;
-                } else {
-                    nxt.push((ent[i][pos].0 & -(1 << (i + 1)), ent[i][pos].1));
-                    pos += 1;
-                }
+        let mut nxt = ent[i].clone();
+        for x in nxt.iter_mut() {
+            x.0 &= -1 << (i + 1);
         }
-        // eprintln!("ent[i] = {:?}, {:?}", ent[i], nxt);
+        comp_max(&mut nxt);
         ent.push(nxt);
     }
     let mut spl = vec![];
@@ -203,11 +182,4 @@ fn solve() {
         }
     }
     puts!("{}\n", ma);
-}
-
-fn main() {
-    // In order to avoid potential stack overflow, spawn a new thread.
-    let stack_size = 104_857_600; // 100 MB
-    let thd = std::thread::Builder::new().stack_size(stack_size);
-    thd.spawn(|| solve()).unwrap().join().unwrap();
 }
