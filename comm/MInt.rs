@@ -1,4 +1,4 @@
-/// Verified by https://atcoder.jp/contests/arc093/submissions/3968098
+/// Verified by https://atcoder.jp/contests/abc198/submissions/21774342
 mod mod_int {
     use std::ops::*;
     pub trait Mod: Copy { fn m() -> i64; }
