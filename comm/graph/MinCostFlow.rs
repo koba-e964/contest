@@ -1,8 +1,8 @@
-/*
- * Minimum cost flow.
- * Verified by: yukicoder No.1301 Strange Graph Shortest Path
- *              (https://yukicoder.me/submissions/590401)
- */
+// Minimum cost flow.
+// Verified by: yukicoder No.1301 Strange Graph Shortest Path
+//              (https://yukicoder.me/submissions/590401)
+//              AtCoder Library Practice Contest - E
+//              (https://atcoder.jp/contests/practice2/submissions/22478556)
 type Cap = isize;
 type Cost = i64;
 #[derive(Debug, Clone, Copy)]
@@ -12,7 +12,6 @@ struct Edge {
     cost: Cost,
     rev: usize, // rev is the position of reverse edge in graph[to]
 }
-
 
 #[derive(Debug, Clone)]
 struct MinCostFlow {
@@ -56,9 +55,6 @@ impl MinCostFlow {
         let n = self.n;
         let inf: Cost = Cost::MAX / 2;
         let mut res = 0;
-        for i in 0..n {
-            self.h[i] = 0;
-        }
         let h = &mut self.h;
         let dist = &mut self.dist;
         while f > 0 {
