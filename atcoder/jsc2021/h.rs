@@ -225,6 +225,7 @@ fn get_root_seq(roots: &[usize], cyc: &[Vec<(usize, i64)>]) -> Vec<(usize, i64)>
     root_seq
 }
 
+// The author read the editorial before implementing this.
 // Tags: namori-graph, almost-tree
 fn solve() {
     let out = std::io::stdout();
