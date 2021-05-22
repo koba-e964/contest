@@ -4,9 +4,8 @@ struct Rng {
 
 impl Rng {
     fn new() -> Self {
-        use std::collections::HashMap;
         use std::hash::{Hasher, BuildHasher};
-        let hm: HashMap<i32, i32> = HashMap::new();
+        let hm = std::collections::HashMap::<i32, i32>::new();
         let mut hash = hm.hasher().build_hasher();
         hash.write_u32(8128);
         Rng {
