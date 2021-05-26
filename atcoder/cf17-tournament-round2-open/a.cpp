@@ -81,10 +81,8 @@ int main(void) {
   int n, m, k;
   cin >> n >> m >> k;
   VI c(n);
-  int czero = 0;
   REP(i, 0, n) {
     cin >> c[i];
-    czero += c[i] == 0;
   }
   vector<PLPI> pool;
   REP(i, 0, m) {
