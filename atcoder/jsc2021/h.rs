@@ -171,13 +171,126 @@ impl Rng {
     }
 }
 
-fn dfs1(v: usize, par: usize, g: &[Vec<usize>], r: usize, root: &mut [usize]) {
-    root[v] = r;
-    for &w in &g[v] {
-        if w == par {
+struct NamoriSplit<T> {
+    #[allow(unused)]
+    forest: Vec<Vec<(usize, T)>>,
+    #[allow(unused)]
+    forest_e: Vec<Vec<usize>>,
+    #[allow(unused)]
+    to_root: Vec<usize>,
+    #[allow(unused)]
+    roots: Vec<usize>,
+    #[allow(unused)]
+    cycle: Vec<T>,
+    #[allow(unused)]
+    to_id: Vec<usize>,
+}
+
+fn namori_split<T: Clone>(g: &[Vec<(usize, T)>]) -> NamoriSplit<T> {
+    fn dfs1(v: usize, par: usize, g: &[Vec<usize>], r: usize, root: &mut [usize]) {
+        root[v] = r;
+        for &w in &g[v] {
+            if w == par {
+                continue;
+            }
+            dfs1(w, v, g, r, root);
+        }
+    }
+    fn get_root_seq<T: Clone>(roots: &[usize], cyc: &[Vec<(usize, T)>]) -> Vec<(usize, T)> {
+        let mut root_seq = vec![];
+        let v = roots[0];
+        if roots.len() == 2 {
+            for i in 0..2 {
+                root_seq.push((roots[i], cyc[v][i].1.clone()));
+            }
+            return root_seq;
+        }
+        let (mut w, c) = cyc[v][0].clone();
+        root_seq.push((v, c));
+        while w != v {
+            let mut nxt = None;
+            for &(a, ref b) in &cyc[w] {
+                if a == root_seq[root_seq.len() - 1].0 {
+                    continue;
+                }
+                nxt = Some((a, b.clone()));
+                break;
+            }
+            let nxt = nxt.unwrap();
+            root_seq.push((w, nxt.1));
+            w = nxt.0;
+        }
+        root_seq
+    }
+    let n = g.len();
+    let mut deg = vec![0; n];
+    for i in 0..n {
+        deg[i] = g[i].len();
+    }
+    let mut que = vec![];
+    for i in 0..n {
+        if deg[i] == 1 {
+            que.push(i);
+        }
+    }
+    let mut rem = vec![true; n];
+    while let Some(v) = que.pop() {
+        if !rem[v] {
             continue;
         }
-        dfs1(w, v, g, r, root);
+        rem[v] = false;
+         for &(w, _) in &g[v] {
+            if rem[w] {
+                deg[w] -= 1;
+                if deg[w] == 1 {
+                    que.push(w);
+                }
+            }
+        }
+    }
+    let mut forest = vec![vec![]; n];
+    let mut forest_e = vec![vec![]; n];
+    let mut cyc = vec![vec![]; n];
+    let mut roots = vec![];
+    for i in 0..n {
+        if rem[i] {
+            roots.push(i);
+        }
+        for &(a, ref c) in &g[i] {
+            if rem[i] && rem[a] {
+                cyc[i].push((a, c.clone()));
+            } else {
+                forest[i].push((a, c.clone()));
+                forest_e[i].push(a);
+            }
+        }
+    }
+    let mut to_root = vec![0; n];
+    for &r in &roots {
+        dfs1(r, n, &forest_e, r, &mut to_root);
+    }
+    let root_seq;
+    let mut to_id = vec![n; n];
+    let mut roots_0 = vec![];
+    let mut cycle = vec![];
+    {
+        root_seq = get_root_seq(&roots, &cyc);
+        for i in 0..root_seq.len() {
+            to_id[root_seq[i].0] = i;
+            roots_0.push(root_seq[i].0);
+            cycle.push(root_seq[i].1.clone());
+        }
+    }
+    for i in 0..n {
+        to_id[i] = to_id[to_root[i]];
+    }
+    NamoriSplit {
+        forest: forest,
+        forest_e: forest_e,
+        to_root: to_root,
+        roots: roots_0,
+        cycle: cycle,
+        to_id: to_id,
     }
 }
 
@@ -199,32 +312,6 @@ fn dfs2(v: usize, par: usize, g: &[Vec<(usize, i64)>], term: &[i64])
     (sum, imos)
 }
 
-fn get_root_seq(roots: &[usize], cyc: &[Vec<(usize, i64)>]) -> Vec<(usize, i64)> {
-    let mut root_seq = vec![];
-    let v = roots[0];
-    if roots.len() == 2 {
-        for i in 0..2 {
-            root_seq.push((roots[i], cyc[v][i].1));
-        }
-        return root_seq;
-    }
-    let (mut w, c) = cyc[v][0];
-    root_seq.push((v, c));
-    while w != v {
-        let mut nxt = (0, 0);
-        for &(a, b) in &cyc[w] {
-            if a == root_seq[root_seq.len() - 1].0 {
-                continue;
-            }
-            nxt = (a, b);
-            break;
-        }
-            root_seq.push((w, nxt.1));
-        w = nxt.0;
-    }
-    root_seq
-}
-
 // The author read the editorial before implementing this.
 // Tags: namori-graph, almost-tree
 fn solve() {
@@ -232,14 +319,6 @@ fn solve() {
     let mut out = BufWriter::new(out.lock());
     macro_rules! puts {
         ($($format:tt)*) => (let _ = write!(out,$($format)*););
-    }
-    #[allow(unused)]
-    macro_rules! putvec {
-        ($v:expr) => {
-            for i in 0..$v.len() {
-                puts!("{}{}", $v[i], if i + 1 == $v.len() {"\n"} else {" "});
-            }
-        }
     }
     input! {
         n: usize, m: usize,
@@ -255,59 +334,15 @@ fn solve() {
         deg[a] += 1;
         deg[i] += 1;
     }
-    let mut que = vec![];
-    for i in 0..n {
-        if deg[i] == 1 {
-            que.push(i);
-        }
-    }
-    let mut rem = vec![true; n];
-    while let Some(v) = que.pop() {
-        if !rem[v] {
-            continue;
-        }
-        rem[v] = false;
-        for &(w, _) in &g[v] {
-            if rem[w] {
-                deg[w] -= 1;
-                if deg[w] == 1 {
-                    que.push(w);
-                }
-            }
-        }
-    }
-    let mut forest = vec![vec![]; n];
-    let mut forest_e = vec![vec![]; n];
-    let mut cyc = vec![vec![]; n];
-    let mut roots = vec![];
-    for i in 0..n {
-        if rem[i] {
-            roots.push(i);
-        }
-        let (a, c) = ac[i];
-        if rem[i] && rem[a] {
-            cyc[i].push((a, c));
-            cyc[a].push((i, c));
-        } else {
-            forest[i].push((a, c));
-            forest_e[i].push(a);
-            forest[a].push((i, c));
-            forest_e[a].push(i);
-        }
-    }
-    let mut to_root = vec![0; n];
-    for &r in &roots {
-        dfs1(r, n, &forest_e, r, &mut to_root);
-    }
+    let NamoriSplit {
+        forest,
+        forest_e,
+        to_root,
+        roots,
+        cycle,
+        to_id,
+    } = namori_split(&g);
     let lca = LowestCommonAncestor::new(&forest_e, &roots);
-    let root_seq;
-    let mut root_inv = vec![n; n];
-    {
-        root_seq = get_root_seq(&roots, &cyc);
-        for i in 0..root_seq.len() {
-            root_inv[root_seq[i].0] = i;
-        }
-    }
     let mut term = vec![0; n];
     let mut qs = vec![];
     for &(x, y) in &xy {
@@ -317,7 +352,7 @@ fn solve() {
             let l = lca.lca(x, y);
             term[l] -= 2;
         } else {
-            qs.push((root_inv[to_root[x]], root_inv[to_root[y]]));
+            qs.push((to_id[x], to_id[y]));
         }
     }
     let mut sum = 0;
@@ -325,8 +360,6 @@ fn solve() {
         let (subsum, _) = dfs2(r, n, &forest, &term);
         sum += subsum;
     }
-    // eprintln!("root_seq = {:?}", root_seq);
-    // eprintln!("sum = {}, qs = {:?}", sum, qs);
     let r = roots.len();
     let mut val = vec![0u64; qs.len()];
     let mut rng = Rng::new();
@@ -344,8 +377,8 @@ fn solve() {
     }
     let mut hm = HashMap::new();
     for i in 0..r {
-        *hm.entry(imos[i]).or_insert(0) += root_seq[i].1;
-        sum += root_seq[i].1;
+        *hm.entry(imos[i]).or_insert(0) += cycle[i];
+        sum += cycle[i];
     }
     let mut ma = 0;
     for (_k, v) in hm {
