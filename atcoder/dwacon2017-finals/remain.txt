@@ -1,3 +1,2 @@
-b
 c (1200pt solution)
 d
