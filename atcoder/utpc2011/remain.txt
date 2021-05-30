@@ -1,6 +1,4 @@
-a
-d
-f
+f (IE)
 h (TLE)
 i
 j
