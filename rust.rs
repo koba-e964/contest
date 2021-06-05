@@ -20,7 +20,7 @@ macro_rules! input {
 
 macro_rules! input_inner {
     ($next:expr) => {};
-    ($next:expr, ) => {};
+    ($next:expr,) => {};
     ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
         let $var = read_value!($next, $t);
         input_inner!{$next $($r)*}
@@ -28,18 +28,7 @@ macro_rules! input_inner {
 }
 
 macro_rules! read_value {
-    ($next:expr, [graph1; $len:expr]) => {{
-        let mut g = vec![vec![]; $len];
-        let ab = read_value!($next, [(usize1, usize1)]);
-        for (a, b) in ab {
-            g[a].push(b);
-            g[b].push(a);
-        }
-        g
-    }};
-    ($next:expr, ( $($t:tt),* )) => {
-        ( $(read_value!($next, $t)),* )
-    };
+    ($next:expr, ( $($t:tt),* )) => { ($(read_value!($next, $t)),*) };
     ($next:expr, [ $t:tt ; $len:expr ]) => {
         (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
     };
@@ -54,34 +43,23 @@ macro_rules! read_value {
     ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
 }
 
-trait Change {
-    fn chmax(&mut self, x: Self);
-    fn chmin(&mut self, x: Self);
-}
+trait Change { fn chmax(&mut self, x: Self); fn chmin(&mut self, x: Self); }
 impl<T: PartialOrd> Change for T {
-    fn chmax(&mut self, x: T) {
-        if *self < x { *self = x; }
-    }
-    fn chmin(&mut self, x: T) {
-        if *self > x { *self = x; }
-    }
+    fn chmax(&mut self, x: T) { if *self < x { *self = x; } }
+    fn chmin(&mut self, x: T) { if *self > x { *self = x; } }
 }
 
-#[allow(unused)]
-macro_rules! debug {
-    ($($format:tt)*) => (write!(std::io::stderr(), $($format)*).unwrap());
-}
-#[allow(unused)]
-macro_rules! debugln {
-    ($($format:tt)*) => (writeln!(std::io::stderr(), $($format)*).unwrap());
+fn main() {
+    // In order to avoid potential stack overflow, spawn a new thread.
+    let stack_size = 104_857_600; // 100 MB
+    let thd = std::thread::Builder::new().stack_size(stack_size);
+    thd.spawn(|| solve()).unwrap().join().unwrap();
 }
 
 fn solve() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
-    macro_rules! puts {
-        ($($format:tt)*) => (let _ = write!(out,$($format)*););
-    }
+    macro_rules! puts {($($format:tt)*) => (let _ = write!(out,$($format)*););}
     #[allow(unused)]
     macro_rules! putvec {
         ($v:expr) => {
@@ -92,9 +70,3 @@ fn solve() {
     }
 }
 
-fn main() {
-    // In order to avoid potential stack overflow, spawn a new thread.
-    let stack_size = 104_857_600; // 100 MB
-    let thd = std::thread::Builder::new().stack_size(stack_size);
-    thd.spawn(|| solve()).unwrap().join().unwrap();
-}
