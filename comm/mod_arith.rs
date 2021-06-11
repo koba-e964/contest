@@ -44,6 +44,44 @@ fn phi(mut x: i64) -> i64 {
     ret
 }
 
+fn invmod(x: i64, m: i64) -> i64 {
+    let (g, mut y, _) = ext_gcd(x, m);
+    assert_eq!(g, 1);
+    y %= m;
+    if y < 0 {
+        y += m;
+    }
+    y
+}
+
+// Verified by: https://atcoder.jp/contests/ttpc2019/submissions/23338287
+fn garner((a, m): (i64, i64), (b, n): (i64, i64)) -> i64 {
+    assert!(0 <= a);
+    assert!(0 <= b);
+    if a == b {
+        return a;
+    }
+    let (g, mut x, mut y) = ext_gcd(m, n);
+    assert_eq!(a % g, b % g);
+    let m = m / g;
+    let n = n / g;
+    let q0 = a / g;
+    let q1 = b / g;
+    x %= n;
+    if x < 0 {
+        x += n;
+    }
+    y %= m;
+    if y < 0 {
+        y += m;
+    }
+    let val = (q0 * y) % m * n + (q1 * x) % n * m;
+    let ret = val * g + (a % g);
+    assert_eq!(ret % m, a % m);
+    assert_eq!(ret % n, b % n);
+    ret % (m / g * n)
+}
+
 const THRESHOLD: i64 = 60;
 
 fn garner_thresh((a, m): (i64, i64), (b, n): (i64, i64)) -> i64 {
