@@ -58,22 +58,43 @@ fn main() {
 
 // Quick-Find data structure.
 // Verified by: https://atcoder.jp/contests/cf17-tournament-round3-open/submissions/22928265
-struct QuickFind { root: Vec<usize>, mem: Vec<Vec<usize>> }
+// Verified by: https://atcoder.jp/contests/ttpc2019/submissions/23384553 (polymorphic version)
+struct QuickFind<T = ()> {
+    root: Vec<usize>, mem: Vec<Vec<usize>>,
+    dat: Vec<T>, default: T,
+}
 
-impl QuickFind {
+impl QuickFind<()> {
+    #[allow(unused)]
     fn new(n: usize) -> Self {
+        Self::with_dat(n, ())
+    }
+    #[allow(unused)]
+    fn unite(&mut self, x: usize, y: usize) {
+        self.unite_with_hooks(x, y, |&(), _| (), |(), ()| ());
+    }
+}
+impl<T: Clone> QuickFind<T> {
+    fn with_dat(n: usize, def: T) -> Self {
         let root = (0..n).collect();
         let mut mem = vec![vec![]; n];
         for i in 0..n {
             mem[i] = vec![i];
         }
-        QuickFind { root: root, mem: mem }
+        QuickFind { root: root, mem: mem, dat: vec![def.clone(); n], default: def }
     }
     fn root(&self, x: usize) -> usize {
         self.root[x]
     }
+    #[allow(unused)]
+    fn set(&mut self, idx: usize, val: T) {
+        let r = self.root[idx];
+        self.dat[r] = val;
+    }
     // unite always merges y to x if |x| >= |y|.
-    fn unite(&mut self, x: usize, y: usize) {
+    fn unite_with_hooks<F: FnMut(&T, i64), G: FnMut(T, T) -> T>(
+        &mut self, x: usize, y: usize,
+        mut hook: F, mut merge: G) {
         let mut x = self.root(x);
         let mut y = self.root(y);
         if x == y { return }
@@ -85,6 +106,14 @@ impl QuickFind {
             self.root[v] = x;
         }
         self.mem[x].extend_from_slice(&memy);
+        // hook
+        hook(&self.dat[x], -1);
+        hook(&self.dat[y], -1);
+        self.dat[x] = merge(
+            std::mem::replace(&mut self.dat[x], self.default.clone()),
+            std::mem::replace(&mut self.dat[y], self.default.clone()),
+        );
+        hook(&self.dat[x], 1);
     }
     #[allow(unused)]
     fn is_same_set(&self, x: usize, y: usize) -> bool {
@@ -279,35 +308,23 @@ fn solve() {
         q: usize,
         ab: [(usize1, usize1); q],
     }
-    let mut qf = QuickFind::new(n);
-    let mut dp = vec![Some(AVLTree::new()); n];
-    let mut lim = vec![0i64; n];
+    let mut qf = QuickFind::with_dat(n, (AVLTree::new(), 0));
     for i in 0..n {
         let (x, p) = xp[i];
         if x < 0 {
             let mut tmp = AVLTree::new();
             tmp.insert(p, -x);
-            dp[i] = Some(tmp);
+            qf.set(i, (tmp, 0));
         } else {
-            lim[i] = x;
+            qf.set(i, (AVLTree::new(), x));
         }
     }
     let mut tot: i64 = 0;
     for &(a, b) in &ab {
         if !qf.is_same_set(a, b) {
-            let ra = qf.root(a);
-            let rb = qf.root(b);
-            qf.unite(a, b);
-            let r = qf.root(a);
-            assert!(ra == r || rb == r);
-            let ro = ra + rb - r;
-            let oldr = calc(&dp[r].as_ref().unwrap(), lim[r]);
-            let oldro = calc(&dp[ro].as_ref().unwrap(), lim[ro]);
-            dp[r] = Some(merge(dp[r].take().unwrap(), dp[ro].take().unwrap()));
-            lim[r] += lim[ro];
-            lim[ro] = 0;
-            let newr = calc(&dp[r].as_ref().unwrap(), lim[r]);
-            tot += newr - oldr - oldro;
+            qf.unite_with_hooks(a, b,
+                                |&(ref t, x), coef| tot += coef * calc(&t, x),
+                                |(t1, x1), (t2, x2)| (merge(t1, t2), x1 + x2));
         }
         puts!("{}\n", tot);
     }
