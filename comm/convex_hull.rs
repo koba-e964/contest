@@ -2,6 +2,8 @@
 // Returns the points of the convex hull in the counter-clockwise order.
 // Verified by: AGC021 B
 // https://atcoder.jp/contests/agc021/submissions/22697344
+// QUPC 2014 G
+// https://atcoder.jp/contests/qupc2014/submissions/23493247
 type Coord = i64; // the type of coordinates
 type P = (Coord, Coord);
 
@@ -15,6 +17,9 @@ fn sub((ax, ay): P, (bx, by): P) -> P {
 
 fn convex_hull(ps: &[P]) -> Vec<P> {
     let n = ps.len();
+    if n == 0 {
+        return vec![];
+    }
     let mut k = 0;
     let mut ps = ps.to_vec();
     ps.sort();
