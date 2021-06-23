@@ -1,0 +1,16 @@
+poster
+sengoku
+stairs
+alplusb
+regions
+finals
+hideseek
+simroad1
+simroad2
+simroad3
+simroad4
+simroad5
+contest
+highway
+lake
+plugs

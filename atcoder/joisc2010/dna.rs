@@ -1,6 +1,55 @@
+#[allow(unused_imports)]
+use std::cmp::*;
+#[allow(unused_imports)]
+use std::collections::*;
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes.by_ref().map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr,) => {};
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, ( $($t:tt),* )) => { ($(read_value!($next, $t)),*) };
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+    ($next:expr, chars) => {
+        read_value!($next, String).chars().collect::<Vec<char>>()
+    };
+    ($next:expr, usize1) => (read_value!($next, usize) - 1);
+    ($next:expr, [ $t:tt ]) => {{
+        let len = read_value!($next, usize);
+        read_value!($next, [$t; len])
+    }};
+    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+}
+
+trait Change { fn chmax(&mut self, x: Self); fn chmin(&mut self, x: Self); }
+impl<T: PartialOrd> Change for T {
+    fn chmax(&mut self, x: T) { if *self < x { *self = x; } }
+    fn chmin(&mut self, x: T) { if *self > x { *self = x; } }
+}
+
 // Ref: http://algoogle.hadrori.jp/algorithm/aho-corasick.html
 // Verified by: https://atcoder.jp/contests/jsc2019-final/submissions/23661893
-// Verified by: https://atcoder.jp/contests/joisc2010/submissions/23693164
 // If no reference to the root remains, it does not work correctly.
 struct PMA<T> {
     len: usize,
@@ -85,4 +134,35 @@ impl<T: Copy> PMA<T> {
         }
         pma.borrow().next[idx].clone().unwrap()
     }
+}
+
+// Tags: aho-corasick, string-algorithms, automaton
+fn main() {
+    input! {
+        n: usize,
+        s: chars,
+        t: [chars; n],
+    }
+    let conv = |t: &[char]| {
+        let a = ['A', 'G', 'C', 'T'];
+        t.iter().map(|&c| a.iter().position(|&x| x == c).unwrap())
+            .collect::<Vec<_>>()
+    };
+    let t: Vec<_> = t.iter().map(|t| conv(t)).collect();
+    let root = PMA::with_arrays(4, &t, |s, x| if s.len() == x { x } else { 0 }, max, 0);
+    let mut cur = root.clone();
+    const INF: i32 = 1 << 20;
+    let mut dp = vec![INF; s.len()];
+    let s = conv(&s);
+    dp[0] = 0;
+    for i in 0..s.len() {
+        cur = PMA::progress(cur, s[i]);
+        let mut me = INF;
+        let l = cur.borrow().dp;
+        for j in i + 1 - l..i {
+            me.chmin(dp[j]);
+        }
+        dp[i].chmin(me + 1);
+    }
+    println!("{}", max(1, dp[s.len() - 1]));
 }
