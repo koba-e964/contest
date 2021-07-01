@@ -1,6 +1,7 @@
 // Ref: http://algoogle.hadrori.jp/algorithm/aho-corasick.html
 // Verified by: https://atcoder.jp/contests/jsc2019-final/submissions/23661893
 // Verified by: https://atcoder.jp/contests/joisc2010/submissions/23693164
+// Verified by: https://atcoder.jp/contests/jag2017autumn/submissions/23887937
 // If no reference to the root remains, it does not work correctly.
 struct PMA<T> {
     len: usize,
@@ -9,7 +10,7 @@ struct PMA<T> {
     back: std::rc::Weak<std::cell::RefCell<Self>>
 }
 
-impl<T: Copy> PMA<T> {
+impl<T: Clone> PMA<T> {
     fn new(len: usize, e: T) -> std::rc::Rc<std::cell::RefCell<Self>> {
         use std::rc::{Rc, Weak};
         use std::cell::RefCell;
@@ -28,12 +29,12 @@ impl<T: Copy> PMA<T> {
     }
     pub fn with_arrays<F: Fn(&[usize], usize) -> T, M: Fn(T, T) -> T>(len: usize, pat: &[Vec<usize>], f: F, m: M, e: T) -> std::rc::Rc<std::cell::RefCell<Self>> {
         use std::rc::{Rc, Weak};
-        let root = Self::new(len, e);
+        let root = Self::new(len, e.clone());
         let root_cp = Rc::clone(&root);
         let root_weak = Rc::downgrade(&root);
         root.borrow_mut().back = Weak::clone(&root_weak);
         for pat in pat {
-            Self::add_pattern(root.clone(), &pat, &f, &m, e);
+            Self::add_pattern(root.clone(), &pat, &f, &m, e.clone());
         }
         let mut que = std::collections::VecDeque::new();
         for i in 0..len {
@@ -55,7 +56,7 @@ impl<T: Copy> PMA<T> {
                     }
                     let to = nxt.borrow().next[i].clone().unwrap();
                     tmp.borrow_mut().back = Rc::downgrade(&to);
-                    let newdp = m(tmp.borrow().dp, to.borrow().dp);
+                    let newdp = m(tmp.borrow().dp.clone(), to.borrow().dp.clone());
                     tmp.borrow_mut().dp = newdp;
                     que.push_back(tmp);
                 }
@@ -69,11 +70,11 @@ impl<T: Copy> PMA<T> {
         for i in 0..pat.len() {
             let c = pat[i];
             if now.borrow().next[c].is_none() {
-                now.borrow_mut().next[c] = Some(Self::new(len, e));
+                now.borrow_mut().next[c] = Some(Self::new(len, e.clone()));
             }
             let val = now.borrow().next[c].clone().unwrap();
             now = val;
-            let newdp = m(now.borrow().dp, f(&pat, i + 1));
+            let newdp = m(now.borrow().dp.clone(), f(&pat, i + 1));
             now.borrow_mut().dp = newdp;
         }
     }
