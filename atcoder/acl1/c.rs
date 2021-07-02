@@ -1,10 +1,52 @@
+#[allow(unused_imports)]
+use std::cmp::*;
+#[allow(unused_imports)]
+use std::collections::*;
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes.by_ref().map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr,) => {};
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, ( $($t:tt),* )) => { ($(read_value!($next, $t)),*) };
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+    ($next:expr, chars) => {
+        read_value!($next, String).chars().collect::<Vec<char>>()
+    };
+    ($next:expr, usize1) => (read_value!($next, usize) - 1);
+    ($next:expr, [ $t:tt ]) => {{
+        let len = read_value!($next, usize);
+        read_value!($next, [$t; len])
+    }};
+    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+}
+
 // Minimum cost flow.
 // Verified by: yukicoder No.1301 Strange Graph Shortest Path
 //              (https://yukicoder.me/submissions/590401)
 //              AtCoder Library Practice Contest - E
 //              (https://atcoder.jp/contests/practice2/submissions/22478556)
-//              ACL Contest 1 - C
-//              (https://atcoder.jp/contests/acl1/submissions/23898415)
 type Cap = isize;
 type Cost = i64;
 #[derive(Debug, Clone, Copy)]
@@ -55,7 +97,7 @@ impl MinCostFlow {
     // whose source is s, sink is t, and flow is f.
     fn min_cost_flow(&mut self, s: usize, t: usize, mut f: Cap) -> Cost {
         let n = self.n;
-        let inf: Cost = std::i64::MAX / 10; // ?????
+        let inf: Cost = std::i64::MAX / 10; // ????
         let mut res = 0;
         let h = &mut self.h;
         let dist = &mut self.dist;
@@ -106,4 +148,51 @@ impl MinCostFlow {
         }
         return res;
     }
+}
+
+fn main() {
+    input! {
+        n: usize, m: usize,
+        s: [chars; n],
+    }
+    let mut os = vec![];
+    for i in 0..n {
+        for j in 0..m {
+            if s[i][j] == 'o' {
+                os.push((i, j));
+            }
+        }
+    }
+    let k = os.len();
+    let mut mcf = MinCostFlow::new(2 + k + n * m);
+    const W: i64 = 1000;
+    for i in 0..k {
+        let mut dp = vec![vec![false; m]; n];
+        let (x, y) = os[i];
+        mcf.add_edge(0, 2 + i, 1, 0);
+        dp[x][y] = true;
+        for a in x..n {
+            for b in y..m {
+                if s[a][b] == '#' {
+                    continue;
+                }
+                if a > x {
+                    dp[a][b] |= dp[a - 1][b];
+                }
+                if b > y {
+                    dp[a][b] |= dp[a][b - 1];
+                }
+                if dp[a][b] {
+                    mcf.add_edge(2 + i, 2 + k + a * m + b, 1, W - (a - x + b - y) as i64);
+                }
+            }
+        }
+    }
+    for i in 0..n {
+        for j in 0..m {
+            mcf.add_edge(2 + k + i * m + j, 1, 1, 0);
+        }
+    }
+    let ans = mcf.min_cost_flow(0, 1, k as isize);
+    println!("{}", W * k as i64 - ans);
 }
