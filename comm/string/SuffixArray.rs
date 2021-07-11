@@ -3,14 +3,18 @@
  * Verified by: AtCoder ARC050 (http://arc050.contest.atcoder.jp/submissions/818912)
  * Reference: http://mayokoex.hatenablog.com/entry/2016/04/03/145845
  */
-fn create_sa(s: &[char]) -> Vec<usize> {
+fn create_sa<T: Ord + Clone>(s: &[T]) -> Vec<usize> {
     let n = s.len();
     let mut sa: Vec<usize> = (0 .. n + 1).collect();
     let mut rank: Vec<usize> = vec![0; n + 1];
     let mut tmp = vec![0; n + 1];
 
-    for i in 0 .. n + 1 {
-        rank[i] = if i < n { s[i] as usize + 1 } else { 0_usize };
+    let mut coord = s.to_vec();
+    coord.sort();
+    coord.dedup();
+
+    for i in 0..n + 1 {
+        rank[i] = if i < n { coord.binary_search(&s[i]).unwrap() + 1 } else { 0_usize };
     }
     let mut k = 1;
     while k <= n {
@@ -38,7 +42,7 @@ struct LCP {
 }
 
 impl LCP {
-    pub fn new(s: &[char], sa: &[usize]) -> LCP {
+    pub fn new<T: Ord>(s: &[T], sa: &[usize]) -> LCP {
         let n = sa.len() - 1;
         let mut inv_sa = vec![0; n + 1];
         for i in 0 .. n + 1 {
@@ -51,7 +55,7 @@ impl LCP {
             spt: spt,
         }
     }
-    fn create_lcp(s: &[char], sa: &[usize]) -> Vec<usize> {
+    fn create_lcp<T: Ord>(s: &[T], sa: &[usize]) -> Vec<usize> {
         let n = s.len();
         let mut rank = vec![0; n + 1];
         let mut lcp = vec![0; n];

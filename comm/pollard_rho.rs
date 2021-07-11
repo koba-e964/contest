@@ -1,6 +1,5 @@
-/// https://judge.yosupo.jp/submission/5155
+// https://judge.yosupo.jp/submission/5155
 mod pollard_rho {
-    use std::collections::HashMap;
     /// binary gcd
     pub fn gcd(mut x: i64, mut y: i64) -> i64 {
         if y == 0 { return x; }
@@ -27,9 +26,7 @@ mod pollard_rho {
         let mut sum = 0;
         let mut cur = x;
         while y > 0 {
-            if (y & 1) == 1 {
-                sum = add_mod(sum, cur, n);
-            }
+            if (y & 1) == 1 { sum = add_mod(sum, cur, n); }
             cur = add_mod(cur, cur, n);
             y >>= 1;
         }
@@ -40,13 +37,9 @@ mod pollard_rho {
         let mut prod = if n == 1 { 0 } else { 1 };
         let mut cur = x % n;
         while e > 0 {
-            if (e & 1) == 1 {
-                prod = mul_mod(prod, cur, n);
-            }
+            if (e & 1) == 1 { prod = mul_mod(prod, cur, n); }
             e >>= 1;
-            if e > 0 {
-                cur = mul_mod(cur, cur, n);
-            }
+            if e > 0 { cur = mul_mod(cur, cur, n); }
         }
         prod
     }
@@ -65,7 +58,7 @@ mod pollard_rho {
             if a % n == 0 { return true; }
             let mut x = mod_pow(a, d, n);
             if x == 1 { return true; }
-            for _ in 0 .. e {
+            for _ in 0..e {
                 if x == n - 1 {
                     return true;
                 }
@@ -95,9 +88,7 @@ mod pollard_rho {
                 for _ in 0..r {
                     y = f(y);
                     d = gcd((x - y).abs(), n);
-                    if d != 1 {
-                        break;
-                    }
+                    if d != 1 { break; }
                 }
                 r *= 2;
             }
@@ -111,10 +102,8 @@ mod pollard_rho {
 
     /// Outputs (p, e) in p's ascending order.
     pub fn factorize(x: i64) -> Vec<(i64, usize)> {
-        if x <= 1 {
-            return Vec::new();
-        }
-        let mut hm = HashMap::new();
+        if x <= 1 { return vec![]; }
+        let mut hm = std::collections::HashMap::new();
         let mut pool = vec![x];
         let mut c = 1;
         while let Some(u) = pool.pop() {

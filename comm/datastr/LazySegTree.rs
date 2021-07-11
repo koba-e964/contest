@@ -89,3 +89,27 @@ impl<R: ActionRing> LazySegTree<R> {
         self.query_sub(a, b, 0, dep, 0, n)
     }
 }
+
+enum Affine {}
+
+impl ActionRing for Affine {
+    type T = i64; // data
+    type U = (i64, i64); // action, (a, b) |-> x |-> ax + b
+    fn biop(x: Self::T, y: Self::T) -> Self::T {
+        x + y
+    }
+    fn update(x: Self::T, (a, b): Self::U, height: usize) -> Self::T {
+        x * a + (b << height)
+    }
+    fn upop(fst: Self::U, snd: Self::U) -> Self::U {
+        let (a, b) = fst;
+        let (c, d) = snd;
+        (a * c, b * c + d)
+    }
+    fn e() -> Self::T {
+        0
+    }
+    fn upe() -> Self::U { // identity for upop
+        (1, 0)
+    }
+}

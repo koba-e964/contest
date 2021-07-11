@@ -4,17 +4,17 @@
 //              https://yukicoder.me/submissions/571533
 fn aho_corasick(pat: &[Vec<usize>], alpha: usize)
                         -> (Vec<Vec<usize>>, Vec<bool>) {
-    let mut st = vec![vec![usize::MAX; alpha]];
+    let mut st = vec![vec![std::usize::MAX; alpha]];
     let mut fin = vec![false];
     let mut back = vec![0];
     for p in pat {
         let mut cur = 0;
         for i in 0..p.len() {
             let c = p[i];
-            if st[cur][c] == usize::MAX {
-                st.push(vec![usize::MAX; alpha]);
+            if st[cur][c] == std::usize::MAX {
+                st.push(vec![std::usize::MAX; alpha]);
                 fin.push(false);
-                back.push(usize::MAX);
+                back.push(std::usize::MAX);
                 st[cur][c] = st.len() - 1;
             }
             cur = st[cur][c];
@@ -27,23 +27,23 @@ fn aho_corasick(pat: &[Vec<usize>], alpha: usize)
     let mut que = std::collections::VecDeque::new();
     que.push_back(0);
     while let Some(i) = que.pop_front() {
-        assert_ne!(back[i], usize::MAX);
+        assert_ne!(back[i], std::usize::MAX);
         if fin[back[i]] {
             fin[i] = true;
         }
         for j in 0..alpha {
-            if st[i][j] != usize::MAX {
+            if st[i][j] != std::usize::MAX {
                 let nxt = st[i][j];
                 que.push_back(nxt);
                 if i == 0 {
                     back[nxt] = 0;
                 } else {
                     let mut cur = back[i];
-                    while st[cur][j] == usize::MAX && cur > 0 {
-                        assert_ne!(back[cur], usize::MAX);
+                    while st[cur][j] == std::usize::MAX && cur > 0 {
+                        assert_ne!(back[cur], std::usize::MAX);
                         cur = back[cur];
                     }
-                    back[nxt] = [0, st[cur][j]][usize::from(st[cur][j] != usize::MAX)];
+                    back[nxt] = [0, st[cur][j]][usize::from(st[cur][j] != std::usize::MAX)];
                 }
             } 
         }
@@ -51,12 +51,12 @@ fn aho_corasick(pat: &[Vec<usize>], alpha: usize)
     // fill in vacant transitions
     for i in 0..st.len() {
         for j in 0..alpha {
-            if st[i][j] == usize::MAX {
+            if st[i][j] == std::usize::MAX {
                 let mut cur = back[i];
-                while st[cur][j] == usize::MAX && cur > 0 {
+                while st[cur][j] == std::usize::MAX && cur > 0 {
                     cur = back[cur];
                 }
-                st[i][j] = [0, st[cur][j]][usize::from(st[cur][j] != usize::MAX)];
+                st[i][j] = [0, st[cur][j]][usize::from(st[cur][j] != std::usize::MAX)];
             }
         }
     }

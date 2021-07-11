@@ -55,6 +55,7 @@ fn invmod(x: i64, m: i64) -> i64 {
 }
 
 // Verified by: https://atcoder.jp/contests/ttpc2019/submissions/23338287
+// Verified by: https://atcoder.jp/contests/acl1/submissions/23895636
 fn garner((a, m): (i64, i64), (b, n): (i64, i64)) -> i64 {
     assert!(0 <= a);
     assert!(0 <= b);
@@ -75,7 +76,9 @@ fn garner((a, m): (i64, i64), (b, n): (i64, i64)) -> i64 {
     if y < 0 {
         y += m;
     }
-    let val = (q0 * y) % m * n + (q1 * x) % n * m;
+    let rem0 = (q0 as i128 * y as i128) % m as i128;
+    let rem1 = (q1 as i128 * x as i128) % n as i128;
+    let val = rem0 as i64 * n + rem1 as i64 * m;
     let ret = val * g + (a % g);
     assert_eq!(ret % m, a % m);
     assert_eq!(ret % n, b % n);
