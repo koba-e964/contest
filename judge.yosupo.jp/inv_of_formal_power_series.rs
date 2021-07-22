@@ -1,7 +1,3 @@
-#[allow(unused_imports)]
-use std::cmp::*;
-#[allow(unused_imports)]
-use std::collections::*;
 use std::io::{Write, BufWriter};
 // https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
 macro_rules! input {
@@ -57,25 +53,16 @@ macro_rules! read_value {
     };
 }
 
-#[allow(unused)]
-macro_rules! debug {
-    ($($format:tt)*) => (write!(std::io::stderr(), $($format)*).unwrap());
-}
-#[allow(unused)]
-macro_rules! debugln {
-    ($($format:tt)*) => (writeln!(std::io::stderr(), $($format)*).unwrap());
-}
-
 /// Verified by https://atcoder.jp/contests/arc093/submissions/3968098
 mod mod_int {
     use std::ops::*;
     pub trait Mod: Copy { fn m() -> i64; }
     #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-    pub struct ModInt<M> { pub x: i64, phantom: ::std::marker::PhantomData<M> }
+    pub struct ModInt<M> { pub x: i32, phantom: ::std::marker::PhantomData<M> }
     impl<M: Mod> ModInt<M> {
         // x >= 0
-        pub fn new(x: i64) -> Self { ModInt::new_internal(x % M::m()) }
-        fn new_internal(x: i64) -> Self {
+        pub fn new(x: i64) -> Self { ModInt::new_internal((x % M::m()) as _) }
+        fn new_internal(x: i32) -> Self {
             ModInt { x: x, phantom: ::std::marker::PhantomData }
         }
         pub fn pow(self, mut e: i64) -> Self {
@@ -97,7 +84,7 @@ mod mod_int {
         fn add(self, other: T) -> Self {
             let other = other.into();
             let mut sum = self.x + other.x;
-            if sum >= M::m() { sum -= M::m(); }
+            if sum >= M::m() as _ { sum -= M::m() as i32; }
             ModInt::new_internal(sum)
         }
     }
@@ -106,13 +93,14 @@ mod mod_int {
         fn sub(self, other: T) -> Self {
             let other = other.into();
             let mut sum = self.x - other.x;
-            if sum < 0 { sum += M::m(); }
+            if sum < 0 { sum += M::m() as i32; }
             ModInt::new_internal(sum)
         }
     }
     impl<M: Mod, T: Into<ModInt<M>>> Mul<T> for ModInt<M> {
         type Output = Self;
-        fn mul(self, other: T) -> Self { ModInt::new(self.x * other.into().x % M::m()) }
+        fn mul(self, other: T) -> Self { ModInt::new(
+            self.x as i64 * other.into().x as i64 % M::m()) }
     }
     impl<M: Mod, T: Into<ModInt<M>>> AddAssign<T> for ModInt<M> {
         fn add_assign(&mut self, other: T) { *self = *self + other; }
@@ -134,7 +122,7 @@ mod mod_int {
     }
     impl<M: Mod> ::std::fmt::Debug for ModInt<M> {
         fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-            let (mut a, mut b, _) = red(self.x, M::m());
+            let (mut a, mut b, _) = red(self.x as _, M::m());
             if b < 0 {
                 a = -a;
                 b = -b;
@@ -173,40 +161,66 @@ macro_rules! define_mod {
         impl mod_int::Mod for $struct_name { fn m() -> i64 { $modulo } }
     }
 }
-const MOD: i64 = 998244353;
+const MOD: i64 = 998_244_353;
 define_mod!(P, MOD);
 type ModInt = mod_int::ModInt<P>;
 
-/// FFT (in-place, verified as NTT only)
-/// R: Ring + Copy
-/// Verified by: https://codeforces.com/contest/1096/submission/47672373
+// FFT (in-place, verified as NTT only)
+// R: Ring + Copy
+// Verified by: https://codeforces.com/contest/1096/submission/47672373
+// Adopts the technique used in https://judge.yosupo.jp/submission/3153.
 mod fft {
     use std::ops::*;
-    /// n should be a power of 2. zeta is a primitive n-th root of unity.
-    /// one is unity
-    /// Note that the result should be multiplied by 1/sqrt(n).
-    #[inline(always)]
-    pub fn transform<R>(f: &mut [R], zeta: R, one: R)
+    // n should be a power of 2. zeta is a primitive n-th root of unity.
+    // one is unity
+    // Note that the result is bit-reversed.
+    pub fn fft<R>(f: &mut [R], zeta: R, one: R)
         where R: Copy +
         Add<Output = R> +
         Sub<Output = R> +
         Mul<Output = R> {
         let n = f.len();
         assert!(n.is_power_of_two());
-        {
-            let mut i = 0;
-            for j in 1 .. n - 1 {
-                let mut k = n >> 1;
-                loop {
-                    i ^= k;
-                    if k <= i { break; }
-                    k >>= 1;
+        let mut m = n;
+        let mut base = zeta;
+        unsafe {
+            while m > 2 {
+                m >>= 1;
+                let mut r = 0;
+                while r < n {
+                    let mut w = one;
+                    for s in r..r + m {
+                        let &u = f.get_unchecked(s);
+                        let d = *f.get_unchecked(s + m);
+                        *f.get_unchecked_mut(s) = u + d;
+                        *f.get_unchecked_mut(s + m) = w * (u - d);
+                        w = w * base;
+                    }
+                    r += 2 * m;
                 }
-                if j < i {
-                    f.swap(i, j);
+                base = base * base;
+            }
+            if m > 1 {
+                // m = 1
+                let mut r = 0;
+                while r < n {
+                    let &u = f.get_unchecked(r);
+                    let d = *f.get_unchecked(r + 1);
+                    *f.get_unchecked_mut(r) = u + d;
+                    *f.get_unchecked_mut(r + 1) = u - d;
+                    r += 2;
                 }
             }
         }
+    }
+    pub fn inv_fft<R>(f: &mut [R], zeta_inv: R, one: R)
+        where R: Copy +
+        Add<Output = R> +
+        Sub<Output = R> +
+        Mul<Output = R> {
+        let n = f.len();
+        assert!(n.is_power_of_two());
+        let zeta = zeta_inv; // inverse FFT
         let mut zetapow = Vec::with_capacity(20);
         {
             let mut m = 1;
@@ -219,6 +233,18 @@ mod fft {
         }
         let mut m = 1;
         unsafe {
+            if m < n {
+                zetapow.pop();
+                let mut r = 0;
+                while r < n {
+                    let &u = f.get_unchecked(r);
+                    let d = *f.get_unchecked(r + 1);
+                    *f.get_unchecked_mut(r) = u + d;
+                    *f.get_unchecked_mut(r + 1) = u - d;
+                    r += 2;
+                }
+                m = 2;
+            }
             while m < n {
                 let base = zetapow.pop().unwrap();
                 let mut r = 0;
@@ -263,28 +289,24 @@ fn formal_power_series_inv<P: mod_int::Mod + PartialOrd>(
     // Adopts the technique used in https://judge.yosupo.jp/submission/3153
     while sz < n {
         let zeta = gen.pow((P::m() - 1) / sz as i64 / 2);
-        for i in 0..2 * sz {
-            tmp_f[i] = f[i];
-            tmp_r[i] = r[i];
-        }
-        fft::transform(&mut tmp_r[..2 * sz], zeta, 1.into());
-        fft::transform(&mut tmp_f[..2 * sz], zeta, 1.into());
+        tmp_f[..2 * sz].copy_from_slice(&f[..2 * sz]);
+        tmp_r[..2 * sz].copy_from_slice(&r[..2 * sz]);
+        fft::fft(&mut tmp_r[..2 * sz], zeta, 1.into());
+        fft::fft(&mut tmp_f[..2 * sz], zeta, 1.into());
         let fac = mod_int::ModInt::new(2 * sz as i64).inv().pow(2);
         for i in 0..2 * sz {
-            tmp_f[i] = tmp_f[i] * tmp_r[i];
+            tmp_f[i] *= tmp_r[i];
         }
-        fft::transform(&mut tmp_f[..2 * sz], zeta.inv(), 1.into());
-        for i in 0..sz {
-            tmp_f[i] = 0.into();
+        fft::inv_fft(&mut tmp_f[..2 * sz], zeta.inv(), 1.into());
+        for v in &mut tmp_f[..sz] {
+            *v = 0.into();
         }
-        fft::transform(&mut tmp_f[..2 * sz], zeta, 1.into());
+        fft::fft(&mut tmp_f[..2 * sz], zeta, 1.into());
         for i in 0..2 * sz {
             tmp_f[i] = -tmp_f[i] * tmp_r[i] * fac;
         }
-        fft::transform(&mut tmp_f[..2 * sz], zeta.inv(), 1.into());
-        for i in sz..2 * sz {
-            r[i] = tmp_f[i];
-        }
+        fft::inv_fft(&mut tmp_f[..2 * sz], zeta.inv(), 1.into());
+        r[sz..2 * sz].copy_from_slice(&tmp_f[sz..2 * sz]);
         sz *= 2;
     }
     r
@@ -294,7 +316,7 @@ fn main() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
     macro_rules! puts {
-        ($($format:tt)*) => (write!(out,$($format)*).unwrap());
+        ($($format:tt)*) => (let _ = write!(out,$($format)*););
     }
     input! {
         n: usize,
@@ -309,6 +331,9 @@ fn main() {
     let a0inv = a0.inv();
     for i in 0..n {
         f[i] *= a0inv;
+    }
+    for _ in 0..9 {
+        formal_power_series_inv(&f, 3.into());
     }
     let g = formal_power_series_inv(&f, 3.into());
     for i in 0..n {
