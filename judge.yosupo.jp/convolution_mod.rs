@@ -1,7 +1,3 @@
-#[allow(unused_imports)]
-use std::cmp::*;
-#[allow(unused_imports)]
-use std::collections::*;
 use std::io::{Write, BufWriter};
 // https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
 macro_rules! input {
@@ -168,34 +164,63 @@ const MOD: i64 = 998_244_353;
 define_mod!(P, MOD);
 type ModInt = mod_int::ModInt<P>;
 
-/// FFT (in-place, verified as NTT only)
-/// R: Ring + Copy
-/// Verified by: https://codeforces.com/contest/1096/submission/47672373
+// FFT (in-place, verified as NTT only)
+// R: Ring + Copy
+// Verified by: https://codeforces.com/contest/1096/submission/47672373
+// Adopts the technique used in https://judge.yosupo.jp/submission/3153.
 mod fft {
     use std::ops::*;
-    /// n should be a power of 2. zeta is a primitive n-th root of unity.
-    /// one is unity
-    /// Note that the result should be multiplied by 1/sqrt(n).
-    pub fn transform<R>(f: &mut [R], zeta: R, one: R)
+    // n should be a power of 2. zeta is a primitive n-th root of unity.
+    // one is unity
+    // Note that the result is bit-reversed.
+    pub fn fft<R>(f: &mut [R], zeta: R, one: R)
         where R: Copy +
         Add<Output = R> +
         Sub<Output = R> +
         Mul<Output = R> {
         let n = f.len();
         assert!(n.is_power_of_two());
-        {
-            let mut i = 0;
-            for j in 1 .. n - 1 {
-                let mut k = n >> 1;
-                loop {
-                    i ^= k;
-                    if k <= i { break; }
-                    k >>= 1;
+        let mut m = n;
+        let mut base = zeta;
+        unsafe {
+            while m > 2 {
+                m >>= 1;
+                let mut r = 0;
+                while r < n {
+                    let mut w = one;
+                    for s in r..r + m {
+                        let &u = f.get_unchecked(s);
+                        let d = *f.get_unchecked(s + m);
+                        *f.get_unchecked_mut(s) = u + d;
+                        *f.get_unchecked_mut(s + m) = w * (u - d);
+                        w = w * base;
+                    }
+                    r += 2 * m;
                 }
-                if j < i { f.swap(i, j); }
+                base = base * base;
+            }
+            if m > 1 {
+                // m = 1
+                let mut r = 0;
+                while r < n {
+                    let &u = f.get_unchecked(r);
+                    let d = *f.get_unchecked(r + 1);
+                    *f.get_unchecked_mut(r) = u + d;
+                    *f.get_unchecked_mut(r + 1) = u - d;
+                    r += 2;
+                }
             }
         }
-        let mut zetapow = Vec::new();
+    }
+    pub fn inv_fft<R>(f: &mut [R], zeta_inv: R, one: R)
+        where R: Copy +
+        Add<Output = R> +
+        Sub<Output = R> +
+        Mul<Output = R> {
+        let n = f.len();
+        assert!(n.is_power_of_two());
+        let zeta = zeta_inv; // inverse FFT
+        let mut zetapow = Vec::with_capacity(20);
         {
             let mut m = 1;
             let mut cur = zeta;
@@ -206,30 +231,44 @@ mod fft {
             }
         }
         let mut m = 1;
-        while m < n {
-            let base = zetapow.pop().unwrap();
-            let mut r = 0;
-            while r < n {
-                let mut w = one;
-                for s in r .. r + m {
-                    let u = f[s];
-                    let d = f[s + m] * w;
-                    f[s] = u + d;
-                    f[s + m] = u - d;
-                    w = w * base;
+        unsafe {
+            if m < n {
+                zetapow.pop();
+                let mut r = 0;
+                while r < n {
+                    let &u = f.get_unchecked(r);
+                    let d = *f.get_unchecked(r + 1);
+                    *f.get_unchecked_mut(r) = u + d;
+                    *f.get_unchecked_mut(r + 1) = u - d;
+                    r += 2;
                 }
-                r += 2 * m;
+                m = 2;
             }
-            m *= 2;
+            while m < n {
+                let base = zetapow.pop().unwrap();
+                let mut r = 0;
+                while r < n {
+                    let mut w = one;
+                    for s in r..r + m {
+                        let &u = f.get_unchecked(s);
+                        let d = *f.get_unchecked(s + m) * w;
+                        *f.get_unchecked_mut(s) = u + d;
+                        *f.get_unchecked_mut(s + m) = u - d;
+                        w = w * base;
+                    }
+                    r += 2 * m;
+                }
+                m *= 2;
+            }
         }
     }
 }
 
-fn solve() {
+fn main() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
     macro_rules! puts {
-        ($($format:tt)*) => (write!(out,$($format)*).unwrap());
+        ($($format:tt)*) => (let _ = write!(out,$($format)*););
     }
     input! {
         n: usize, m: usize,
@@ -245,12 +284,12 @@ fn solve() {
         bb[i] = b[i].into();
     }
     let zeta = ModInt::new(3).pow((MOD - 1) / W as i64);
-    fft::transform(&mut aa, zeta, 1.into());
-    fft::transform(&mut bb, zeta, 1.into());
+    fft::fft(&mut aa, zeta, 1.into());
+    fft::fft(&mut bb, zeta, 1.into());
     for i in 0..W {
         aa[i] *= bb[i];
     }
-    fft::transform(&mut aa, zeta.inv(), 1.into());
+    fft::inv_fft(&mut aa, zeta.inv(), 1.into());
     let factor = ModInt::new(W as i64).inv();
     for elem in aa.iter_mut() {
         *elem *= factor;
@@ -258,11 +297,4 @@ fn solve() {
     for i in 0..n + m - 1 {
         puts!("{}{}", aa[i], if i + 1 == n + m - 1 { "\n" } else { " " });
     }
-}
-
-fn main() {
-    // In order to avoid potential stack overflow, spawn a new thread.
-    let stack_size = 104_857_600; // 100 MB
-    let thd = std::thread::Builder::new().stack_size(stack_size);
-    thd.spawn(|| solve()).unwrap().join().unwrap();
 }
