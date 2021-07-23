@@ -1,0 +1,59 @@
+use std::cmp::*;
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes.by_ref().map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr,) => {};
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, chars) => {
+        read_value!($next, String).chars().collect::<Vec<char>>()
+    };
+    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+}
+
+fn main() {
+    input! {
+        n: usize,
+        s: chars,
+    }
+    let mut dp = vec![0; n + 1];
+    for i in 1..n + 1 {
+        dp[i] = dp[i - 1];
+        if i >= 3 && s[i - 2] == 'x' && s[i - 3] == s[i - 1] &&
+            ['a', 'i', 'u', 'e', 'o'].iter().any(|&x| x == s[i - 1]) {
+                dp[i] = max(dp[i], dp[i - 3] + 1);
+            }
+    }
+    let mut s = s;
+    let mut c = n;
+    while c > 0 {
+        if dp[c] == dp[c - 1] {
+            c -= 1;
+            continue;
+        }
+        c -= 3;
+        for j in c..c + 3 {
+            s[j] = '.';
+        }
+    }
+    println!("{}", s.into_iter().collect::<String>());
+}
