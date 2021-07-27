@@ -106,13 +106,12 @@ impl MinCostFlow {
     }
     // Calcucates the minimum cost flow
     // whose source is s, sink is t, and flow is f.
-    fn min_cost_flow(&mut self, s: usize, t: usize, mut f: Cap, mut func: impl FnMut(Cap, i64)) -> Cost {
+    fn min_cost_flow(&mut self, s: usize, t: usize, mut f: Cap) -> Cost {
         let n = self.n;
         let inf: Cost = std::i64::MAX / 10; // ?????
         let mut res = 0;
         let h = &mut self.h;
         let dist = &mut self.dist;
-        let oldf = f;
         while f > 0 {
             let mut que = std::collections::BinaryHeap::<(Cost, usize)>::new();
             for i in 0..n {
@@ -157,7 +156,6 @@ impl MinCostFlow {
 	        self.graph[i][erev].cap += d;
                 i = pv;
             }
-            func(oldf - f, res);
         }
         return res;
     }
@@ -169,17 +167,14 @@ fn solve() {
         a: [i64; n],
     }
     let mut mcf = MinCostFlow::new(2 + 2 * n);
-    let inf = 1i64 << 50;
-    let k = 1 << 31;
     for i in 0..n {
         mcf.add_edge(0, 2 + 2 * i, 1, 0);
-        mcf.add_edge(2 + 2 * i, 2 + 2 * i + 1, 1, k);
         mcf.add_edge(2 + 2 * i + 1, 1, 1, 0);
         for j in i + 1..n {
-            mcf.add_edge(2 + 2 * i, 2 + 2 * j + 1, 1, (a[i] - a[j]).abs() - c + k);
+            mcf.add_edge(2 + 2 * i, 2 + 2 * j + 1, 1, (a[i] - a[j]).abs());
         }
     }
-    let mut mi = inf;
-    mcf.min_cost_flow(0, 1, n as isize, |f, cos| mi.chmin((n as i64 - f as i64) * c + cos - f as i64 * (k - c)));
-    println!("{}", mi);
+    mcf.add_edge(0, 1, n as isize, c);
+    let ans = mcf.min_cost_flow(0, 1, n as isize);
+    println!("{}", ans);
 }
