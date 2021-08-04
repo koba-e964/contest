@@ -560,10 +560,12 @@ fn formal_power_series_comp<P: mod_int::Mod + PartialEq>(
     assert_eq!(g[0], 0.into());
     // Pick m such that m ~ sqrt(n) and m is a power of two
     let mut m = 1;
-    let mut c = 2;
+    let mut c = 1;
     while m * m * c < n {
-        m *= 2;
-        c += 2;
+        m += 1;
+        if m.is_power_of_two() {
+            c += 1;
+        }
     }
     let p = n.next_power_of_two();
     let l = (n + m - 1) / m;
@@ -676,6 +678,7 @@ fn formal_power_series_comp<P: mod_int::Mod + PartialEq>(
         }
     }
     fft::inv_fft(&mut ans, zeta.inv(), 1.into());
+    ans.truncate(n);
     ans
 }
 
