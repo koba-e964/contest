@@ -471,9 +471,30 @@ fn formal_power_series_exp<P: mod_int::Mod + PartialEq>(
     f
 }
 
+// FFT((g^l2 mod x^p) as mod x^2p)
+fn find_fftgl2<P: mod_int::Mod + PartialEq>(
+    lng: &[mod_int::ModInt<P>],
+    l2: usize,
+    p: usize,
+    gen: mod_int::ModInt<P>,
+    fac: &[mod_int::ModInt<P>],
+    invfac: &[mod_int::ModInt<P>],
+) -> Vec<mod_int::ModInt<P>> {
+    let mut lng2 = vec![mod_int::ModInt::new(0); p];
+    for i in 0..p {
+        lng2[i] = lng[i] * l2 as i64;
+    }
+    let mut gl2 = formal_power_series_exp(&lng2, gen, fac, invfac);
+    assert_eq!(gl2.len(), p);
+    gl2.resize(2 * p, 0.into());
+    let zeta = gen.pow((MOD - 1) / p as i64 / 2);
+    fft::fft(&mut gl2, zeta, 1.into());
+    gl2
+}
+
 // Finds f(g(x)cons x^sh) mod x^n where g(x) = exp(lng(x)).
 // lng = ln(g) mod x^deg(g).
-// Complexity: (jm/n)log(n)M(n) where l = deg(f), m = deg(g)
+// Complexity: (lm/n)log(n)M(n) where l = deg(f), m = deg(g)
 fn formal_power_series_comp_rec<P: mod_int::Mod + PartialEq>(
     f: &[mod_int::ModInt<P>],
     m: usize,
@@ -484,8 +505,12 @@ fn formal_power_series_comp_rec<P: mod_int::Mod + PartialEq>(
     gen: mod_int::ModInt<P>,
     fac: &[mod_int::ModInt<P>],
     invfac: &[mod_int::ModInt<P>],
+    memo: &mut std::collections::HashMap<(usize, usize), Vec<mod_int::ModInt<P>>>,
 ) -> Vec<mod_int::ModInt<P>> {
-    use std::cmp::min;
+    use std::cmp::{max, min};
+    if n == 0 {
+        return vec![];
+    }
     let l = f.len();
     if l <= 1 {
         let mut ans = vec![mod_int::ModInt::new(0)];
@@ -497,29 +522,22 @@ fn formal_power_series_comp_rec<P: mod_int::Mod + PartialEq>(
     let l2 = l / 2;
     let u = min((l - 1) as i64 * (m - 1) as i64 + 1, n as i64) as usize;
     let p = u.next_power_of_two();
-    let mut lng2 = vec![mod_int::ModInt::new(0); p];
-    for i in 0..p {
-        lng2[i] = lng[i] * l2 as i64;
-    }
-    // g^{floor(l/2)}
-    let mut gl2 = formal_power_series_exp(&lng2, gen, fac, invfac);
-    assert_eq!(gl2.len(), p);
-    gl2.resize(2 * p, 0.into());
     let fst = formal_power_series_comp_rec(
-        &f[..l2], m, cons, lng, sh, n, gen, fac, invfac);
+        &f[..l2], m, cons, lng, sh, n, gen, fac, invfac, memo);
+    let shl2 = min(u as i64, sh as i64 * l2 as i64) as usize;
     let mut snd = formal_power_series_comp_rec(
-        &f[l2..], m, cons, lng, sh, n, gen, fac, invfac);
+        &f[l2..], m, cons, lng, sh, max(n, shl2) - shl2, gen, fac, invfac, memo);
     let zeta = gen.pow((MOD - 1) / p as i64 / 2);
-    fft::fft(&mut gl2, zeta, 1.into());
     snd.resize(2 * p, 0.into());
     fft::fft(&mut snd, zeta, 1.into());
+    // FFT(g^{floor(l/2)})
+    let gl2 = &memo.entry((l2, p)).or_insert_with(|| find_fftgl2(&lng, l2, p, gen, fac, invfac));
     let factor = mod_int::ModInt::new(2 * p as i64).inv() * cons.pow(l2 as i64);
     for i in 0..2 * p {
         snd[i] *= gl2[i] * factor;
     }
     fft::inv_fft(&mut snd, zeta.inv(), 1.into());
     let mut ans = vec![mod_int::ModInt::new(0); u];
-    let shl2 = min(u as i64, sh as i64 * l2 as i64) as usize;
     let len = min(fst.len(), u);
     ans[..len].copy_from_slice(&fst[..len]);
     for i in shl2..min(shl2 + snd.len(), u) {
@@ -584,7 +602,7 @@ fn formal_power_series_comp<P: mod_int::Mod + PartialEq>(
     if !zero {
         let lng = formal_power_series_log(&gmalt, gen, fac, invfac);
         ans = formal_power_series_comp_rec(
-            f, m, cons, &lng, sh, n, gen, fac, invfac);
+            f, m, cons, &lng, sh, n, gen, fac, invfac, &mut Default::default());
         ans.resize(n, 0.into());
         tmp = ans.clone();
         tmp.resize(2 * p, 0.into());
@@ -592,6 +610,7 @@ fn formal_power_series_comp<P: mod_int::Mod + PartialEq>(
         ans = vec![mod_int::ModInt::new(0); n];
         ans[0] = f[0];
     }
+    ans.resize(2 * p, 0.into());
     let zeta = gen.pow((P::m() - 1) / p as i64 / 2);
     let factor2 = mod_int::ModInt::new(2 * p as i64).inv();
     let mut tmp2 = vec![mod_int::ModInt::new(0); 2 * p];
@@ -599,6 +618,10 @@ fn formal_power_series_comp<P: mod_int::Mod + PartialEq>(
         fft::fft(&mut gmpinv, zeta, 1.into());
     }
     fft::fft(&mut gr, zeta, 1.into());
+    fft::fft(&mut ans, zeta, 1.into());
+    for i in 0..2 * p {
+        ans[i] *= factor2;
+    }
     grpow.copy_from_slice(&gr);
     for i in 1..l + 1 {
         if !zero {
@@ -624,10 +647,11 @@ fn formal_power_series_comp<P: mod_int::Mod + PartialEq>(
         }
         // tmp(g_m(x))g_r(x)^i/i!
         if !zero {
-            fft::fft(&mut tmp, zeta, 1.into());
+            tmp2.copy_from_slice(&tmp);
+            fft::fft(&mut tmp2, zeta, 1.into());
+            let factor = factor2 * invfac[i];
             for j in 0..2 * p {
-                tmp[j] *= factor2;
-                tmp2[j] = tmp[j] * grpow[j] * invfac[i];
+                tmp2[j] = tmp2[j] * grpow[j] * factor;
             }
         } else {
             // g_m(x) = 0, so f^{(i)}(g_m(x))g_r(x)^i/i! = f[i] * g_r(x)^i
@@ -636,22 +660,22 @@ fn formal_power_series_comp<P: mod_int::Mod + PartialEq>(
                 * factor2;
             }
         }
-        fft::inv_fft(&mut tmp2, zeta.inv(), 1.into());
-        for j in 0..n {
+        // ans is inv_fft'ed later
+        for j in 0..2 * p {
             ans[j] += tmp2[j];
         }
-        for j in 0..2 * p {
-            grpow[j] *= gr[j] * factor2;
-        }
-        fft::inv_fft(&mut grpow, zeta.inv(), 1.into());
-        for j in p..2 * p {
-            grpow[j] = 0.into();
-        }
-        fft::fft(&mut grpow, zeta, 1.into());
-        if !zero {
-            fft::inv_fft(&mut tmp, zeta.inv(), 1.into());
+        if i < l {
+            for j in 0..2 * p {
+                grpow[j] *= gr[j] * factor2;
+            }
+            fft::inv_fft(&mut grpow, zeta.inv(), 1.into());
+            for j in p..2 * p {
+                grpow[j] = 0.into();
+            }
+            fft::fft(&mut grpow, zeta, 1.into());
         }
     }
+    fft::inv_fft(&mut ans, zeta.inv(), 1.into());
     ans
 }
 
