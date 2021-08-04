@@ -283,7 +283,7 @@ mod fft {
 // Reference: https://arxiv.org/pdf/1301.5804.pdf
 // Complexity: O(n log n)
 // Depends on: ModInt.rs, fact_init.rs, fft.rs
-fn formal_power_series_exp<P: mod_int::Mod + PartialOrd>(
+fn formal_power_series_exp<P: mod_int::Mod + PartialEq>(
     h: &[mod_int::ModInt<P>],
     gen: mod_int::ModInt<P>,
     fac: &[mod_int::ModInt<P>],

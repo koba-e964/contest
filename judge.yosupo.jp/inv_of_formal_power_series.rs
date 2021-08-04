@@ -274,9 +274,9 @@ mod fft {
 /// Verified by: https://judge.yosupo.jp/submission/3219
 ///
 /// Depends on: ModInt.rs, fft.rs
-fn formal_power_series_inv<P: mod_int::Mod + PartialOrd>(
+fn formal_power_series_inv<P: mod_int::Mod + PartialEq>(
     f: &[mod_int::ModInt<P>],
-    gen: mod_int::ModInt<P>
+    gen: mod_int::ModInt<P>,
 ) -> Vec<mod_int::ModInt<P>> {
     let n = f.len();
     assert!(n.is_power_of_two());
