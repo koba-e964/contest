@@ -466,8 +466,7 @@ fn lagrange_inversion<P: mod_int::Mod + PartialEq>(
     assert!(k < n);
     assert_eq!(g[0], 0.into());
     assert_ne!(g[1], 0.into());
-    let g1 = g[1];
-    let g1inv = g1.inv();
+    let g1inv = g[1].inv();
     let mut g = g.to_vec();
     for i in 1..n {
         g[i - 1] = g[i] * g1inv;
@@ -486,7 +485,7 @@ fn lagrange_inversion<P: mod_int::Mod + PartialEq>(
     let zeta = gen.pow((P::m() - 1) / 2 / n as i64);
     fft::fft(&mut tmp, zeta, 1.into());
     fft::fft(&mut g, zeta, 1.into());
-    let factor = mod_int::ModInt::new(2 * n as i64).inv();
+    let factor = mod_int::ModInt::new(2 * n as i64).inv() * g1inv.pow(k as i64);
     for i in 0..2 * n {
         tmp[i] *= g[i] * factor;
     }
