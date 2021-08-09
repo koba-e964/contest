@@ -54,6 +54,7 @@ mod mod_int {
             }
             sum
         }
+        pub fn inv(self) -> Self { self.pow(M::m() - 2) }
     }
     impl<M: Mod, T: Into<ModInt<M>>> Add<T> for ModInt<M> {
         type Output = Self;
@@ -111,42 +112,44 @@ const MOD: i64 = 998_244_353;
 define_mod!(P, MOD);
 type MInt = mod_int::ModInt<P>;
 
-/// Generates an Iterator over subsets of univ, in the descending order. 
-/// Verified by: http://judge.u-aizu.ac.jp/onlinejudge/review.jsp?rid=3050308
-struct SubsetIter { bits: Option<usize>, univ: usize }
-impl Iterator for SubsetIter {
-    type Item = usize;
-    fn next(&mut self) -> Option<usize> {
-        match self.bits {
-            None => None,
-            Some(bits) => {
-                let ans = bits;
-                self.bits =
-                    if bits == 0 { None }
-                else { Some((bits - 1) & self.univ) };
-                Some(ans)
-            }
+// O(n^2)
+fn fps_ln_small(f: &[MInt], invs: &[MInt]) -> Vec<MInt> {
+    assert!(f[0] == 1.into());
+    let n = f.len();
+    let mut ans = vec![MInt::new(0); n];
+    let mut fp = vec![MInt::new(0); n - 1];
+    for i in 0..n - 1 {
+        fp[i] = f[i + 1] * (i + 1) as i64;
+    }
+    for i in 0..n - 1 {
+        let c = fp[i];
+        ans[i + 1] = c * invs[i + 1];
+        for j in 0..n - 1 - i {
+            fp[i + j] -= c * f[j];
         }
     }
-}
-fn subsets(univ: usize) -> SubsetIter {
-    SubsetIter { bits: Some(univ), univ: univ }
+    ans
 }
 
+// Tags: log-with-subset-convolution, inclusion-exclusion-principle, avoiding-3^n, 3^n-to-2^n
 fn main() {
     input! {
         n: usize, m: usize,
         ab: [(usize1, usize1); m],
+    }
+    let mut invs = vec![MInt::new(0); n + 1];
+    for i in 1..n + 1 {
+        invs[i] = MInt::new(i as i64).inv();
     }
     let mut g = vec![0; n];
     for &(a, b) in &ab {
         g[a] |= 1 << b;
         g[b] |= 1 << a;
     }
-    let mut dp = vec![MInt::new(0); 1 << n];
     let mut ep = vec![MInt::new(0); 1 << n];
-    ep[0] = 1.into();
-    for bits in 1usize..1 << n {
+    // Technique used in subset convolution, complexity: O(2^n n^2)
+    let mut poly = vec![vec![MInt::new(0); n + 1]; 1 << n];
+    for bits in 0usize..1 << n {
         let mut a = 0;
         for i in 0..n {
             if (bits & 1 << i) != 0 {
@@ -155,23 +158,38 @@ fn main() {
         }
         a /= 2;
         ep[bits] = MInt::new(2).pow(a as i64);
-        dp[bits] = ep[bits];
-        for sub in subsets(bits) {
-            if 2 * sub <= bits {
+        let bc = bits.count_ones() as usize;
+        poly[bits][bc] = ep[bits];
+    }
+    for i in 0..n {
+        for bits in 0..1 << n {
+            if (bits & 1 << i) != 0 {
                 continue;
             }
-            if sub == bits {
+            for j in 0..n + 1 {
+                poly[bits | 1 << i][j] = poly[bits | 1 << i][j] + poly[bits][j];
+            }
+        }
+    }
+    for bits in 0..1 << n {
+        poly[bits] = fps_ln_small(&poly[bits], &invs);
+    }
+    for i in 0..n {
+        for bits in 0..1 << n {
+            if (bits & 1 << i) != 0 {
                 continue;
             }
-            let rest = bits - sub;
-            dp[bits] = dp[bits] - dp[sub] * ep[rest];
+            for j in 0..n + 1 {
+                poly[bits | 1 << i][j] = poly[bits | 1 << i][j] - poly[bits][j];
+            }
         }
     }
     let mut ans = vec![MInt::new(0); n];
-    for bits in 0..1 << n {
+    for bits in 0usize..1 << n {
+        let bc = bits.count_ones() as usize;
         for i in 1..n {
             if (bits & 1 << i) != 0 && (bits & 1) != 0 {
-                ans[i] += dp[bits] * ep[(1 << n) - 1 - bits];
+                ans[i] += poly[bits][bc] * ep[(1 << n) - 1 - bits];
             }
         }
     }
