@@ -1,7 +1,6 @@
-/**
- * Strong connected components.
- * Verified by: yukicoder No.470 (http://yukicoder.me/submissions/145785)
- */
+// Strong connected components.
+// Verified by: yukicoder No.470 (http://yukicoder.me/submissions/145785)
+//              ABC214-H (https://atcoder.jp/contests/abc214/submissions/25082618)
 struct SCC {
     n: usize,
     ncc: usize,
@@ -74,32 +73,38 @@ impl SCC {
     fn dag(&self) -> Vec<Vec<usize>> {
         assert!(self.ncc <= self.n);
         let ncc = self.ncc;
-        let mut ret = vec![HashSet::new(); ncc];
+        let mut ret = vec![vec![]; ncc];
         let n = self.n;
         for i in 0 .. n {
             for &to in self.g[i].iter() {
                 if self.cmp[i] != self.cmp[to] {
                     assert!(self.cmp[i] < self.cmp[to]);
-                    ret[self.cmp[i]].insert(self.cmp[to]);
+                    ret[self.cmp[i]].push(self.cmp[to]);
                 }
             }
         }
-        ret.into_iter().map(|set| set.into_iter().collect()).collect()
+        ret.into_iter().map(|mut v| {
+            v.sort_unstable(); v.dedup();
+            v
+        }).collect()
     }
     #[allow(dead_code)]
     fn rdag(&self) -> Vec<Vec<usize>> {
         assert!(self.ncc <= self.n);
         let ncc = self.ncc;
-        let mut ret = vec![HashSet::new(); ncc];
+        let mut ret = vec![vec![]; ncc];
         let n = self.n;
         for i in 0 .. n {
             for &to in self.g[i].iter() {
                 if self.cmp[i] != self.cmp[to] {
                     assert!(self.cmp[i] < self.cmp[to]);
-                    ret[self.cmp[to]].insert(self.cmp[i]);
+                    ret[self.cmp[to]].push(self.cmp[i]);
                 }
             }
         }
-        ret.into_iter().map(|set| set.into_iter().collect()).collect()
+        ret.into_iter().map(|mut v| {
+            v.sort_unstable(); v.dedup();
+            v
+        }).collect()
     }
 }
