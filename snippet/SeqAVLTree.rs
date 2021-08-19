@@ -130,16 +130,45 @@ impl<T: Default + Copy, F: Fn(T, T) -> T + Copy> Node<T, F> {
         let mut me = t.e;
         let mut right = t.e;
         if l < llen {
-            left = Self::range(t.ch[0].as_ref().unwrap(), l, min(r, llen));
+            left = Self::range(t.ch[0].as_ref().unwrap(), l, std::cmp::min(r, llen));
         }
         if l <= llen && r >= llen + 1 {
             me = t.val;
         }
         if r > llen + 1 {
             right = Self::range(t.ch[1].as_ref().unwrap(),
-                                max(llen + 1, l) - llen - 1, r - llen - 1);
+                                std::cmp::max(llen + 1, l) - llen - 1, r - llen - 1);
         }
         (t.f)((t.f)(left, me), right)
+    }
+    // Find min x s.t. p(t.range(0..x)), or |t| + 1 if there is no such x
+    fn binary_search<M: Fn(T) -> bool>(t: &Option<Box<Self>>, cur: T, p: &M) -> usize {
+        if p(cur) {
+            return 0;
+        }
+        let t = if let Some(ref t) = t {
+            t
+        } else {
+            return 1;
+        };
+        if !p((t.f)(cur, t.sum)) {
+            return t.size + 1;
+        }
+        let sub = Node::binary_search(&t.ch[0], cur, p);
+        let llen = Self::len(&t.ch[0]);
+        if sub <= llen {
+            return sub;
+        }
+        let lsum = if let Some(ref l) = t.ch[0] {
+            l.sum
+        } else {
+            t.e
+        };
+        let tmp = (t.f)(lsum, t.val);
+        if p(tmp) {
+            return llen + 1;
+        }
+        llen + 1 + Self::binary_search(&t.ch[1], (t.f)(cur, tmp), p)
     }
 }
 
@@ -177,5 +206,9 @@ impl<T: Default + Copy, F: Fn(T, T) -> T + Copy> SeqAVLTree<T, F> {
         } else {
             self.e
         }
+    }
+    // Find min x s.t. p(t.range(0..x)), or |t| + 1 if there is no such x
+    fn binary_search<M: Fn(T) -> bool>(&self, f: M) -> usize {
+        Node::binary_search(&self.root, self.e, &f)
     }
 }
