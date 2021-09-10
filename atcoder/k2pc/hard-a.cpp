@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-int toCo(int num,int *x,int *y)
+void toCo(int num,int *x,int *y)
 {
 	int k=ceil(sqrt(2*num+0.25)-0.5);
 	*x=k;
