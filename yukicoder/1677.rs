@@ -1,0 +1,206 @@
+use std::cmp::*;
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes.by_ref().map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr,) => {};
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, chars) => {
+        read_value!($next, String).chars().collect::<Vec<char>>()
+    };
+    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+}
+
+/// Verified by https://atcoder.jp/contests/abc198/submissions/21774342
+mod mod_int {
+    use std::ops::*;
+    pub trait Mod: Copy { fn m() -> i64; }
+    #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct ModInt<M> { pub x: i64, phantom: ::std::marker::PhantomData<M> }
+    impl<M: Mod> ModInt<M> {
+        // x >= 0
+        pub fn new(x: i64) -> Self { ModInt::new_internal(x % M::m()) }
+        fn new_internal(x: i64) -> Self {
+            ModInt { x: x, phantom: ::std::marker::PhantomData }
+        }
+        pub fn pow(self, mut e: i64) -> Self {
+            debug_assert!(e >= 0);
+            let mut sum = ModInt::new_internal(1);
+            let mut cur = self;
+            while e > 0 {
+                if e % 2 != 0 { sum *= cur; }
+                cur *= cur;
+                e /= 2;
+            }
+            sum
+        }
+        #[allow(dead_code)]
+        pub fn inv(self) -> Self { self.pow(M::m() - 2) }
+    }
+    impl<M: Mod, T: Into<ModInt<M>>> Add<T> for ModInt<M> {
+        type Output = Self;
+        fn add(self, other: T) -> Self {
+            let other = other.into();
+            let mut sum = self.x + other.x;
+            if sum >= M::m() { sum -= M::m(); }
+            ModInt::new_internal(sum)
+        }
+    }
+    impl<M: Mod, T: Into<ModInt<M>>> Sub<T> for ModInt<M> {
+        type Output = Self;
+        fn sub(self, other: T) -> Self {
+            let other = other.into();
+            let mut sum = self.x - other.x;
+            if sum < 0 { sum += M::m(); }
+            ModInt::new_internal(sum)
+        }
+    }
+    impl<M: Mod, T: Into<ModInt<M>>> Mul<T> for ModInt<M> {
+        type Output = Self;
+        fn mul(self, other: T) -> Self { ModInt::new(self.x * other.into().x % M::m()) }
+    }
+    impl<M: Mod, T: Into<ModInt<M>>> AddAssign<T> for ModInt<M> {
+        fn add_assign(&mut self, other: T) { *self = *self + other; }
+    }
+    impl<M: Mod, T: Into<ModInt<M>>> SubAssign<T> for ModInt<M> {
+        fn sub_assign(&mut self, other: T) { *self = *self - other; }
+    }
+    impl<M: Mod, T: Into<ModInt<M>>> MulAssign<T> for ModInt<M> {
+        fn mul_assign(&mut self, other: T) { *self = *self * other; }
+    }
+    impl<M: Mod> Neg for ModInt<M> {
+        type Output = Self;
+        fn neg(self) -> Self { ModInt::new(0) - self }
+    }
+    impl<M> ::std::fmt::Display for ModInt<M> {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+            self.x.fmt(f)
+        }
+    }
+    impl<M: Mod> From<i64> for ModInt<M> {
+        fn from(x: i64) -> Self { Self::new(x) }
+    }
+} // mod mod_int
+
+macro_rules! define_mod {
+    ($struct_name: ident, $modulo: expr) => {
+        #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        struct $struct_name {}
+        impl mod_int::Mod for $struct_name { fn m() -> i64 { $modulo } }
+    }
+}
+const MOD: i64 = 998_244_353;
+define_mod!(P, MOD);
+type MInt = mod_int::ModInt<P>;
+
+fn main() {
+    // In order to avoid potential stack overflow, spawn a new thread.
+    let stack_size = 104_857_600; // 100 MB
+    let thd = std::thread::Builder::new().stack_size(stack_size);
+    thd.spawn(|| solve()).unwrap().join().unwrap();
+}
+
+enum E {
+    I(usize),
+    Any,
+    Max(Box<E>, Box<E>),
+    Mex(Box<E>, Box<E>),
+    What(Box<E>, Box<E>),
+}
+
+fn prs(s: &[char]) -> (usize, E) {
+    if s[0] == 'm' {
+        let (p1, e1) = prs(&s[4..]);
+        let (p2, e2) = prs(&s[4 + p1 + 1..]);
+        let e = match s[1] {
+            'a' => E::Max(Box::new(e1), Box::new(e2)),
+            'e' => E::Mex(Box::new(e1), Box::new(e2)),
+            '?' => E::What(Box::new(e1), Box::new(e2)),
+            _ => panic!(),
+        };
+        return (4 + p1 + 1 + p2 + 1, e);
+    }
+    (1, match s[0] {
+        '0' => E::I(0),
+        '1' => E::I(1),
+        '2' => E::I(2),
+        '?' => E::Any,
+        _ => panic!(),
+    })
+}
+
+fn mex(a: usize, b: usize) -> usize {
+    if a != 0 && b != 0 {
+        return 0;
+    }
+    if a + b != 1 {
+        return 1;
+    }
+    2
+}
+
+fn dfs(e: &E) -> [MInt; 3] {
+    let mut ans = [MInt::new(0); 3];
+    match *e {
+        E::I(v) => ans[v] += 1,
+        E::Any => ans = [MInt::new(1); 3],
+        E::Max(ref a, ref b) => {
+            let s1 = dfs(a);
+            let s2 = dfs(b);
+            for i in 0..3 {
+                for j in 0..3 {
+                    ans[max(i, j)] += s1[i] * s2[j];
+                }
+            }
+        }
+        E::Mex(ref a, ref b) => {
+            let s1 = dfs(a);
+            let s2 = dfs(b);
+            for i in 0..3 {
+                for j in 0..3 {
+                    ans[mex(i, j)] += s1[i] * s2[j];
+                }
+            }
+        }
+        E::What(ref a, ref b) => {
+            let s1 = dfs(a);
+            let s2 = dfs(b);
+            for i in 0..3 {
+                for j in 0..3 {
+                    ans[max(i, j)] += s1[i] * s2[j];
+                    ans[mex(i, j)] += s1[i] * s2[j];
+                }
+            }
+        }
+    }
+    ans
+}
+
+fn solve() {
+    input! {
+        s: chars,
+        k: usize,
+    }
+    let (_, e) = prs(&s);
+    let v = dfs(&e);
+    println!("{}", v[k]);
+}
