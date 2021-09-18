@@ -22,6 +22,7 @@ pub struct LazySegTree<R: ActionRing> {
 }
 
 impl<R: ActionRing> LazySegTree<R> {
+    #[allow(unused)]
     pub fn new(n_: usize) -> Self {
         let mut n = 1;
         let mut dep = 0;
@@ -31,6 +32,26 @@ impl<R: ActionRing> LazySegTree<R> {
             dep: dep,
             dat: vec![R::e(); 2 * n - 1],
             lazy: vec![R::upe(); 2 * n - 1]
+        }
+    }
+    #[allow(unused)]
+    pub fn with(a: &[R::T]) -> Self {
+        let n_ = a.len();
+        let mut n = 1;
+        let mut dep = 0;
+        while n < n_ { n *= 2; dep += 1; } // n is a power of 2
+        let mut dat = vec![R::e(); 2 * n - 1];
+        for i in 0..n_ {
+            dat[n - 1 + i] = a[i];
+        }
+        for i in (0..n - 1).rev() {
+            dat[i] = R::biop(dat[2 * i + 1], dat[2 * i + 2]);
+        }
+        LazySegTree {
+            n: n,
+            dep: dep,
+            dat: dat,
+            lazy: vec![R::upe(); 2 * n - 1],
         }
     }
     #[inline]
@@ -111,5 +132,73 @@ impl ActionRing for Affine {
     }
     fn upe() -> Self::U { // identity for upop
         (1, 0)
+    }
+}
+
+enum AddMax {}
+
+impl ActionRing for AddMax {
+    type T = i32; // data
+    type U = i32; // action, a |-> x |-> a + x
+    fn biop(x: Self::T, y: Self::T) -> Self::T {
+        std::cmp::max(x, y)
+    }
+    fn update(x: Self::T, a: Self::U, _height: usize) -> Self::T {
+        x + a
+    }
+    fn upop(fst: Self::U, snd: Self::U) -> Self::U {
+        fst + snd
+    }
+    fn e() -> Self::T {
+        0
+    }
+    fn upe() -> Self::U { // identity for upop
+        0
+    }
+}
+
+enum V {}
+
+const B: usize = 3;
+
+impl ActionRing for V {
+    type T = [MInt; B]; // data
+    type U = [[MInt; B]; B]; // action, (a, b) |-> x |-> ax + b
+    fn biop(x: Self::T, y: Self::T) -> Self::T {
+        let mut ans = [0.into(); B];
+        for i in 0..B {
+            ans[i] = x[i] + y[i];
+        }
+        ans
+    }
+    fn update(x: Self::T, o: Self::U, _height: usize) -> Self::T {
+        let mut ans = [0.into(); B];
+        for i in 0..B {
+            for j in 0..B {
+                ans[j] += x[i] * o[i][j];
+            }
+        }
+        ans
+    }
+    fn upop(fst: Self::U, snd: Self::U) -> Self::U {
+        let mut ans = [[0.into(); B]; B];
+        for i in 0..B {
+            for j in 0..B {
+                for k in 0..B {
+                    ans[i][k] += fst[i][j] * snd[j][k];
+                }
+            }
+        }
+        ans
+    }
+    fn e() -> Self::T {
+        [0.into(); B]
+    }
+    fn upe() -> Self::U { // identity for upop
+        let mut ans = [[0.into(); B]; B];
+        for i in 0..B {
+            ans[i][i] = 1.into();
+        }
+        ans
     }
 }
