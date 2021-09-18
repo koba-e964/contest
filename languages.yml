@@ -21,7 +21,7 @@
   file:
   extension: rb
   yukicoder_name: ruby
-- name: Python3
+- name: Python
   file:
   extension: py
   yukicoder_name: pypy3
