@@ -1,0 +1,1582 @@
+#include <algorithm>
+#include <cassert>
+#include <cctype>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
+#include <deque>
+#include <functional>
+#include <iomanip>
+#include <iostream>
+#include <list>
+#include <map>
+#include <queue>
+#include <random>
+#include <set>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
+
+#define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
+#define DEBUGP(val) cerr << #val << "=" << val << "\n"
+
+using namespace std;
+typedef long long int ll;
+typedef vector<int> VI;
+typedef vector<ll> VL;
+typedef pair<int, int> PI;
+const ll mod = 1e9 + 7;
+
+vector<vector<PI>> tbl;
+
+void init() {
+  tbl.resize(61);
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    tbl[2] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(8, 12));
+    e.push_back(PI(10, 12));
+    tbl[9] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(2, 12));
+    tbl[0] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(2, 5));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(7, 12));
+    e.push_back(PI(9, 12));
+    tbl[38] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(1, 3));
+    e.push_back(PI(3, 4));
+    e.push_back(PI(1, 5));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(9, 12));
+    tbl[51] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(9, 12));
+    tbl[25] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(10, 12));
+    e.push_back(PI(11, 12));
+    tbl[46] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(8, 12));
+    tbl[13] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(9, 12));
+    e.push_back(PI(11, 12));
+    tbl[10] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(2, 4));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(3, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(2, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(9, 12));
+    tbl[50] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(2, 3));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(10, 12));
+    e.push_back(PI(11, 12));
+    tbl[8] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(1, 4));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(6, 8));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(2, 12));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(7, 12));
+    e.push_back(PI(8, 12));
+    tbl[48] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 5));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(7, 12));
+    e.push_back(PI(8, 12));
+    e.push_back(PI(9, 12));
+    tbl[6] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(3, 4));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(9, 12));
+    e.push_back(PI(10, 12));
+    e.push_back(PI(11, 12));
+    tbl[1] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(3, 4));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(3, 8));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(2, 12));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(8, 12));
+    tbl[2] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(3, 4));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(9, 12));
+    e.push_back(PI(11, 12));
+    tbl[19] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(4, 5));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(3, 8));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(2, 12));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(7, 12));
+    e.push_back(PI(8, 12));
+    e.push_back(PI(9, 12));
+    e.push_back(PI(11, 12));
+    tbl[31] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(3, 4));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(8, 12));
+    tbl[5] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(3, 4));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(6, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(7, 12));
+    e.push_back(PI(8, 12));
+    e.push_back(PI(9, 12));
+    e.push_back(PI(10, 12));
+    e.push_back(PI(11, 12));
+    tbl[54] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(2, 3));
+    e.push_back(PI(1, 4));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(6, 8));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(7, 12));
+    tbl[16] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 4));
+    e.push_back(PI(1, 5));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(6, 8));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(10, 12));
+    e.push_back(PI(11, 12));
+    tbl[3] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(1, 4));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(8, 12));
+    e.push_back(PI(9, 12));
+    e.push_back(PI(11, 12));
+    tbl[52] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(2, 4));
+    e.push_back(PI(3, 4));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(3, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(9, 12));
+    tbl[53] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(3, 4));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(7, 12));
+    e.push_back(PI(8, 12));
+    tbl[18] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(7, 12));
+    tbl[39] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(2, 3));
+    e.push_back(PI(1, 4));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(3, 4));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(6, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(10, 12));
+    e.push_back(PI(11, 12));
+    tbl[12] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(2, 4));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(3, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(9, 12));
+    e.push_back(PI(10, 12));
+    tbl[20] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(2, 3));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(3, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(8, 12));
+    e.push_back(PI(10, 12));
+    tbl[17] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(1, 5));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(8, 12));
+    e.push_back(PI(10, 12));
+    tbl[7] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(1, 4));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(6, 8));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(11, 12));
+    tbl[35] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(9, 12));
+    tbl[28] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(3, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(7, 12));
+    e.push_back(PI(9, 12));
+    e.push_back(PI(10, 12));
+    tbl[60] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 5));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(10, 12));
+    tbl[47] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(1, 5));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(7, 12));
+    e.push_back(PI(8, 12));
+    tbl[45] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(3, 4));
+    e.push_back(PI(1, 5));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(6, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(8, 12));
+    tbl[4] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(3, 4));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(3, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(7, 12));
+    e.push_back(PI(10, 12));
+    tbl[55] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(1, 3));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(3, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(11, 12));
+    tbl[15] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(1, 5));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(8, 12));
+    e.push_back(PI(11, 12));
+    tbl[32] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(3, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(7, 12));
+    tbl[41] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(1, 4));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(2, 12));
+    e.push_back(PI(9, 12));
+    tbl[43] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(1, 4));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(8, 12));
+    e.push_back(PI(9, 12));
+    e.push_back(PI(11, 12));
+    tbl[22] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(2, 12));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(7, 12));
+    tbl[36] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(1, 4));
+    e.push_back(PI(3, 4));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(8, 12));
+    e.push_back(PI(11, 12));
+    tbl[34] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(2, 3));
+    e.push_back(PI(1, 4));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(8, 12));
+    e.push_back(PI(9, 12));
+    e.push_back(PI(10, 12));
+    tbl[56] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(1, 4));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(3, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(2, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(9, 12));
+    e.push_back(PI(10, 12));
+    e.push_back(PI(11, 12));
+    tbl[49] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(3, 4));
+    e.push_back(PI(1, 5));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(10, 12));
+    tbl[59] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(1, 5));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(3, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(6, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(7, 12));
+    e.push_back(PI(8, 12));
+    e.push_back(PI(10, 12));
+    e.push_back(PI(11, 12));
+    tbl[11] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(1, 5));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(10, 12));
+    e.push_back(PI(11, 12));
+    tbl[27] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(6, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(9, 12));
+    tbl[21] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 4));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(1, 5));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(8, 12));
+    e.push_back(PI(9, 12));
+    e.push_back(PI(11, 12));
+    tbl[33] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 5));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(6, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(2, 12));
+    e.push_back(PI(7, 12));
+    e.push_back(PI(11, 12));
+    tbl[58] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 2));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(2, 12));
+    e.push_back(PI(4, 12));
+    tbl[24] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(2, 3));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(2, 12));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(7, 12));
+    tbl[37] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(2, 4));
+    e.push_back(PI(3, 4));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(3, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(9, 12));
+    tbl[23] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(3, 4));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(3, 8));
+    e.push_back(PI(5, 8));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(7, 12));
+    tbl[44] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 4));
+    e.push_back(PI(3, 4));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(8, 12));
+    tbl[14] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 4));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(3, 4));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(5, 6));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(6, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(2, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(6, 12));
+    tbl[42] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(3, 7));
+    e.push_back(PI(6, 7));
+    e.push_back(PI(2, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(6, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(8, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(1, 11));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(9, 12));
+    e.push_back(PI(10, 12));
+    e.push_back(PI(11, 12));
+    tbl[40] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(2, 3));
+    e.push_back(PI(3, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(2, 9));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(8, 10));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(1, 12));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(6, 12));
+    tbl[30] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 4));
+    e.push_back(PI(2, 4));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(2, 7));
+    e.push_back(PI(4, 7));
+    e.push_back(PI(5, 7));
+    e.push_back(PI(7, 8));
+    e.push_back(PI(3, 9));
+    e.push_back(PI(6, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(10, 11));
+    e.push_back(PI(2, 12));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(7, 12));
+    e.push_back(PI(8, 12));
+    tbl[29] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(1, 5));
+    e.push_back(PI(2, 5));
+    e.push_back(PI(4, 5));
+    e.push_back(PI(2, 6));
+    e.push_back(PI(4, 6));
+    e.push_back(PI(6, 8));
+    e.push_back(PI(1, 9));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(1, 10));
+    e.push_back(PI(4, 10));
+    e.push_back(PI(5, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(9, 10));
+    e.push_back(PI(2, 11));
+    e.push_back(PI(3, 11));
+    e.push_back(PI(5, 11));
+    e.push_back(PI(6, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(8, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(6, 12));
+    tbl[26] = e;
+  }
+  {
+    vector<PI> e;
+    e.push_back(PI(1, 3));
+    e.push_back(PI(2, 3));
+    e.push_back(PI(1, 5));
+    e.push_back(PI(1, 6));
+    e.push_back(PI(3, 6));
+    e.push_back(PI(1, 7));
+    e.push_back(PI(1, 8));
+    e.push_back(PI(4, 8));
+    e.push_back(PI(4, 9));
+    e.push_back(PI(5, 9));
+    e.push_back(PI(7, 9));
+    e.push_back(PI(6, 10));
+    e.push_back(PI(7, 10));
+    e.push_back(PI(4, 11));
+    e.push_back(PI(7, 11));
+    e.push_back(PI(9, 11));
+    e.push_back(PI(2, 12));
+    e.push_back(PI(3, 12));
+    e.push_back(PI(4, 12));
+    e.push_back(PI(5, 12));
+    e.push_back(PI(6, 12));
+    e.push_back(PI(11, 12));
+    tbl[57] = e;
+  }
+}
+
+int main(void) {
+  ios::sync_with_stdio(false);
+  cin.tie(0);
+  int k;
+  cin >> k;
+  init();
+  vector<PI> d = tbl[k];
+  cout << 12 << " " << d.size() << endl;
+  for (auto e: d) {
+    cout << e.first << " " << e.second << endl;
+  }
+}
