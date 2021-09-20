@@ -52,11 +52,11 @@ impl Segs {
         }
     }
     // adds [l, r).
-    fn add(&mut self, mut l: i64, mut r: i64)  {
+    fn add(&mut self, mut l: i64, mut r: i64) {
         assert!(l <= r);
         if l == r { return; }
         fn deref((&x, &y): (&i64, &i64)) -> (i64, i64) { (x, y) }
-        let mut p = self.s.range(..=l).rev().next().map(deref);
+        let mut p = self.s.range(..l).rev().next().map(deref);
         if p.is_none() {
             p = self.s.iter().next().map(deref);
         }
