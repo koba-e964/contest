@@ -1,3 +1,29 @@
+use std::io::Read;
+
+fn get_word() -> String {
+    let stdin = std::io::stdin();
+    let mut stdin=stdin.lock();
+    let mut u8b: [u8; 1] = [0];
+    loop {
+        let mut buf: Vec<u8> = Vec::with_capacity(16);
+        loop {
+            let res = stdin.read(&mut u8b);
+            if res.unwrap_or(0) == 0 || u8b[0] <= b' ' {
+                break;
+            } else {
+                buf.push(u8b[0]);
+            }
+        }
+        if buf.len() >= 1 {
+            let ret = String::from_utf8(buf).unwrap();
+            return ret;
+        }
+    }
+}
+
+#[allow(dead_code)]
+fn get<T: std::str::FromStr>() -> T { get_word().parse().ok().unwrap() }
+
 // Verified by: https://atcoder.jp/contests/joisc2021/submissions/25693167
 pub trait Action {
     type T: Clone + Copy; // data
@@ -75,24 +101,6 @@ impl<R: Action> DualSegTree<R> {
     }
 }
 
-enum ChmaxAdd {}
-
-impl Action for ChmaxAdd {
-    type T = i64; // data
-    type U = (i64, i64); // action, (a, b) |-> x |-> max(x, a) + b
-    fn update(x: Self::T, (a, b): Self::U) -> Self::T {
-        max(x, a) + b
-    }
-    fn upop(fst: Self::U, snd: Self::U) -> Self::U {
-        let (a, b) = fst;
-        let (c, d) = snd;
-        (std::cmp::max(a, c - b), b + d)
-    }
-    fn upe() -> Self::U { // identity for upop
-        (-1 << 50, 0)
-    }
-}
-
 const B: usize = 3;
 
 enum V {}
@@ -127,4 +135,63 @@ impl Action for V {
         }
         a
     }
+}
+
+fn dfs(v: usize, ch: &[Vec<(usize, i64)>], di: i64, de: i64,
+       dist: &mut [i64], dep: &mut [i64],
+       cnt: &mut usize, rng: &mut [(usize, usize)]) {
+    dist[v] = di;
+    dep[v] = de;
+    rng[v].0 = *cnt;
+    *cnt += 1;
+    for &(w, c) in &ch[v] {
+        dfs(w, ch, di + c, de + 1, dist, dep, cnt, rng);
+    }
+    rng[v].1 = *cnt;
+}
+
+fn solve() {
+    let n: usize = get();
+    let mut ch = vec![vec![]; n];
+    for _ in 0..n - 1 {
+        let a = get::<usize>();
+        let b = get::<usize>();
+        let c: i64 = get();
+        ch[a].push((b, c));
+    }
+    let mut dist = vec![0; n];
+    let mut dep = vec![0; n];
+    let mut rng = vec![(0, 0); n];
+    let mut cnt = 0;
+    dfs(0, &ch, 0, 0, &mut dist, &mut dep, &mut cnt, &mut rng);
+    let mut arr = vec![[0; B]; n];
+    for i in 0..n {
+        let k = rng[i].0;
+        arr[k] = [dist[i], dep[i], 1];
+    }
+    let mut st = DualSegTree::<V>::new(&arr);
+    let q: usize = get();
+    for _ in 0..q {
+        let ty: i32 = get();
+        let a: usize = get();
+        if ty == 1 {
+            let x: i64 = get();
+            let (s, e) = rng[a];
+            let d = dep[a];
+            st.update(s, e, [
+                [1, 0, 0],
+                [x, 1, 0],
+                [-x * d, 0, 1],
+            ]);
+        } else {
+            println!("{}", st.query(rng[a].0)[0]);
+        }
+    }
+}
+
+fn main() {
+    // In order to avoid potential stack overflow, spawn a new thread.
+    let stack_size = 104_857_600; // 100 MB
+    let thd = std::thread::Builder::new().stack_size(stack_size);
+    thd.spawn(|| solve()).unwrap().join().unwrap();
 }
