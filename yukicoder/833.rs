@@ -1,10 +1,45 @@
+#[allow(unused_imports)]
+use std::cmp::*;
+use std::io::{Write, BufWriter};
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes.by_ref().map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr,) => {};
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, ( $($t:tt),* )) => { ($(read_value!($next, $t)),*) };
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+    ($next:expr, usize1) => (read_value!($next, usize) - 1);
+    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+}
+
 /**
  * Segment Tree. This data structure is useful for fast folding on intervals of an array
  * whose elements are elements of monoid I. Note that constructing this tree requires the identity
  * element of I and the operation of I.
  * Verified by: yukicoder No. 259 (http://yukicoder.me/submissions/100581)
  *              AGC015-E (http://agc015.contest.atcoder.jp/submissions/1461001)
- *              yukicoder No. 833 (https://yukicoder.me/submissions/703521)
  */
 struct SegTree<I, BiOp> {
     n: usize,
@@ -32,7 +67,6 @@ impl<I, BiOp> SegTree<I, BiOp>
     }
     /* [a, b) (note: half-inclusive)
      * http://proc-cpuinfo.fixstars.com/2017/07/optimize-segment-tree/ */
-    #[allow(unused)]
     pub fn query(&self, mut a: usize, mut b: usize) -> I {
         let mut left = self.e;
         let mut right = self.e;
@@ -51,7 +85,6 @@ impl<I, BiOp> SegTree<I, BiOp>
         (self.op)(left, right)
     }
     // Port from https://github.com/atcoder/ac-library/blob/master/atcoder/segtree.hpp
-    #[allow(unused)]
     fn max_right<F: Fn(I) -> bool>(
         &self, mut l: usize, f: &F,
     ) -> usize {
@@ -83,7 +116,6 @@ impl<I, BiOp> SegTree<I, BiOp>
         self.n
     }
     // Port from https://github.com/atcoder/ac-library/blob/master/atcoder/segtree.hpp
-    #[allow(unused)]
     fn min_left<F: Fn(I) -> bool>(
         &self, mut r: usize, f: &F,
     ) -> usize {
@@ -115,5 +147,40 @@ impl<I, BiOp> SegTree<I, BiOp>
             if (r + 1).is_power_of_two() { break; }
         }
         0
+    }
+}
+
+fn main() {
+    let out = std::io::stdout();
+    let mut out = BufWriter::new(out.lock());
+    macro_rules! puts {($($format:tt)*) => (let _ = write!(out,$($format)*););}
+    input! {
+        n: usize, q: usize,
+        a: [i64; n],
+        qx: [(i32, usize1); q],
+    }
+    let mut st = SegTree::new(n - 1, min, 1);
+    for i in 0..n - 1 {
+        st.update(i, 0);
+    }
+    let mut val = SegTree::new(n, |x, y| x + y, 0i64);
+    for i in 0..n {
+        val.update(i, a[i]);
+    }
+    for (q, x) in qx {
+        match q {
+            1 => st.update(x, 1),
+            2 => st.update(x, 0),
+            3 => {
+                let v = val.query(x, x + 1);
+                val.update(x, v + 1);
+            }
+            4 => {
+                let l = st.min_left(x, &|v| v == 1);
+                let r = min(n - 1, st.max_right(x, &|v| v == 1));
+                puts!("{}\n", val.query(l, r + 1));
+            }
+            _ => panic!(),
+        }
     }
 }
