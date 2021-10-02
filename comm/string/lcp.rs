@@ -1,41 +1,5 @@
-/*
- * Suffix Array by Manber & Myers.
- * Verified by: AtCoder ARC050 (http://arc050.contest.atcoder.jp/submissions/818912)
- * Reference: http://mayokoex.hatenablog.com/entry/2016/04/03/145845
- */
-fn create_sa<T: Ord + Clone>(s: &[T]) -> Vec<usize> {
-    let n = s.len();
-    let mut sa: Vec<usize> = (0 .. n + 1).collect();
-    let mut rank: Vec<usize> = vec![0; n + 1];
-    let mut tmp = vec![0; n + 1];
-
-    let mut coord = s.to_vec();
-    coord.sort();
-    coord.dedup();
-
-    for i in 0..n + 1 {
-        rank[i] = if i < n { coord.binary_search(&s[i]).unwrap() + 1 } else { 0_usize };
-    }
-    let mut k = 1;
-    while k <= n {
-        {
-            let key = |i: &usize| {
-                let ri = if i + k <= n { rank[i + k] as i32 } else { -1 };
-                (rank[*i], ri)
-            };
-            sa.sort_by_key(&key);
-            tmp[sa[0]] = 0;
-            for i in 1 .. n + 1 {
-                tmp[sa[i]] = tmp[sa[i - 1]]
-                    + if key(&sa[i - 1]) < key(&sa[i]) { 1 } else { 0 };
-            }
-        }
-        rank.clone_from_slice(&tmp);
-        k *= 2;
-    }
-    return sa;
-}
-
+// s.len() == sa.len() must hold.
+// Verified by: https://yukicoder.me/submissions/704334
 struct LCP {
     inv_sa: Vec<usize>,
     spt: Vec<Vec<usize>>
@@ -43,9 +7,10 @@ struct LCP {
 
 impl LCP {
     pub fn new<T: Ord>(s: &[T], sa: &[usize]) -> LCP {
-        let n = sa.len() - 1;
-        let mut inv_sa = vec![0; n + 1];
-        for i in 0 .. n + 1 {
+        let n = sa.len();
+        assert_eq!(s.len(), n);
+        let mut inv_sa = vec![0; n];
+        for i in 0..n {
             inv_sa[sa[i]] = i;
         }
         let lcp = Self::create_lcp(s, sa);
@@ -57,14 +22,16 @@ impl LCP {
     }
     fn create_lcp<T: Ord>(s: &[T], sa: &[usize]) -> Vec<usize> {
         let n = s.len();
-        let mut rank = vec![0; n + 1];
-        let mut lcp = vec![0; n];
-        for i in 0 .. n + 1 {
+        let mut rank = vec![0; n];
+        let mut lcp = vec![0; n - 1];
+        for i in 0..n {
             rank[sa[i]] = i;
         }
         let mut h: usize = 0;
-        lcp[0] = 0;
-        for i in 0 .. n {
+        for i in 0..n {
+            if rank[i] == 0 {
+                continue;
+            }
             let j = sa[rank[i] - 1];
             h = h.saturating_sub(1);
             while j + h < n && i + h < n {
@@ -98,6 +65,10 @@ impl LCP {
     }
     
     pub fn get_lcp(&self, f: usize, s: usize) -> usize {
+        let n = self.inv_sa.len();
+        if f == n || s == n {
+            return 0;
+        }
         let f = self.inv_sa[f];
         let s = self.inv_sa[s];
         let (f, s) = 
