@@ -11,9 +11,9 @@ fn conv(a: Vec<MInt>, b: Vec<MInt>) -> Vec<MInt> {
     for i in 0..m + 1 { g[i] = b[i]; }
     let fac = MInt::new(p as i64).inv();
     let zeta = MInt::new(3).pow((MOD - 1) / p as i64);
-    fft::transform(&mut f, zeta, 1.into());
-    fft::transform(&mut g, zeta, 1.into());
+    fft::fft(&mut f, zeta, 1.into());
+    fft::fft(&mut g, zeta, 1.into());
     for i in 0..p { f[i] *= g[i] * fac; }
-    fft::transform(&mut f, zeta.inv(), 1.into());
+    fft::inv_fft(&mut f, zeta.inv(), 1.into());
     f[..n + m + 1].to_vec()
 }
