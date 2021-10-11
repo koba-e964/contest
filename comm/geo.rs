@@ -67,3 +67,25 @@ fn line((x1, y1): P, (x2, y2): P) -> Line {
     // ax + by = c, (a, b) > (0, 0)
     (a, b, c)
 }
+
+// arg sort
+// Verified by: https://yukicoder.me/submissions/706856
+fn arg_sort(xy: &mut [(Coord, Coord, i32)]) {
+    fn half((x, y, _): (Coord, Coord, i32)) -> i32 {
+        assert_ne!((x, y), (0, 0));
+        if y >= 0 {
+            if x > 0 || y > 0 {
+                1
+            } else {
+                2
+            }
+        } else {
+            2
+        }
+    }
+    xy.sort_unstable_by(|&a, &b| {
+        half(a).cmp(&half(b)).then_with(
+            || 0.cmp(&(a.0 * b.1 - a.1 * b.0))
+                .then_with(|| a.2.cmp(&b.2)))
+    });
+}
