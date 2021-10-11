@@ -1,7 +1,8 @@
-// Verified by: https://yukicoder.me/submissions/706785
-trait LeaveOne: Default + Clone {
+// Verified by: https://atcoder.jp/contests/abc160/submissions/26509495
+trait LeaveOne<App = ()>: Default + Clone {
     type T: Default + Clone;
-    fn build(vals: &[Self::T]) -> Self;
+    type App;
+    fn build(vals: &[Self::T], app: &Self::App) -> Self;
     fn leave_one(&self, excl: Self::T) -> Self::T;
     fn exchange_one(&self, excl: Self::T, incl: Self::T) -> Self::T;
     fn add_one(&self, incl: Self::T) -> Self::T;
@@ -18,13 +19,13 @@ struct Reroot<LOO: LeaveOne> {
 }
 
 impl<LOO: LeaveOne> Reroot<LOO> {
-    pub fn new(g: &[Vec<usize>]) -> Self {
+    pub fn new(g: &[Vec<usize>], app: &LOO::App) -> Self {
         let n = g.len();
         let mut dp1 = vec![LOO::T::default(); n];
         let mut dp2 = vec![vec![]; n];
         let mut dp_loo = vec![LOO::default(); n];
-        Self::dfs1(0, n, &g, &mut dp_loo, &mut dp2);
-        Self::dfs2(0, n, &g, &mut dp1, &dp_loo, &mut dp2, LOO::T::default());
+        Self::dfs1(0, n, &g, &mut dp_loo, &mut dp2, app);
+        Self::dfs2(0, n, &g, &mut dp1, &dp_loo, &mut dp2, &app, LOO::T::default());
         Reroot {
             dp1: dp1,
             dp2: dp2,
@@ -33,18 +34,18 @@ impl<LOO: LeaveOne> Reroot<LOO> {
     }
     fn dfs1(
         v: usize, par: usize, g: &[Vec<usize>],
-        dp_loo: &mut [LOO], dp2: &mut [Vec<LOO::T>],
+        dp_loo: &mut [LOO], dp2: &mut [Vec<LOO::T>], app: &LOO::App,
     ) {
         let mut mydp2 = vec![LOO::T::default(); g[v].len()];
         let mut chval = vec![];
         for i in 0..g[v].len() {
             let w = g[v][i];
             if w == par { continue; }
-            Self::dfs1(w, v, g, dp_loo, dp2);
+            Self::dfs1(w, v, g, dp_loo, dp2, app);
             mydp2[i] = dp_loo[w].as_is();
             chval.push(mydp2[i].clone());
         }
-        dp_loo[v] = LOO::build(&chval);
+        dp_loo[v] = LOO::build(&chval, app);
         dp2[v] = mydp2;
     }
     fn dfs2(
@@ -52,6 +53,7 @@ impl<LOO: LeaveOne> Reroot<LOO> {
         dp1: &mut [LOO::T],
         dp_loo: &[LOO],
         dp2: &mut [Vec<LOO::T>],
+        app: &LOO::App,
         passed: LOO::T,
     ) {
         for i in 0..g[v].len() {
@@ -65,7 +67,7 @@ impl<LOO: LeaveOne> Reroot<LOO> {
             } else {
                 dp_loo[v].exchange_one(dp2[v][i].clone(), passed.clone())
             };
-            Self::dfs2(w, v, g, dp1, dp_loo, dp2, inherited);
+            Self::dfs2(w, v, g, dp1, dp_loo, dp2, app, inherited);
         }
         dp1[v] = if par >= g.len() {
             dp_loo[v].as_is()

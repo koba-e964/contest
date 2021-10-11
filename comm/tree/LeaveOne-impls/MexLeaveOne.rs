@@ -1,15 +1,9 @@
 // Depends on: tree/Reroot.rs
-// Verified by: https://yukicoder.me/submissions/706785
-#[derive(Default, Clone, Debug)]
-struct MexLeaveOne {
-    mex1: usize,
-    mex2: usize,
-    f: Vec<usize>,
-}
-
+// Verified by: https://yukicoder.me/submissions/706820
 impl LeaveOne for MexLeaveOne {
     type T = usize;
-    fn build(vals: &[usize]) -> Self {
+    type App = ();
+    fn build(vals: &[usize], _: &()) -> Self {
         let seen = vals.iter().cloned().collect::<std::collections::HashSet<_>>();
         let mut mex1 = 0;
         while seen.contains(&mex1) {
