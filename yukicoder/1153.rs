@@ -38,6 +38,15 @@ fn main() {
     thd.spawn(|| solve()).unwrap().join().unwrap();
 }
 
+trait LeaveOne: Default + Clone {
+    type T: Default + Clone;
+    fn build(vals: &[Self::T]) -> Self;
+    fn leave_one(&self, excl: Self::T) -> Self::T;
+    fn exchange_one(&self, excl: Self::T, incl: Self::T) -> Self::T;
+    fn add_one(&self, incl: Self::T) -> Self::T;
+    fn as_is(&self) -> Self::T;
+}
+
 #[derive(Default, Clone, Debug)]
 struct MexLeaveOne {
     mex1: usize,
@@ -45,7 +54,31 @@ struct MexLeaveOne {
     f: Vec<usize>,
 }
 
-impl MexLeaveOne {
+impl LeaveOne for MexLeaveOne {
+    type T = usize;
+    fn build(vals: &[usize]) -> Self {
+        let seen = vals.iter().cloned().collect::<std::collections::HashSet<_>>();
+        let mut mex1 = 0;
+        while seen.contains(&mex1) {
+            mex1 += 1;
+        }
+        let mut mex2 = mex1 + 1;
+        while seen.contains(&mex2) {
+            mex2 += 1;
+        }
+        let mut f = vec![0; mex2];
+        for &v in vals {
+            if v < mex2 {
+                f[v] += 1;
+            }
+        }
+        let loo = MexLeaveOne {
+            mex1: mex1,
+            mex2: mex2,
+            f: f,
+        };
+        loo
+    }
     fn leave_one(&self, excl: usize) -> usize {
         if excl >= self.mex1 {
             return self.mex1;
@@ -82,68 +115,71 @@ impl MexLeaveOne {
     }
 }
 
-fn dfs1(
-    v: usize, par: usize, g: &[Vec<usize>],
-    dp_loo: &mut [MexLeaveOne], dp2: &mut [Vec<usize>],
-) {
-    let mut seen = std::collections::HashSet::new();
-    let mut mydp2 = vec![0; g[v].len()];
-    for i in 0..g[v].len() {
-        let w = g[v][i];
-        if w == par { continue; }
-        dfs1(w, v, g, dp_loo, dp2);
-        mydp2[i] = dp_loo[w].as_is();
-        seen.insert(mydp2[i]);
-    }
-    let mut mex1 = 0;
-    while seen.contains(&mex1) {
-        mex1 += 1;
-    }
-    let mut mex2 = mex1 + 1;
-    while seen.contains(&mex2) {
-        mex2 += 1;
-    }
-    let mut f = vec![0; mex2];
-    for i in 0..g[v].len() {
-        let w = g[v][i];
-        if w == par { continue; }
-        if mydp2[i] < mex2 {
-            f[mydp2[i]] += 1;
-        }
-    }
-    let loo = MexLeaveOne {
-        mex1: mex1,
-        mex2: mex2,
-        f: f,
-    };
-    dp_loo[v] = loo;
-    dp2[v] = mydp2;
+struct Reroot<LOO: LeaveOne> {
+    #[allow(unused)]
+    pub dp1: Vec<LOO::T>,
+    #[allow(unused)]
+    pub dp2: Vec<Vec<LOO::T>>,
+    #[allow(unused)]
+    pub dp_loo: Vec<LOO>,
 }
-fn dfs2(
-    v: usize, par: usize, g: &[Vec<usize>],
-    dp1: &mut [usize],
-    dp_loo: &[MexLeaveOne],
-    dp2: &mut [Vec<usize>],
-    passed: usize,
-) {
-    for i in 0..g[v].len() {
-        let w = g[v][i];
-        if w == par {
-            dp2[v][i] = passed;
-            continue;
+
+impl<LOO: LeaveOne> Reroot<LOO> {
+    pub fn new(g: &[Vec<usize>]) -> Self {
+        let n = g.len();
+        let mut dp1 = vec![LOO::T::default(); n];
+        let mut dp2 = vec![vec![]; n];
+        let mut dp_loo = vec![LOO::default(); n];
+        Self::dfs1(0, n, &g, &mut dp_loo, &mut dp2);
+        Self::dfs2(0, n, &g, &mut dp1, &dp_loo, &mut dp2, LOO::T::default());
+        Reroot {
+            dp1: dp1,
+            dp2: dp2,
+            dp_loo: dp_loo,
         }
-        let inherited = if par >= g.len() {
-            dp_loo[v].leave_one(dp2[v][i])
-        } else {
-            dp_loo[v].exchange_one(dp2[v][i], passed)
-        };
-        dfs2(w, v, g, dp1, dp_loo, dp2, inherited);
     }
-    dp1[v] = if par >= g.len() {
-        dp_loo[v].as_is()
-    } else {
-        dp_loo[v].add_one(passed)
-    };
+    fn dfs1(
+        v: usize, par: usize, g: &[Vec<usize>],
+        dp_loo: &mut [LOO], dp2: &mut [Vec<LOO::T>],
+    ) {
+        let mut mydp2 = vec![LOO::T::default(); g[v].len()];
+        let mut chval = vec![];
+        for i in 0..g[v].len() {
+            let w = g[v][i];
+            if w == par { continue; }
+            Self::dfs1(w, v, g, dp_loo, dp2);
+            mydp2[i] = dp_loo[w].as_is();
+            chval.push(mydp2[i].clone());
+        }
+        dp_loo[v] = LOO::build(&chval);
+        dp2[v] = mydp2;
+    }
+    fn dfs2(
+        v: usize, par: usize, g: &[Vec<usize>],
+        dp1: &mut [LOO::T],
+        dp_loo: &[LOO],
+        dp2: &mut [Vec<LOO::T>],
+        passed: LOO::T,
+    ) {
+        for i in 0..g[v].len() {
+            let w = g[v][i];
+            if w == par {
+                dp2[v][i] = passed.clone();
+                continue;
+            }
+            let inherited = if par >= g.len() {
+                dp_loo[v].leave_one(dp2[v][i].clone())
+            } else {
+                dp_loo[v].exchange_one(dp2[v][i].clone(), passed.clone())
+            };
+            Self::dfs2(w, v, g, dp1, dp_loo, dp2, inherited);
+        }
+        dp1[v] = if par >= g.len() {
+            dp_loo[v].as_is()
+        } else {
+            dp_loo[v].add_one(passed)
+        };
+    }
 }
 
 // Tags: rerooting
@@ -158,14 +194,10 @@ fn solve() {
         g[u].push(v);
         g[v].push(u);
     }
-    let mut dp1 = vec![0; n];
-    let mut dp2 = vec![vec![]; n];
-    let mut dp_loo = vec![MexLeaveOne::default(); n];
-    dfs1(0, n, &g, &mut dp_loo, &mut dp2);
-    dfs2(0, n, &g, &mut dp1, &dp_loo, &mut dp2, 0);
+    let reroot = Reroot::<MexLeaveOne>::new(&g);
     let mut gr = 0;
     for &a in &a {
-        gr ^= dp1[a];
+        gr ^= reroot.dp1[a];
     }
     if gr == 0 {
         println!("-1 -1");
@@ -178,7 +210,7 @@ fn solve() {
     for i in 0..n {
         if !pop[i] { continue; }
         for j in 0..g[i].len() {
-            if (gr ^ dp1[i] ^ dp2[i][j]) == 0 {
+            if (gr ^ reroot.dp1[i] ^ reroot.dp2[i][j]) == 0 {
                 let idx = a.iter().position(|&a| a == i).unwrap();
                 println!("{} {}", idx + 1, g[i][j] + 1);
                 return;
