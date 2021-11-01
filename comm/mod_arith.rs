@@ -54,6 +54,30 @@ fn invmod(x: i64, m: i64) -> i64 {
     y
 }
 
+// Find a generator of (Z/pZ)^\times
+fn gen_zpz(p: i64) -> i64 {
+    let mut v = p - 1;
+    let mut f = 2;
+    let mut fs = vec![];
+    while v >= f * f {
+        if v % f == 0 {
+            fs.push(f);
+            while v % f == 0 { v /= f; }
+        }
+        f += 1;
+    }
+    if v > 1 {
+        fs.push(v);
+    }
+    let mut g = 2;
+    loop {
+        if fs.iter().all(|&x| powmod(g, (p - 1) / x, p) != 1) {
+            return g;
+        }
+        g += 1;
+    }
+}
+
 // Verified by: https://atcoder.jp/contests/ttpc2019/submissions/23338287
 // Verified by: https://atcoder.jp/contests/acl1/submissions/23895636
 fn garner((a, m): (i64, i64), (b, n): (i64, i64)) -> i64 {
