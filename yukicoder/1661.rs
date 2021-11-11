@@ -47,24 +47,26 @@ impl DivDP {
         }
     }
     // pos should be of form floor(n / ???).
-    fn upd<F>(&mut self, pos: i64, f: F) where F: Fn(i64) -> i64 {
+    unsafe fn upd<F>(&mut self, pos: i64, f: F) where F: Fn(i64) -> i64 {
         if pos >= self.n / self.b {
             let idx = self.n / pos;
             debug_assert_eq!(pos, self.n / idx);
-            self.dp_big[idx as usize] = f(self.dp_big[idx as usize]);
+            let val = *self.dp_big.get_unchecked(idx as usize);
+            *self.dp_big.get_unchecked_mut(idx as usize) = f(val);
             return;
         }
         let idx = pos as usize;
-        self.dp[idx] = f(self.dp[idx]);
+        let val = *self.dp.get_unchecked(idx);
+        *self.dp.get_unchecked_mut(idx) = f(val);
     }
-    fn get(&self, pos: i64) -> i64 {
+    unsafe fn get(&self, pos: i64) -> i64 {
         if pos >= self.n / self.b {
             let idx = self.n / pos;
             debug_assert_eq!(pos, self.n / idx);
-            return self.dp_big[idx as usize];
+            return *self.dp_big.get_unchecked(idx as usize);
         }
         let idx = pos as usize;
-        self.dp[idx]
+        *self.dp.get_unchecked(idx)
     }
     fn init<F>(&mut self, f: F) where F: Fn(i64) -> i64 {
         for i in 0..self.dp.len() {
@@ -139,24 +141,26 @@ fn calc(n: i64, prs: &[usize]) -> i64 {
     sqn -= 1;
     let mut dp = DivDP::new(n, sqn);
     dp.init(|x| max(0, x - 1));
-    for &p in prs {
-        let p = p as i64;
-        if p * p > n {
-            break;
+    unsafe {
+        for &p in prs {
+            let p = p as i64;
+            if p * p > n {
+                break;
+            }
+            for i in 1..=min(sqn, n / p / p) {
+                let val = dp.get(n / i / p);
+                let val = val - dp.get(p - 1);
+                dp.upd(n / i, |x| x - val);
+            }
+            for i in (p * p..n / sqn).rev() {
+                let val = dp.get(i / p);
+                let val = val - dp.get(p - 1);
+                dp.upd(i, |x| x - val);
+            }
         }
-        for i in 1..=min(sqn, n / p / p) {
-            let val = dp.get(n / i / p);
-            let val = val - dp.get(p - 1);
-            dp.upd(n / i, |x| x - val);
-        }
-        for i in (p * p..n / sqn).rev() {
-            let val = dp.get(i / p);
-            let val = val - dp.get(p - 1);
-            dp.upd(i, |x| x - val);
-        }
+        // dp[j] = #{x <= j | x is prime}
+        dp.get(n) + dp.get(n / 2)
     }
-    // dp[j] = #{x <= j | x is prime}
-    dp.get(n) + dp.get(n / 2)
 }
 
 // Tags: lucys-algorithm, prime-counting
