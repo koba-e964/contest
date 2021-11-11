@@ -16,10 +16,6 @@ def main():
 
     resp = requests.get(SOLVED_ENDPOINT.format(USERNAME))
     solved = json.loads(resp.text)
-    sl = len(solved)
-    print('Solved: {}, All: {}'.format(sl, whole))
-    print('Unsolved: {} / {} ({:.3f} %)'
-          .format(whole - sl, whole, 100 * (1.0 - sl / whole)))
 
     levels = {}
     for p in problems:
@@ -32,15 +28,21 @@ def main():
     keys = [k for k in levels]
     keys.sort()
     sl = {k: 0 for k in keys}
+    sl_count = 0
     for p in solved:
         if p['ProblemType'] != 0:
             continue
         lev = p['Level']
         sl[lev] += 1
+        sl_count += 1
+    print('Solved: {}, All: {}'.format(sl_count, whole))
+    print('Unsolved: {} / {} ({:.3f} %)'
+          .format(whole - sl_count, whole, 100 * (1.0 - sl_count / whole)))
     print()
     print('remaining:')
     level_sum = 0.0
     solved_sum = 0.0
+
     for k in keys:
         a = sl[k]
         b = levels[k]
