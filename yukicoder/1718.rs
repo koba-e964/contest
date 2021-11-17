@@ -201,8 +201,9 @@ fn main() {
     thd.spawn(|| solve()).unwrap().join().unwrap();
 }
 
-// ​​https://yukicoder.me/problems/no/1718 (3.5)
+// https://yukicoder.me/problems/no/1718 (3.5)
 // 全方位木 DP。答えは (ドングリに到達するのに通る辺の本数) * 2 - max(ドングリまでの距離)。
+// Tags: rerooting
 fn solve() {
     let out = std::io::stdout();
     let mut out = BufWriter::new(out.lock());
