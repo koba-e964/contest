@@ -1,8 +1,9 @@
-// Verified by: https://atcoder.jp/contests/abc160/submissions/26509495
-trait LeaveOne<App = ()>: Default + Clone {
+// Verified by: https://yukicoder.me/submissions/717057
+trait LeaveOne<Me = (), App = ()>: Default + Clone {
     type T: Default + Clone;
+    type Me: Clone;
     type App;
-    fn build(vals: &[Self::T], app: &Self::App) -> Self;
+    fn build(me: Self::Me, vals: &[Self::T], app: &Self::App) -> Self;
     fn leave_one(&self, excl: Self::T) -> Self::T;
     fn exchange_one(&self, excl: Self::T, incl: Self::T) -> Self::T;
     fn add_one(&self, incl: Self::T) -> Self::T;
@@ -19,12 +20,12 @@ struct Reroot<LOO: LeaveOne> {
 }
 
 impl<LOO: LeaveOne> Reroot<LOO> {
-    pub fn new(g: &[Vec<usize>], app: &LOO::App) -> Self {
+    pub fn new(g: &[Vec<usize>], me: &[LOO::Me], app: &LOO::App) -> Self {
         let n = g.len();
         let mut dp1 = vec![LOO::T::default(); n];
         let mut dp2 = vec![vec![]; n];
         let mut dp_loo = vec![LOO::default(); n];
-        Self::dfs1(0, n, &g, &mut dp_loo, &mut dp2, app);
+        Self::dfs1(0, n, &g, &mut dp_loo, &mut dp2, me, app);
         Self::dfs2(0, n, &g, &mut dp1, &dp_loo, &mut dp2, &app, LOO::T::default());
         Reroot {
             dp1: dp1,
@@ -34,18 +35,18 @@ impl<LOO: LeaveOne> Reroot<LOO> {
     }
     fn dfs1(
         v: usize, par: usize, g: &[Vec<usize>],
-        dp_loo: &mut [LOO], dp2: &mut [Vec<LOO::T>], app: &LOO::App,
+        dp_loo: &mut [LOO], dp2: &mut [Vec<LOO::T>], me: &[LOO::Me], app: &LOO::App,
     ) {
         let mut mydp2 = vec![LOO::T::default(); g[v].len()];
         let mut chval = vec![];
         for i in 0..g[v].len() {
             let w = g[v][i];
             if w == par { continue; }
-            Self::dfs1(w, v, g, dp_loo, dp2, app);
+            Self::dfs1(w, v, g, dp_loo, dp2, me, app);
             mydp2[i] = dp_loo[w].as_is();
             chval.push(mydp2[i].clone());
         }
-        dp_loo[v] = LOO::build(&chval, app);
+        dp_loo[v] = LOO::build(me[v].clone(), &chval, app);
         dp2[v] = mydp2;
     }
     fn dfs2(
