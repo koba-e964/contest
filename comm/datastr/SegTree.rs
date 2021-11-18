@@ -8,6 +8,7 @@
  */
 struct SegTree<I, BiOp> {
     n: usize,
+    orign: usize,
     dat: Vec<I>,
     op: BiOp,
     e: I,
@@ -19,10 +20,11 @@ impl<I, BiOp> SegTree<I, BiOp>
     pub fn new(n_: usize, op: BiOp, e: I) -> Self {
         let mut n = 1;
         while n < n_ { n *= 2; } // n is a power of 2
-        SegTree {n: n, dat: vec![e; 2 * n - 1], op: op, e: e}
+        SegTree {n: n, orign: n_, dat: vec![e; 2 * n - 1], op: op, e: e}
     }
     /* ary[k] <- v */
     pub fn update(&mut self, idx: usize, v: I) {
+        debug_assert!(idx < self.orign);
         let mut k = idx + self.n - 1;
         self.dat[k] = v;
         while k > 0 {
@@ -34,6 +36,8 @@ impl<I, BiOp> SegTree<I, BiOp>
      * http://proc-cpuinfo.fixstars.com/2017/07/optimize-segment-tree/ */
     #[allow(unused)]
     pub fn query(&self, mut a: usize, mut b: usize) -> I {
+        debug_assert!(a <= b);
+        debug_assert!(b <= self.orign);
         let mut left = self.e;
         let mut right = self.e;
         a += self.n - 1;
@@ -49,71 +53,5 @@ impl<I, BiOp> SegTree<I, BiOp>
             b = (b - 1) / 2;
         }
         (self.op)(left, right)
-    }
-    // Port from https://github.com/atcoder/ac-library/blob/master/atcoder/segtree.hpp
-    #[allow(unused)]
-    fn max_right<F: Fn(I) -> bool>(
-        &self, mut l: usize, f: &F,
-    ) -> usize {
-        assert!(f(self.e));
-        if l == self.n {
-            return self.n;
-        }
-        l += self.n - 1;
-        let mut sm = self.e;
-        loop {
-            while l % 2 == 1 {
-                l = (l - 1) / 2;
-            }
-            if !f((self.op)(sm, self.dat[l])) {
-                while l < self.n - 1 {
-                    l = 2 * l + 1;
-                    let val = (self.op)(sm, self.dat[l]);
-                    if f(val) {
-                        sm = val;
-                        l += 1;
-                    }
-                }
-                return l + 1 - self.n;
-            }
-            sm = (self.op)(sm, self.dat[l]);
-            l += 1;
-            if (l + 1).is_power_of_two() { break; }
-        }
-        self.n
-    }
-    // Port from https://github.com/atcoder/ac-library/blob/master/atcoder/segtree.hpp
-    #[allow(unused)]
-    fn min_left<F: Fn(I) -> bool>(
-        &self, mut r: usize, f: &F,
-    ) -> usize {
-        if !f(self.e) {
-            return r + 1;
-        }
-        if r == 0 {
-            return 0;
-        }
-        r += self.n - 1;
-        let mut sm = self.e;
-        loop {
-            r -= 1;
-            while r > 0 && r % 2 == 0 {
-                r = (r - 1) / 2;
-            }
-            if !f((self.op)(self.dat[r], sm)) {
-                while r < self.n - 1 {
-                    r = 2 * r + 2;
-                    let val = (self.op)(self.dat[r], sm);
-                    if f(val) {
-                        sm = val;
-                        r -= 1;
-                    }
-                }
-                return r + 2 - self.n;
-            }
-            sm = (self.op)(self.dat[r], sm);
-            if (r + 1).is_power_of_two() { break; }
-        }
-        0
     }
 }
