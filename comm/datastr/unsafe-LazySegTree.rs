@@ -1,8 +1,9 @@
+// In all O(log n) operations, array accesses are unchecked.
 // Lazy Segment Tree. This data structure is useful for fast folding and updating on intervals of an array
 // whose elements are elements of monoid T. Note that constructing this tree requires the identity
 // element of T and the operation of T. This is monomorphised, because of efficiency. T := i64, biop = max, upop = (+)
 // Reference: https://github.com/atcoder/ac-library/blob/master/atcoder/lazysegtree.hpp
-// Verified by: https://judge.yosupo.jp/submission/68794
+// Verified by: https://judge.yosupo.jp/submission/68792
 pub trait ActionRing {
     type T: Clone + Copy; // data
     type U: Clone + Copy + PartialEq + Eq; // action
@@ -12,6 +13,11 @@ pub trait ActionRing {
     fn e() -> Self::T;
     fn upe() -> Self::U; // identity for upop
 }
+// We use an acl-like non-recursive implementation, because it is faster.
+// Even though Affine needs an extra element to track the size of elements
+// in a non-recursive implementation, experiments show it is faster:
+// non-recursive: https://judge.yosupo.jp/submission/68792 (869ms)
+// recursive: https://judge.yosupo.jp/submission/68793 (1151ms)
 pub struct LazySegTree<R: ActionRing> {
     n: usize,
     dep: usize,
@@ -84,17 +90,19 @@ impl<R: ActionRing> LazySegTree<R> {
         }
         let mut sml = R::e();
         let mut smr = R::e();
-        while l < r {
-            if (l & 1) != 0 {
-                sml = R::biop(sml, self.dat[l]);
-                l += 1;
+        unsafe {
+            while l < r {
+                if (l & 1) != 0 {
+                    sml = R::biop(sml, *self.dat.get_unchecked(l));
+                    l += 1;
+                }
+                if (r & 1) != 0 {
+                    r -= 1;
+                    smr = R::biop(*self.dat.get_unchecked(r), smr);
+                }
+                l >>= 1;
+                r >>= 1;
             }
-            if (r & 1) != 0 {
-                r -= 1;
-                smr = R::biop(self.dat[r], smr);
-            }
-            l >>= 1;
-            r >>= 1;
         }
         R::biop(sml, smr)
     }
@@ -134,112 +142,29 @@ impl<R: ActionRing> LazySegTree<R> {
     }
     #[inline]
     fn update_node(&mut self, k: usize) {
-        self.dat[k] = R::biop(self.dat[2 * k], self.dat[2 * k + 1]);
+        unsafe {
+            let val = R::biop(*self.dat.get_unchecked(2 * k), *self.dat.get_unchecked(2 * k + 1));
+            *self.dat.get_unchecked_mut(k) = val;
+        }
     }
     fn all_apply(&mut self, k: usize, f: R::U) {
-        self.dat[k] = R::update(self.dat[k], f);
+        unsafe {
+            let val = R::update(*self.dat.get_unchecked(k), f);
+            *self.dat.get_unchecked_mut(k) = val;
+        }
         if k < self.n {
-            self.lazy[k] = R::upop(self.lazy[k], f);
+            unsafe {
+                let val = R::upop(*self.lazy.get_unchecked(k), f);
+                *self.lazy.get_unchecked_mut(k) = val;
+            }
         }
     }
     fn push(&mut self, k: usize) {
-        let val = self.lazy[k];
+        let val = unsafe { *self.lazy.get_unchecked(k) };
         self.all_apply(2 * k, val);
         self.all_apply(2 * k + 1, val);
-        self.lazy[k] = R::upe();
-    }
-}
-
-enum Affine {}
-
-type AffineInt = i64; // Change here to change type
-impl ActionRing for Affine {
-    type T = (AffineInt, AffineInt); // data, size
-    type U = (AffineInt, AffineInt); // action, (a, b) |-> x |-> ax + b
-    fn biop((x, s): Self::T, (y, t): Self::T) -> Self::T {
-        (x + y, s + t)
-    }
-    fn update((x, s): Self::T, (a, b): Self::U) -> Self::T {
-        (x * a + b * s, s)
-    }
-    fn upop(fst: Self::U, snd: Self::U) -> Self::U {
-        let (a, b) = fst;
-        let (c, d) = snd;
-        (a * c, b * c + d)
-    }
-    fn e() -> Self::T {
-        (0.into(), 0.into())
-    }
-    fn upe() -> Self::U { // identity for upop
-        (1.into(), 0.into())
-    }
-}
-
-enum AddMax {}
-
-impl ActionRing for AddMax {
-    type T = i32; // data
-    type U = i32; // action, a |-> x |-> a + x
-    fn biop(x: Self::T, y: Self::T) -> Self::T {
-        std::cmp::max(x, y)
-    }
-    fn update(x: Self::T, a: Self::U) -> Self::T {
-        x + a
-    }
-    fn upop(fst: Self::U, snd: Self::U) -> Self::U {
-        fst + snd
-    }
-    fn e() -> Self::T {
-        0
-    }
-    fn upe() -> Self::U { // identity for upop
-        0
-    }
-}
-
-enum V {}
-
-type VInt = i64;
-const VB: usize = 3;
-
-impl ActionRing for V {
-    type T = [VInt; VB]; // data
-    type U = [[VInt; VB]; VB]; // action, (a, b) |-> x |-> ax + b
-    fn biop(x: Self::T, y: Self::T) -> Self::T {
-        let mut ans = [0.into(); VB];
-        for i in 0..VB {
-            ans[i] = x[i] + y[i];
+        unsafe {
+            *self.lazy.get_unchecked_mut(k) = R::upe();
         }
-        ans
-    }
-    fn update(x: Self::T, o: Self::U) -> Self::T {
-        let mut ans = [0.into(); VB];
-        for i in 0..VB {
-            for j in 0..VB {
-                ans[j] += x[i] * o[i][j];
-            }
-        }
-        ans
-    }
-    fn upop(fst: Self::U, snd: Self::U) -> Self::U {
-        let mut ans = [[0.into(); VB]; VB];
-        for i in 0..VB {
-            for j in 0..VB {
-                for k in 0..VB {
-                    ans[i][k] += fst[i][j] * snd[j][k];
-                }
-            }
-        }
-        ans
-    }
-    fn e() -> Self::T {
-        [0.into(); VB]
-    }
-    fn upe() -> Self::U { // identity for upop
-        let mut ans = [[0.into(); VB]; VB];
-        for i in 0..VB {
-            ans[i][i] = 1.into();
-        }
-        ans
     }
 }
