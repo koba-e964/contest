@@ -1,15 +1,5 @@
-#[allow(unused_imports)]
 use std::cmp::*;
-#[allow(unused_imports)]
-use std::collections::*;
-use std::io::Read;
-
-#[allow(dead_code)]
-fn getline() -> String {
-    let mut ret = String::new();
-    std::io::stdin().read_line(&mut ret).ok().unwrap();
-    ret
-}
+use std::io::{Read, Write, BufWriter};
 
 fn get_word() -> String {
     let stdin = std::io::stdin();
@@ -82,6 +72,7 @@ impl<T: Clone + std::ops::AddAssign<T>> BIT<T> {
     }
 }
 
+// Reference: https://github.com/atcoder/ac-library/blob/master/atcoder/lazysegtree.hpp
 pub trait Action {
     type T: Clone + Copy; // data
     type U: Clone + Copy + PartialEq + Eq; // action
@@ -93,68 +84,89 @@ pub struct DualSegTree<R: Action> {
     n: usize,
     dat: Vec<R::T>,
     lazy: Vec<R::U>,
+    dep: usize,
 }
 
 impl<R: Action> DualSegTree<R> {
     pub fn new(a: &[R::T]) -> Self {
         let n_ = a.len();
         let mut n = 1;
-        while n < n_ { n *= 2; } // n is a power of 2
+        let mut dep = 0;
+        while n < n_ { n *= 2; dep += 1; } // n is a power of 2
+        let mut a = a.to_vec();
+        let filler = a[0];
+        a.resize(n, filler);
         DualSegTree {
             n: n,
-            dat: a.to_vec(),
-            lazy: vec![R::upe(); 2 * n - 1]
+            dat: a,
+            lazy: vec![R::upe(); n],
+            dep: dep,
         }
     }
     #[inline]
-    fn lazy_evaluate_node(&mut self, k: usize) {
-        if self.lazy[k] == R::upe() { return; }
-        if k >= self.n - 1 {
-            let idx = k + 1 - self.n;
-            self.dat[idx] = R::update(self.dat[idx], self.lazy[k]);
-        }
-        if k < self.n - 1 {
-            self.lazy[2 * k + 1] = R::upop(self.lazy[2 * k + 1], self.lazy[k]);
-            self.lazy[2 * k + 2] = R::upop(self.lazy[2 * k + 2], self.lazy[k]);
-        }
-        self.lazy[k] = R::upe(); // identity for upop
+    pub fn set(&mut self, idx: usize, x: R::T) {
+        debug_assert!(idx < self.n);
+        self.apply_any(idx, |_t| x);
     }
-    fn update_sub(&mut self, a: usize, b: usize, v: R::U, k: usize, l: usize, r: usize) {
-        self.lazy_evaluate_node(k);
-
-        // [a,b) and  [l,r) intersects?
-        if r <= a || b <= l {return;}
-        if a <= l && r <= b {
-            self.lazy[k] = R::upop(self.lazy[k], v);
-            self.lazy_evaluate_node(k);
-            return;
-        }
-
-        self.update_sub(a, b, v, 2 * k + 1, l, (l + r) / 2);
-        self.update_sub(a, b, v, 2 * k + 2, (l + r) / 2, r);
-    }
-    /* ary[i] = upop(ary[i], v) for i in [a, b) (half-inclusive) */
     #[inline]
-    pub fn update(&mut self, a: usize, b: usize, v: R::U) {
-        let n = self.n;
-        self.update_sub(a, b, v, 0, 0, n);
+    pub fn apply(&mut self, idx: usize, f: R::U) {
+        debug_assert!(idx < self.n);
+        self.apply_any(idx, |t| R::update(t, f));
     }
-    /* l,r are for simplicity */
-    fn update_at_sub(&mut self, a: usize, k: usize, l: usize, r: usize) {
-        self.lazy_evaluate_node(k);
-
-        // [a,a+1) and  [l,r) intersect?
-        if r <= a || a + 1 <= l { return; }
-        if a <= l && r <= a + 1 { return; }
-        self.update_at_sub(a, 2 * k + 1, l, (l + r) / 2);
-        self.update_at_sub(a, 2 * k + 2, (l + r) / 2, r);
+    pub fn apply_any<F: Fn(R::T) -> R::T>(&mut self, idx: usize, f: F) {
+        debug_assert!(idx < self.n);
+        let idx = idx + self.n;
+        for i in (1..self.dep + 1).rev() {
+            self.push(idx >> i);
+        }
+        let to = &mut self.dat[idx - self.n];
+        *to = f(*to);
     }
-    /* [a, b) (note: half-inclusive) */
+    pub fn get(&mut self, idx: usize) -> R::T {
+        debug_assert!(idx < self.n);
+        let idx = idx + self.n;
+        for i in (1..self.dep + 1).rev() {
+            self.push(idx >> i);
+        }
+        self.dat[idx - self.n]
+    }
+    /* ary[i] = upop(ary[i], v) for i in [l, r) (half-inclusive) */
     #[inline]
-    pub fn query(&mut self, a: usize) -> R::T {
-        let n = self.n;
-        self.update_at_sub(a, 0, 0, n);
-        self.dat[a]
+    pub fn update(&mut self, l: usize, r: usize, f: R::U)  {
+        debug_assert!(l <= r && r <= self.n);
+        if l == r { return; }
+        let mut l = l + self.n;
+        let mut r = r + self.n;
+        for i in (1..self.dep + 1).rev() {
+            if ((l >> i) << i) != l { self.push(l >> i); }
+            if ((r >> i) << i) != r { self.push((r - 1) >> i); }
+        }
+        while l < r {
+            if (l & 1) != 0 {
+                self.all_apply(l, f);
+                l += 1;
+            }
+            if (r & 1) != 0 {
+                r -= 1;
+                self.all_apply(r, f);
+            }
+            l >>= 1;
+            r >>= 1;
+        }
+    }
+    fn all_apply(&mut self, k: usize, f: R::U) {
+        if k >= self.n {
+            self.dat[k - self.n] = R::update(self.dat[k - self.n], f);
+        }
+        if k < self.n {
+            self.lazy[k] = R::upop(self.lazy[k], f);
+        }
+    }
+    fn push(&mut self, k: usize) {
+        let val = self.lazy[k];
+        self.all_apply(2 * k, val);
+        self.all_apply(2 * k + 1, val);
+        self.lazy[k] = R::upe();
     }
 }
 
@@ -176,18 +188,16 @@ impl Action for ChmaxAdd {
     }
 }
 
-/**
- * Lazy Segment Tree. This data structure is useful for fast folding and updating on intervals of an array
- * whose elements are elements of monoid T. Note that constructing this tree requires the identity
- * element of T and the operation of T. This is monomorphised, because of efficiency. T := i64, biop = max, upop = (+)
- * Reference: http://d.hatena.ne.jp/kyuridenamida/20121114/1352835261
- * Verified by https://codeforces.com/contest/1114/submission/49759034
- */
+// Lazy Segment Tree. This data structure is useful for fast folding and updating on intervals of an array
+// whose elements are elements of monoid T. Note that constructing this tree requires the identity
+// element of T and the operation of T. This is monomorphised, because of efficiency. T := i64, biop = max, upop = (+)
+// Reference: https://github.com/atcoder/ac-library/blob/master/atcoder/lazysegtree.hpp
+// Verified by: https://judge.yosupo.jp/submission/68794
 pub trait ActionRing {
     type T: Clone + Copy; // data
     type U: Clone + Copy + PartialEq + Eq; // action
     fn biop(x: Self::T, y: Self::T) -> Self::T;
-    fn update(x: Self::T, a: Self::U, height: usize) -> Self::T;
+    fn update(x: Self::T, a: Self::U) -> Self::T;
     fn upop(fst: Self::U, snd: Self::U) -> Self::U;
     fn e() -> Self::T;
     fn upe() -> Self::U; // identity for upop
@@ -198,7 +208,6 @@ pub struct LazySegTree<R: ActionRing> {
     dat: Vec<R::T>,
     lazy: Vec<R::U>,
 }
-
 impl<R: ActionRing> LazySegTree<R> {
     pub fn new(n_: usize) -> Self {
         let mut n = 1;
@@ -207,64 +216,127 @@ impl<R: ActionRing> LazySegTree<R> {
         LazySegTree {
             n: n,
             dep: dep,
-            dat: vec![R::e(); 2 * n - 1],
-            lazy: vec![R::upe(); 2 * n - 1]
+            dat: vec![R::e(); 2 * n],
+            lazy: vec![R::upe(); n]
         }
     }
-    #[inline]
-    fn lazy_evaluate_node(&mut self, k: usize, height: usize) {
-        if self.lazy[k] == R::upe() { return; }
-        self.dat[k] = R::update(self.dat[k], self.lazy[k], height);
-        if k < self.n - 1 {
-            self.lazy[2 * k + 1] = R::upop(self.lazy[2 * k + 1], self.lazy[k]);
-            self.lazy[2 * k + 2] = R::upop(self.lazy[2 * k + 2], self.lazy[k]);
+    #[allow(unused)]
+    pub fn with(a: &[R::T]) -> Self {
+        let mut ret = Self::new(a.len());
+        let n = ret.n;
+        for i in 0..a.len() {
+            ret.dat[n + i] = a[i];
         }
-        self.lazy[k] = R::upe(); // identity for upop
+        for i in (1..n).rev() {
+            ret.update_node(i);
+        }
+        ret
+    }
+    #[inline]
+    pub fn set(&mut self, idx: usize, x: R::T) {
+        debug_assert!(idx < self.n);
+        self.apply_any(idx, |_t| x);
+    }
+    #[inline]
+    pub fn apply(&mut self, idx: usize, f: R::U) {
+        debug_assert!(idx < self.n);
+        self.apply_any(idx, |t| R::update(t, f));
+    }
+    pub fn apply_any<F: Fn(R::T) -> R::T>(&mut self, idx: usize, f: F) {
+        debug_assert!(idx < self.n);
+        let idx = idx + self.n;
+        for i in (1..self.dep + 1).rev() {
+            self.push(idx >> i);
+        }
+        self.dat[idx] = f(self.dat[idx]);
+        for i in 1..self.dep + 1 {
+            self.update_node(idx >> i);
+        }
+    }
+    pub fn get(&mut self, idx: usize) -> R::T {
+        debug_assert!(idx < self.n);
+        let idx = idx + self.n;
+        for i in (1..self.dep + 1).rev() {
+            self.push(idx >> i);
+        }
+        self.dat[idx]
+    }
+    /* [l, r) (note: half-inclusive) */
+    #[inline]
+    pub fn query(&mut self, l: usize, r: usize) -> R::T {
+        debug_assert!(l <= r && r <= self.n);
+        if l == r { return R::e(); }
+        let mut l = l + self.n;
+        let mut r = r + self.n;
+        for i in (1..self.dep + 1).rev() {
+            if ((l >> i) << i) != l { self.push(l >> i); }
+            if ((r >> i) << i) != r { self.push((r - 1) >> i); }
+        }
+        let mut sml = R::e();
+        let mut smr = R::e();
+        while l < r {
+            if (l & 1) != 0 {
+                sml = R::biop(sml, self.dat[l]);
+                l += 1;
+            }
+            if (r & 1) != 0 {
+                r -= 1;
+                smr = R::biop(self.dat[r], smr);
+            }
+            l >>= 1;
+            r >>= 1;
+        }
+        R::biop(sml, smr)
+    }
+    /* ary[i] = upop(ary[i], v) for i in [l, r) (half-inclusive) */
+    #[inline]
+    pub fn update(&mut self, l: usize, r: usize, f: R::U)  {
+        debug_assert!(l <= r && r <= self.n);
+        if l == r { return; }
+        let mut l = l + self.n;
+        let mut r = r + self.n;
+        for i in (1..self.dep + 1).rev() {
+            if ((l >> i) << i) != l { self.push(l >> i); }
+            if ((r >> i) << i) != r { self.push((r - 1) >> i); }
+        }
+        {
+            let l2 = l;
+            let r2 = r;
+            while l < r {
+                if (l & 1) != 0 {
+                    self.all_apply(l, f);
+                    l += 1;
+                }
+                if (r & 1) != 0 {
+                    r -= 1;
+                    self.all_apply(r, f);
+                }
+                l >>= 1;
+                r >>= 1;
+            }
+            l = l2;
+            r = r2;
+        }
+        for i in 1..self.dep + 1 {
+            if ((l >> i) << i) != l { self.update_node(l >> i); }
+            if ((r >> i) << i) != r { self.update_node((r - 1) >> i); }
+        }
     }
     #[inline]
     fn update_node(&mut self, k: usize) {
-        self.dat[k] = R::biop(self.dat[2 * k + 1], self.dat[2 * k + 2]);
+        self.dat[k] = R::biop(self.dat[2 * k], self.dat[2 * k + 1]);
     }
-    fn update_sub(&mut self, a: usize, b: usize, v: R::U, k: usize, height: usize, l: usize, r: usize) {
-        self.lazy_evaluate_node(k, height);
-
-        // [a,b) and  [l,r) intersects?
-        if r <= a || b <= l {return;}
-        if a <= l && r <= b {
-            self.lazy[k] = R::upop(self.lazy[k], v);
-            self.lazy_evaluate_node(k, height);
-            return;
+    fn all_apply(&mut self, k: usize, f: R::U) {
+        self.dat[k] = R::update(self.dat[k], f);
+        if k < self.n {
+            self.lazy[k] = R::upop(self.lazy[k], f);
         }
-
-        self.update_sub(a, b, v, 2 * k + 1, height - 1, l, (l + r) / 2);
-        self.update_sub(a, b, v, 2 * k + 2, height - 1, (l + r) / 2, r);
-        self.update_node(k);
     }
-    /* ary[i] = upop(ary[i], v) for i in [a, b) (half-inclusive) */
-    #[inline]
-    pub fn update(&mut self, a: usize, b: usize, v: R::U) {
-        let n = self.n;
-        let dep = self.dep;
-        self.update_sub(a, b, v, 0, dep, 0, n);
-    }
-    /* l,r are for simplicity */
-    fn query_sub(&mut self, a: usize, b: usize, k: usize, height: usize, l: usize, r: usize) -> R::T {
-        self.lazy_evaluate_node(k, height);
-
-        // [a,b) and  [l,r) intersect?
-        if r <= a || b <= l {return R::e();}
-        if a <= l && r <= b {return self.dat[k];}
-        let vl = self.query_sub(a, b, 2 * k + 1, height - 1, l, (l + r) / 2);
-        let vr = self.query_sub(a, b, 2 * k + 2, height - 1, (l + r) / 2, r);
-        self.update_node(k);
-        R::biop(vl, vr)
-    }
-    /* [a, b) (note: half-inclusive) */
-    #[inline]
-    pub fn query(&mut self, a: usize, b: usize) -> R::T {
-        let n = self.n;
-        let dep = self.dep;
-        self.query_sub(a, b, 0, dep, 0, n)
+    fn push(&mut self, k: usize) {
+        let val = self.lazy[k];
+        self.all_apply(2 * k, val);
+        self.all_apply(2 * k + 1, val);
+        self.lazy[k] = R::upe();
     }
 }
 
@@ -276,7 +348,7 @@ impl ActionRing for AddMax {
     fn biop(x: Self::T, y: Self::T) -> Self::T {
         std::cmp::max(x, y)
     }
-    fn update(x: Self::T, a: Self::U, _height: usize) -> Self::T {
+    fn update(x: Self::T, a: Self::U) -> Self::T {
         (x.0 + a, x.1)
     }
     fn upop(fst: Self::U, snd: Self::U) -> Self::U {
@@ -295,6 +367,9 @@ type Q = (usize, usize, i32, i64);
 // Tags: chmax-segtree
 // Solved with hints
 fn main() {
+    let out = std::io::stdout();
+    let mut out = BufWriter::new(out.lock());
+    macro_rules! puts {($($format:tt)*) => (let _ = write!(out,$($format)*););}
     let n: usize = get();
     let _m: i32 = get();
     let q: usize = get();
@@ -322,7 +397,7 @@ fn main() {
         } else {
             let a = get::<usize>() - 1;
             let b = get::<i64>() - 1;
-            let len = st.query(a);
+            let len = st.get(a);
             let idx = ans.len();
             let hi = hi.accum(a + 1);
             ans.push(0);
@@ -331,26 +406,17 @@ fn main() {
             }
         }
     }
-    // eprintln!("gs = {:?}", gs);
     const INF: i64 = 1 << 52;
-    let mut st = LazySegTree::<AddMax>::new(n);
     let mut pos = vec![0; n];
+    let mut stinit = vec![(0, 0); n];
     for i in 0..n {
         gs[i].sort_unstable();
         gs[i].push((INF, q));
         let val = -gs[i][0].0;
-        st.dat[st.n - 1 + i] = (val, i);
+        stinit[i] = (val, i);
     }
-    for i in (0..st.n - 1).rev() {
-        st.dat[i] = AddMax::biop(st.dat[2 * i + 1], st.dat[2 * i + 2]);
-    }
+    let mut st = LazySegTree::<AddMax>::with(&stinit);
     for (l, r, kind, len) in qs {
-        /*
-        eprintln!("{} {} {} {}", l, r, kind, len);
-        for i in 0..n {
-            eprint!(" {:?}", st.query(i, i + 1));
-        }
-        eprintln!();*/
         st.update(l, r, len);
         loop {
             let (val, idx) = st.query(l, r);
@@ -361,10 +427,10 @@ fn main() {
             let (y, _) = gs[idx][pos[idx] + 1];
             ans[w] = kind;
             pos[idx] += 1;
-            st.update(idx, idx + 1, x - y);
+            st.apply(idx, x - y);
         }
     }
     for i in 0..ans.len() {
-        println!("{}", ans[i]);
+        puts!("{}\n", ans[i]);
     }
 }

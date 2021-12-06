@@ -3,6 +3,7 @@
 // element of T and the operation of T. This is monomorphised, because of efficiency. T := i64, biop = max, upop = (+)
 // Reference: https://github.com/atcoder/ac-library/blob/master/atcoder/lazysegtree.hpp
 // Verified by: https://judge.yosupo.jp/submission/68794
+//              https://atcoder.jp/contests/joisc2021/submissions/27734236
 pub trait ActionRing {
     type T: Clone + Copy; // data
     type U: Clone + Copy + PartialEq + Eq; // action
@@ -19,7 +20,6 @@ pub struct LazySegTree<R: ActionRing> {
     lazy: Vec<R::U>,
 }
 impl<R: ActionRing> LazySegTree<R> {
-    #[allow(unused)]
     pub fn new(n_: usize) -> Self {
         let mut n = 1;
         let mut dep = 0;
@@ -28,37 +28,38 @@ impl<R: ActionRing> LazySegTree<R> {
             n: n,
             dep: dep,
             dat: vec![R::e(); 2 * n],
-            lazy: vec![R::upe(); 2 * n]
+            lazy: vec![R::upe(); n],
         }
     }
     #[allow(unused)]
     pub fn with(a: &[R::T]) -> Self {
-        let n_ = a.len();
-        let mut n = 1;
-        let mut dep = 0;
-        while n < n_ { n *= 2; dep += 1; } // n is a power of 2
-        let mut dat = vec![R::e(); 2 * n];
-        for i in 0..n_ {
-            dat[n + i] = a[i];
+        let mut ret = Self::new(a.len());
+        let n = ret.n;
+        for i in 0..a.len() {
+            ret.dat[n + i] = a[i];
         }
-        let mut ret = LazySegTree {
-            n: n,
-            dep: dep,
-            dat: dat,
-            lazy: vec![R::upe(); 2 * n],
-        };
         for i in (1..n).rev() {
             ret.update_node(i);
         }
         ret
     }
+    #[inline]
     pub fn set(&mut self, idx: usize, x: R::T) {
+        debug_assert!(idx < self.n);
+        self.apply_any(idx, |_t| x);
+    }
+    #[inline]
+    pub fn apply(&mut self, idx: usize, f: R::U) {
+        debug_assert!(idx < self.n);
+        self.apply_any(idx, |t| R::update(t, f));
+    }
+    pub fn apply_any<F: Fn(R::T) -> R::T>(&mut self, idx: usize, f: F) {
         debug_assert!(idx < self.n);
         let idx = idx + self.n;
         for i in (1..self.dep + 1).rev() {
             self.push(idx >> i);
         }
-        self.dat[idx] = x;
+        self.dat[idx] = f(self.dat[idx]);
         for i in 1..self.dep + 1 {
             self.update_node(idx >> i);
         }

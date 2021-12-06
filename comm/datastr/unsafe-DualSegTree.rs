@@ -83,72 +83,22 @@ impl<R: Action> DualSegTree<R> {
     }
     fn all_apply(&mut self, k: usize, f: R::U) {
         if k >= self.n {
-            self.dat[k - self.n] = R::update(self.dat[k - self.n], f);
+            unsafe {
+                let val = R::update(*self.dat.get_unchecked(k - self.n), f);
+                *self.dat.get_unchecked_mut(k - self.n) = val;
+            }
         }
         if k < self.n {
-            self.lazy[k] = R::upop(self.lazy[k], f);
+            unsafe {
+                let val = R::upop(*self.lazy.get_unchecked(k), f);
+                *self.lazy.get_unchecked_mut(k) = val;
+            }
         }
     }
     fn push(&mut self, k: usize) {
-        let val = self.lazy[k];
+        let val = unsafe { *self.lazy.get_unchecked(k) };
         self.all_apply(2 * k, val);
         self.all_apply(2 * k + 1, val);
-        self.lazy[k] = R::upe();
-    }
-}
-
-enum ChmaxAdd {}
-type ChmaxAddInt = i64;
-
-impl Action for ChmaxAdd {
-    type T = ChmaxAddInt; // data
-    type U = (ChmaxAddInt, ChmaxAddInt); // action, (a, b) |-> x |-> max(x, a) + b
-    fn update(x: Self::T, (a, b): Self::U) -> Self::T {
-        std::cmp::max(x, a) + b
-    }
-    fn upop(fst: Self::U, snd: Self::U) -> Self::U {
-        let (a, b) = fst;
-        let (c, d) = snd;
-        (std::cmp::max(a, c - b), b + d)
-    }
-    fn upe() -> Self::U { // identity for upop
-        (-1 << 50, 0)
-    }
-}
-
-
-enum V {}
-type VInt = i64;
-const VB: usize = 3;
-
-impl Action for V {
-    type T = [VInt; VB]; // data
-    type U = [[VInt; VB]; VB]; // action
-    fn update(x: Self::T, a: Self::U) -> Self::T {
-        let mut ret = [0.into(); VB];
-        for i in 0..VB {
-            for j in 0..VB {
-                ret[j] += x[i] * a[i][j];
-            }
-        }
-        ret
-    }
-    fn upop(fst: Self::U, snd: Self::U) -> Self::U {
-        let mut ret = [[0.into(); VB]; VB];
-        for i in 0..VB {
-            for j in 0..VB {
-                for k in 0..VB {
-                    ret[i][k] += fst[i][j] * snd[j][k];
-                }
-            }
-        }
-        ret
-    }
-    fn upe() -> Self::U { // identity for upop
-        let mut a = [[0.into(); VB]; VB];
-        for i in 0..VB {
-            a[i][i] = 1.into();
-        }
-        a
+        unsafe { *self.lazy.get_unchecked_mut(k) = R::upe(); }
     }
 }
