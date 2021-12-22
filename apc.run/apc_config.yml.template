@@ -1,0 +1,3 @@
+username: 'username'
+password: 'password'
+chrome_executable_path: '/usr/local/bin/chromedriver'
