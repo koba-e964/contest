@@ -12,11 +12,11 @@ import yaml
 def read_yukicoder_config(yukicoder_config_path):
     """Read yukicoder-specific config
     """
-    with open(yukicoder_config_path) as file:
+    with open(yukicoder_config_path, encoding='utf-8') as file:
         config = yaml.safe_load(file)
-    v = cerberus.Validator({'api_key': {'type': 'string'}})
-    if not v.validate(config):
-        print('Invalid config: {} {}'.format(yukicoder_config_path, v.errors),
+    val = cerberus.Validator({'api_key': {'type': 'string'}})
+    if not val.validate(config):
+        print('Invalid config: {} {}'.format(yukicoder_config_path, val.errors),
               file=sys.stderr)
         sys.exit(1)
     return config
@@ -25,7 +25,7 @@ def read_yukicoder_config(yukicoder_config_path):
 def read_language_config(language_config_path):
     """Read language config
     """
-    with open(language_config_path) as file:
+    with open(language_config_path, encoding='utf-8') as file:
         languages = yaml.safe_load(file)
     # Cerberus does not support top-level list values;
     # therefore, we use a hack here: wrapping languages with a dummy key-value pair.
@@ -44,15 +44,17 @@ def read_language_config(language_config_path):
             }
         }
     }
-    v = cerberus.Validator(value_schema)
-    if not v.validate(value):
-        print('Invalid languages config: {} {}'.format(language_config_path, v.errors),
+    val = cerberus.Validator(value_schema)
+    if not val.validate(value):
+        print('Invalid languages config: {} {}'.format(language_config_path, val.errors),
               file=sys.stderr)
         sys.exit(1)
     return languages
 
 
 def main():
+    """main
+    """
     if len(sys.argv) != 2:
         print("./submit.py PROBLEM_ID.ext")
         sys.exit(1)
@@ -74,12 +76,12 @@ def main():
         sys.exit(1)
 
     lang = next(x for x in languages if x['extension'] == extension[1:])['yukicoder_name']
-    with open(filename) as file:
+    with open(filename, encoding='utf-8') as file:
         source = file.read()
 
     api_key = yukicoder_config['api_key']
 
-    url = "https://yukicoder.me/api/v1/problems/no/{}".format(problem_name)
+    url = f'https://yukicoder.me/api/v1/problems/no/{problem_name}'
     resp = requests.get(url, headers={
         'Authorization': "bearer " + api_key,
         'Accept': 'application/json'
@@ -92,7 +94,7 @@ def main():
         sys.exit(2)
     problem_id = response['ProblemId']
 
-    post_url = "https://yukicoder.me/api/v1/problems/{}/submit".format(problem_id)
+    post_url = f'https://yukicoder.me/api/v1/problems/{problem_id}/submit'
 
     print("Submitting \x1b[34m{}\x1b[0m as \x1b[34m{}\x1b[0m".format(filename, lang))
     print("\tto \x1b[32m{}\x1b[0m (problem_id = {})".format(problem_name, problem_id))

@@ -13,7 +13,7 @@ import yaml
 def read_apc_config(apc_config_path):
     """Read apc-specific config
     """
-    with open(apc_config_path) as file:
+    with open(apc_config_path, encoding='utf-8') as file:
         config = yaml.safe_load(file)
     val = cerberus.Validator({
         'username': {'required': True, 'type': 'string'},
@@ -28,7 +28,7 @@ def read_apc_config(apc_config_path):
 def read_contest_config(contest_config_path):
     """Read contest-specific config
     """
-    with open(contest_config_path) as file:
+    with open(contest_config_path, encoding='utf-8') as file:
         config = yaml.safe_load(file)
     val = cerberus.Validator({
         'contest_id': {'required': True, 'type': 'integer'},
@@ -43,7 +43,7 @@ def read_contest_config(contest_config_path):
 def read_language_config(language_config_path):
     """Read language config
     """
-    with open(language_config_path) as file:
+    with open(language_config_path, encoding='utf-8') as file:
         languages = yaml.safe_load(file)
     # Cerberus does not support top-level list values;
     # therefore, we use a hack here: wrapping languages with a dummy key-value pair.
@@ -222,7 +222,7 @@ def main():
         sys.exit(1)
     language = next(x for x in languages if x['extension'] == extension[1:])['name']
 
-    with open(filename) as file:
+    with open(filename, encoding='utf-8') as file:
         source = file.read()
 
     csrftoken = get_csrftoken(dry_run)
@@ -239,7 +239,7 @@ def main():
         # problem_name = contest_name + "/" + problem_name_in_contest
         comp = list(problem_name.split('/'))
         if len(comp) != 2:
-            print('File too deep: {}'.format(filename), file=sys.stderr)
+            print(f'File too deep: {filename}', file=sys.stderr)
             sys.exit(1)
         contest_name = comp[0]
         problem_name_in_contest = comp[1]
@@ -258,7 +258,7 @@ def main():
                 print('Want to add new entry {}: {}'.format(problem_name_in_contest, newname))
                 sys.exit(1)
             result = conf['problem_map'][problem_name_in_contest]
-            print('Conversion happened: {} => {}'.format(problem_name, result))
+            print(f'Conversion happened: {problem_name} => {result}')
             problem_name = result
         else:
             print("In-contest submission! TODO")
