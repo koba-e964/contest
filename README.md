@@ -1,4 +1,4 @@
-## Competitive Programming Code [![Build Status](https://travis-ci.com/koba-e964/contest.svg?branch=master)](https://travis-ci.com/koba-e964/contest)
+## Competitive Programming Code [![Build Status](https://github.com/koba-e964/contest/actions/workflows/pylint.yml/badge.svg?branch=master)](https://github.com/koba-e964/contest/actions/workflows/pylint.yml)
 
 ### Author
 kobae964
