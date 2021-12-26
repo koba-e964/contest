@@ -51,6 +51,7 @@ fn quo(a: i64, b: i64) -> i64 {
 
 const INF: i64 = 1 << 60;
 
+// リジャッジで落ちたので、定数倍高速化して通した。
 fn main() {
     input! {
         k: usize, l: usize, m: usize, n: usize, s: i64,
@@ -61,6 +62,7 @@ fn main() {
     }
     let fst = two(&a, &b);
     let snd = two(&c, &d);
+    let snd_light: Vec<_> = snd.iter().map(|&(a, b, _)| (a, b)).collect();
     let mut pass = INF;
     let mut fail = -INF;
     while pass - fail > 1 {
@@ -72,10 +74,10 @@ fn main() {
                     count += snd.len() as i64;
                 }
             } else if f > 0 {
-                let idx = snd.binary_search(&(quo(mid, f), INF, INF)).unwrap_err();
+                let idx = snd_light.binary_search(&(quo(mid, f), INF)).unwrap_err();
                 count += idx as i64;
             } else {
-                let idx = snd.binary_search(&(quo(-mid - f - 1, -f), -INF, -INF)).unwrap_err();
+                let idx = snd_light.binary_search(&(quo(-mid - f - 1, -f), -INF)).unwrap_err();
                 count += (snd.len() - idx) as i64;
             }
         }
