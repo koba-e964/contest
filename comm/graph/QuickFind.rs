@@ -1,6 +1,7 @@
 // Quick-Find data structure.
 // Verified by: https://atcoder.jp/contests/cf17-tournament-round3-open/submissions/22928265
 // Verified by: https://atcoder.jp/contests/ttpc2019/submissions/23384553 (polymorphic version)
+// Verified by: https://yukicoder.me/submissions/727881 (polymorphic version)
 struct QuickFind<T = ()> {
     root: Vec<usize>, mem: Vec<Vec<usize>>,
     dat: Vec<T>, default: T,
@@ -30,8 +31,17 @@ impl<T: Clone> QuickFind<T> {
     }
     #[allow(unused)]
     fn set(&mut self, idx: usize, val: T) {
+        self.apply(idx, move |me| *me = val);
+    }
+    #[allow(unused)]
+    fn get(&mut self, idx: usize) -> T {
+        let mut ans = self.default.clone();
+        self.apply(idx, |me| ans = me.clone());
+        ans
+    }
+    fn apply<F: FnOnce(&mut T)>(&mut self, idx: usize, f: F) {
         let r = self.root[idx];
-        self.dat[r] = val;
+        f(&mut self.dat[r]);
     }
     // unite always merges y to x if |x| >= |y|.
     fn unite_with_hooks<F: FnMut(&T, i64), G: FnMut(T, T) -> T>(
