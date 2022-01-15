@@ -1,0 +1,12 @@
+name: Library
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check library files
+      run: |
+        ./comm/check_library.sh

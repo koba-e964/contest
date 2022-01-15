@@ -24,6 +24,9 @@ mod mod_int {
         #[allow(dead_code)]
         pub fn inv(self) -> Self { self.pow(M::m() - 2) }
     }
+    impl<M: Mod> Default for ModInt<M> {
+        fn default() -> Self { Self::new_internal(0) }
+    }
     impl<M: Mod, T: Into<ModInt<M>>> Add<T> for ModInt<M> {
         type Output = Self;
         fn add(self, other: T) -> Self {

@@ -1,4 +1,4 @@
-## Competitive Programming Code [![Build Status](https://github.com/koba-e964/contest/actions/workflows/pylint.yml/badge.svg?branch=master)](https://github.com/koba-e964/contest/actions/workflows/pylint.yml)
+## Competitive Programming Code [![Build Status](https://github.com/koba-e964/contest/actions/workflows/pylint.yml/badge.svg?branch=master)](https://github.com/koba-e964/contest/actions/workflows/pylint.yml) [![Library Status](https://github.com/koba-e964/contest/actions/workflows/library.yml/badge.svg?branch=master)](https://github.com/koba-e964/contest/actions/workflows/library.yml)
 
 ### Author
 kobae964

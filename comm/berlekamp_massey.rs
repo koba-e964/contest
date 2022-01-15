@@ -2,7 +2,7 @@
 // https://yukicoder.me/submissions/510746
 // https://en.wikipedia.org/wiki/Berlekamp%E2%80%93Massey_algorithm
 // Complexity: O(n^2)
-// Depends on ModInt.rs
+// Depends on MInt.rs
 fn berlekamp_massey<P: mod_int::Mod + PartialEq>(
     n: usize,
     s: &[mod_int::ModInt<P>],
@@ -49,12 +49,12 @@ fn berlekamp_massey<P: mod_int::Mod + PartialEq>(
     cp[0..l + 1].to_vec()
 }
 
-fn polymul(a: &[ModInt], b: &[ModInt], mo: &[ModInt]) -> Vec<ModInt> {
+fn polymul(a: &[MInt], b: &[MInt], mo: &[MInt]) -> Vec<MInt> {
     let n = a.len();
     debug_assert_eq!(b.len(), n);
     debug_assert_eq!(mo.len(), n + 1);
     debug_assert_eq!(mo[n], 1.into());
-    let mut ret = vec![ModInt::new(0); 2 * n - 1];
+    let mut ret = vec![MInt::new(0); 2 * n - 1];
     for i in 0..n {
         for j in 0..n {
             ret[i + j] += a[i] * b[j];
@@ -70,10 +70,10 @@ fn polymul(a: &[ModInt], b: &[ModInt], mo: &[ModInt]) -> Vec<ModInt> {
 }
     
 
-fn polypow(a: &[ModInt], mut e: i64, mo: &[ModInt]) -> Vec<ModInt> {
+fn polypow(a: &[MInt], mut e: i64, mo: &[MInt]) -> Vec<MInt> {
     let n = a.len();
     debug_assert_eq!(mo.len(), n + 1);
-    let mut prod = vec![ModInt::new(0); n];
+    let mut prod = vec![MInt::new(0); n];
     prod[0] += 1;
     let mut cur = a.to_vec();
     while e > 0 {
@@ -87,16 +87,16 @@ fn polypow(a: &[ModInt], mut e: i64, mo: &[ModInt]) -> Vec<ModInt> {
 }
 
 // Finds u a^e v^T by using Berlekamp-massey algorithm.
-fn eval_matpow(a: &[Vec<ModInt>], e: i64, u: &[ModInt], v: &[ModInt]) -> ModInt {
+fn eval_matpow(a: &[Vec<MInt>], e: i64, u: &[MInt], v: &[MInt]) -> MInt {
     let k = a.len();
     // Find first 2k terms
-    let mut terms = vec![ModInt::new(0); 2 * k];
+    let mut terms = vec![MInt::new(0); 2 * k];
     let mut cur = u.to_vec();
     for pos in 0..2 * k {
         for i in 0..k {
             terms[pos] += cur[i] * v[i];
         }
-        let mut nxt = vec![ModInt::new(0); k];
+        let mut nxt = vec![MInt::new(0); k];
         for i in 0..k {
             for j in 0..k {
                 nxt[j] += cur[i] * a[i][j];
@@ -108,7 +108,7 @@ fn eval_matpow(a: &[Vec<ModInt>], e: i64, u: &[ModInt], v: &[ModInt]) -> ModInt 
     poly.reverse();
     // If terms' minimal polynomial is 1, then terms == 0.
     if poly.len() == 1 {
-        return ModInt::new(0);
+        return MInt::new(0);
     }
     // If terms' minimal polynomial is x + r,
     // then terms is a gemetric progression with common ratio -r.
@@ -117,10 +117,10 @@ fn eval_matpow(a: &[Vec<ModInt>], e: i64, u: &[ModInt], v: &[ModInt]) -> ModInt 
         let r = -poly[0];
         return terms[0] * r.pow(e);
     }
-    let mut base = vec![ModInt::new(0); poly.len() - 1];
+    let mut base = vec![MInt::new(0); poly.len() - 1];
     base[1] += 1;
     let powpoly = polypow(&base, e, &poly);
-    let mut ans = ModInt::new(0);
+    let mut ans = MInt::new(0);
     for i in 0..poly.len() - 1 {
         ans += powpoly[i] * terms[i];
     }
