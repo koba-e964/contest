@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+"""Prints yukicoder-related statistics (ratio of unsolved problems)
+"""
 
-import sys
-import gzip
 import json
 import requests
 
@@ -10,6 +10,8 @@ ALL_ENDPOINT = 'https://yukicoder.me/api/v1/problems'
 USERNAME = 'koba-e964'
 
 def main():
+    """main function
+    """
     resp = requests.get(ALL_ENDPOINT)
     problems = json.loads(resp.text)
     whole = sum(1 for _ in filter(lambda entry: entry['ProblemType'] == 0, problems))
@@ -18,43 +20,42 @@ def main():
     solved = json.loads(resp.text)
 
     levels = {}
-    for p in problems:
-        if p['ProblemType'] != 0:
+    for prob in problems:
+        if prob['ProblemType'] != 0:
             continue
-        lev = p['Level']
+        lev = prob['Level']
         if lev not in levels:
             levels[lev] = 0
         levels[lev] += 1
-    keys = [k for k in levels]
+    keys = list(levels)
     keys.sort()
-    sl = {k: 0 for k in keys}
+    solved_map = {k: 0 for k in keys}
     sl_count = 0
-    for p in solved:
-        if p['ProblemType'] != 0:
+    for prob in solved:
+        if prob['ProblemType'] != 0:
             continue
-        lev = p['Level']
-        sl[lev] += 1
+        lev = prob['Level']
+        solved_map[lev] += 1
         sl_count += 1
-    print('Solved: {}, All: {}'.format(sl_count, whole))
-    print('Unsolved: {} / {} ({:.3f} %)'
-          .format(whole - sl_count, whole, 100 * (1.0 - sl_count / whole)))
+    print(f'Solved: {sl_count}, All: {whole}')
+    ratio = 100 * (1.0 - sl_count / whole)
+    print(f'Unsolved: {whole - sl_count} / {whole} ({ratio:.3f} %)')
     print()
     print('remaining:')
     level_sum = 0.0
     solved_sum = 0.0
 
     for k in keys:
-        a = sl[k]
-        b = levels[k]
-        print('Level {}: {} / {} ({:.3f} %)'
-              .format(k, b - a, b, 100 * (1.0 - a / b)))
-        level_sum += b * k
-        solved_sum += a * k
+        solved_k = solved_map[k]
+        all_k = levels[k]
+        ratio = 100 * (1.0 - solved_k / all_k)
+        print(f'Level {k}: {all_k - solved_k} / {all_k} ({ratio:.3f} %)')
+        level_sum += all_k * k
+        solved_sum += solved_k * k
 
     print()
-    print('Star {} / {} ({:.3f}%)'
-          .format(level_sum - solved_sum, level_sum,
-                  100 * (1.0 - solved_sum / level_sum)))
+    ratio = 100 * (1.0 - solved_sum / level_sum)
+    print(f'Star {level_sum - solved_sum} / {level_sum} ({ratio:.3f}%)')
 
 if __name__ == '__main__':
     main()

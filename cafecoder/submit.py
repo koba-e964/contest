@@ -10,13 +10,13 @@ import requests
 import yaml
 
 def read_cafecoder_config(cafecoder_config_path):
-    """Read yukicoder-specific config
+    """Read cafecoder-specific config
     """
-    with open(cafecoder_config_path) as file:
+    with open(cafecoder_config_path, encoding='utf-8') as file:
         config = yaml.safe_load(file)
-    v = cerberus.Validator({'name': {'type': 'string'}, 'password': {'type': 'string'}})
-    if not v.validate(config):
-        print('Invalid config: {} {}'.format(cafecoder_config_path, v.errors),
+    val = cerberus.Validator({'name': {'type': 'string'}, 'password': {'type': 'string'}})
+    if not val.validate(config):
+        print(f'Invalid config: {cafecoder_config_path} {val.errors}',
               file=sys.stderr)
         sys.exit(1)
     return config
@@ -25,7 +25,7 @@ def read_cafecoder_config(cafecoder_config_path):
 def read_language_config(language_config_path):
     """Read language config
     """
-    with open(language_config_path) as file:
+    with open(language_config_path, encoding='utf-8') as file:
         languages = yaml.safe_load(file)
     # Cerberus does not support top-level list values;
     # therefore, we use a hack here: wrapping languages with a dummy key-value pair.
@@ -44,9 +44,9 @@ def read_language_config(language_config_path):
             }
         }
     }
-    v = cerberus.Validator(value_schema)
-    if not v.validate(value):
-        print('Invalid languages config: {} {}'.format(language_config_path, v.errors),
+    val = cerberus.Validator(value_schema)
+    if not val.validate(value):
+        print(f'Invalid languages config: {language_config_path} {val.errors}',
               file=sys.stderr)
         sys.exit(1)
     return languages
@@ -63,7 +63,7 @@ def sign_in(cafecoder_config):
     }
 
 def get_contest_info(contest_name):
-    contest_info_url = 'https://api.cafecoder.top/api/contests/{}'.format(contest_name)
+    contest_info_url = f'https://api.cafecoder.top/api/contests/{contest_name}'
     resp = requests.get(contest_info_url)
     value = json.loads(resp.text)
     task_schema = {
@@ -88,7 +88,7 @@ def get_contest_info(contest_name):
         'allow_unknown': True,
     }})
     if not val.validate({'dummy': value}):
-        print("Invalid response: {}\n{}".format(value, val.errors), file=sys.stderr)
+        print(f'Invalid response: {value}\n{val.errors}', file=sys.stderr)
         sys.exit(1)
     return value
 
@@ -97,7 +97,7 @@ def sign_out(auth):
     url = 'https://api.cafecoder.top/api/auth/sign_out'
     resp = requests.delete(url, headers=auth)
     value = json.loads(resp.text)
-    if value['success'] != True:
+    if value['success'] is not True:
         print("Error!", file=sys.stderr)
         print(resp.text, file=sys.stderr)
         print(resp.headers, file=sys.stderr)
@@ -105,10 +105,12 @@ def sign_out(auth):
 
 
 def get_problem_info(filename):
+    """Gets information about the problem from the given filename.
+    """
     source_dir = os.path.dirname(os.path.abspath(filename))
     contest_name = os.path.basename(source_dir)
-    print("contest_name = {}".format(contest_name))
-    
+    print(f'contest_name = {contest_name}')
+
     (problem_name, extension) = os.path.splitext(filename)
     problem_name = os.path.basename(problem_name)
     return {
@@ -119,12 +121,13 @@ def get_problem_info(filename):
 
 
 def submit_to_task(problem_info, task, filename, languages, auth):
+    """POST to submit the given code.
+    """
     headers = auth.copy()
     lang = 'rust:1.48.0' # TODO
     headers['lang'] = lang
-    url = 'https://api.cafecoder.top/api/contests/{}/tasks/{}/submit'.\
-    format(problem_info['contest_name'], task['slug'])
-    with open(filename) as file:
+    url = f'https://api.cafecoder.top/api/contests/{problem_info["contest_name"]}/tasks/{task["slug"]}/submit'
+    with open(filename, encoding='utf-8') as file:
         body = file.read()
     resp = requests.post(url, body, headers=headers)
     if resp.status_code != 204:
@@ -134,6 +137,8 @@ def submit_to_task(problem_info, task, filename, languages, auth):
 
 
 def main():
+    """main function
+    """
     if len(sys.argv) != 2:
         print("./submit.py PROBLEM_ID.ext")
         sys.exit(1)
@@ -152,17 +157,16 @@ def main():
     info = get_contest_info(problem_info['contest_name'])
 
     task = None
-    for t in info['tasks']:
-        if t['position'].lower() == problem_info['problem_name']:
-            task = t
+    for task0 in info['tasks']:
+        if task0['position'].lower() == problem_info['problem_name']:
+            task = task0
             break
 
 
     print('Submitting...')
-    print('problem_name = {}, task_name = {}'.
-          format(problem_info['problem_name'], task['name']))
+    print(f'problem_name = {problem_info["problem_name"]}, task_name = {task["name"]}')
     submit_to_task(problem_info, task, sys.argv[1], languages, auth)
     sign_out(auth)
-    
+
 
 main()
