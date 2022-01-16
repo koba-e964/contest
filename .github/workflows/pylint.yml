@@ -12,6 +12,7 @@ jobs:
         python-script:
           - apc.run/submit.py
           - atcoder/ranking.py
+          - cafecoder/remaining.py
           - cafecoder/submit.py
           - yukicoder/remaining.py
           - yukicoder/submit.py
