@@ -1,0 +1,57 @@
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes.by_ref().map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr,) => {};
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+    ($next:expr, usize1) => (read_value!($next, usize) - 1);
+    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+}
+
+fn dfs(v: usize, targ: i64, b: &[Vec<usize>]) -> bool {
+    if v >= b.len() {
+        return targ == 0;
+    }
+    for u in &b[v] {
+        if dfs(v + 1, targ ^ 1 << u, b) {
+            return true;
+        }
+    }
+    false
+}
+
+fn main() {
+    input! {
+        n: usize, m: usize, c: usize,
+        l: [i64; m],
+        b: [[usize1; c]; n],
+    }
+    let mut st = 0;
+    for i in 0..m {
+        st |= l[i] << i;
+    }
+    println!("{}", if dfs(0, st, &b) { "Yes" } else { "No" });
+    println!("{}", if dfs(0, st ^ ((1 << m) - 1), &b) { "Yes" } else { "No" });
+}

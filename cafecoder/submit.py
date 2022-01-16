@@ -5,6 +5,7 @@
 import sys
 import json
 import os
+import http
 import cerberus
 import requests
 import yaml
@@ -56,6 +57,9 @@ def sign_in(cafecoder_config):
     sign_in_url = 'https://api.cafecoder.top/api/auth/sign_in'
     resp = requests.post(sign_in_url, cafecoder_config, headers={
     })
+    if resp.status_code == http.HTTPStatus.UNAUTHORIZED:
+        print('Login failed! name or password in cafecoder_config is wrong.')
+        sys.exit(1)
     return {
         'uid': resp.headers['uid'],
         'client': resp.headers['client'],
