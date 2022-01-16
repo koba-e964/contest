@@ -1,0 +1,51 @@
+name: Publish CafeCoder achievements
+
+on:
+  push:
+    branches: [ master ]
+#    paths:
+#      - 'cafecoder/*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      # TODO remaining.py doesn't need secrets. We can place name and password in separate files and do away with this trick.
+      - name: use dummy config file
+        run: |
+          echo 'name: kobae964' >>cafecoder/cafecoder_config
+          echo 'password: dummy-password' >>cafecoder/cafecoder_config
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint -r cafecoder/requirements.txt
+      - name: Generate JSON file
+        run: |
+          ./cafecoder/remaining.py
+
+      - name: Checkout contest-achievements repo
+        uses: actions/checkout@v2
+        with:
+          repository: koba-e964/contest-achievements
+          ref: master
+          token: "${{ secrets.PERSONAL_TOKEN }}"
+          path: 'contest-achievements'
+      - name: Place JSON and git push
+        working-directory: contest-achievements
+        run: |
+          mkdir -p cafecoder
+          cp ../cafecoder/statuses.json cafecoder/statuses.json
+
+          # https://zenn.dev/lollipop_onl/articles/eoz-gha-push-diffs
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
+          git add cafecoder/statuses.json
+          git commit -m 'Update CafeCoder achievements'
+          pwd
+          echo "${GITHUB_ACTOR}"
+          git log -1
+          git remote -v
+          git push origin -v
