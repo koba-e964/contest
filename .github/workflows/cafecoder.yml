@@ -3,8 +3,8 @@ name: Publish CafeCoder achievements
 on:
   push:
     branches: [ master ]
-#    paths:
-#      - 'cafecoder/*'
+    paths:
+      - 'cafecoder/**'
 
 jobs:
   build:
@@ -24,6 +24,7 @@ jobs:
       - name: Generate JSON file
         run: |
           ./cafecoder/remaining.py
+          ./cafecoder/make_summary.py
 
       - name: Checkout contest-achievements repo
         uses: actions/checkout@v2
@@ -36,16 +37,12 @@ jobs:
         working-directory: contest-achievements
         run: |
           mkdir -p cafecoder
-          cp ../cafecoder/statuses.json cafecoder/statuses.json
+          cp ../cafecoder/statuses.json ../cafecoder/summary.md cafecoder/
 
           # https://zenn.dev/lollipop_onl/articles/eoz-gha-push-diffs
           git config --global user.name "${GITHUB_ACTOR}"
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
 
-          git add cafecoder/statuses.json
+          git add cafecoder/
           git commit -m 'Update CafeCoder achievements'
-          pwd
-          echo "${GITHUB_ACTOR}"
-          git log -1
-          git remote -v
-          git push origin -v
+          git push
