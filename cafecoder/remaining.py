@@ -3,9 +3,11 @@
 """
 
 import sys
+import datetime
 import json
 import os
 import cerberus
+import dateutil.parser
 import requests
 import yaml
 
@@ -21,6 +23,33 @@ def read_cafecoder_config(cafecoder_config_path):
               file=sys.stderr)
         sys.exit(1)
     return config
+
+
+def read_contest_config(contest_config_path):
+    """Read contest-specific config
+    """
+    try:
+        with open(contest_config_path, encoding='utf-8') as file:
+            config = yaml.safe_load(file)
+    except OSError:
+        config = {}
+    contest_schema = {
+        'skipped': {
+            'type': 'boolean',
+            'default': False,
+        },
+        'ignore': {
+            'type': 'list',
+            'schema': {'type': 'string'},
+            'default_setter': lambda _doc: [],
+        },
+    }
+    val = cerberus.Validator(contest_schema)
+    if not val.validate(config):
+        print(f'Invalid config: {contest_config_path} {val.errors}',
+              file=sys.stderr)
+        sys.exit(1)
+    return val.normalized(config)
 
 
 def get_contests():
@@ -62,6 +91,8 @@ def get_contest_info(contest_name):
         'position': {'type': 'string'},
     }
     value_schema = {
+        'start_at': {'type': 'string'},
+        'end_at': {'type': 'string'},
         'tasks': {
             'nullable': True,
             'type': 'list',
@@ -106,10 +137,14 @@ def get_submissions(username, contest_slug):
 def get_statuses(username, contest_slug):
     """
     Finds which problems username solved.
+    If this function returned None, then the contest has not started yet.
     """
-    tasks = get_contest_info(contest_slug)['tasks']
-    if tasks is None:
+    contest_info = get_contest_info(contest_slug)
+    now = datetime.datetime.now(datetime.timezone.utc)
+    start_at = dateutil.parser.parse(contest_info['start_at'])
+    if now < start_at:
         return None
+    tasks = contest_info['tasks']
     ntasks = len(tasks)
     taskpos = [None] * ntasks
     table = {}
@@ -143,16 +178,23 @@ def main():
     data = []
     for contest in contests:
         contest_slug = contest['slug']
+        contest_config_path = os.path.join(script_dir, contest_slug, 'contest.yml')
+        contest_config = read_contest_config(contest_config_path)
+        if contest_config['skipped']:
+            continue
+        ignore = contest_config['ignore']
         result = get_statuses(username, contest_slug)
         if result is None:
-            print(contest_slug, 'undefined')
+            # Not started
             continue
         (taskpos, solved) = result
         size = len(taskpos)
         statuses = [None] * size
         for i in range(size):
+            ignored = taskpos[i] in ignore
             statuses[i] = {
                 'position': taskpos[i],
+                'ignored': ignored,
                 'solved': solved[i],
             }
         current = {

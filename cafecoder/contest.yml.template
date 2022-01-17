@@ -1,0 +1,8 @@
+# contest.yml should be placed in each contest directory (./CONTEST_NAME/contest.yml)
+
+# Skip this contest?
+# default: false
+skipped: false
+
+# ignored positions
+ignore: ["A", "B"]
