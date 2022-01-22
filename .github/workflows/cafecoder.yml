@@ -1,10 +1,11 @@
-name: Publish CafeCoder achievements
+name: Publish achievements
 
 on:
   push:
     branches: [ master ]
     paths:
       - 'cafecoder/**'
+      - 'yukicoder/**'
 
 jobs:
   build:
@@ -13,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       # TODO remaining.py doesn't need secrets. We can place name and password in separate files and do away with this trick.
-      - name: use dummy config file
+      - name: Use dummy config file (CafeCoder)
         run: |
           echo 'name: kobae964' >>cafecoder/cafecoder_config
           echo 'password: dummy-password' >>cafecoder/cafecoder_config
@@ -21,10 +22,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pylint -r cafecoder/requirements.txt
-      - name: Generate JSON file
+      - name: Generate JSON file (CafeCoder)
         run: |
           ./cafecoder/remaining.py
           ./cafecoder/make_summary.py
+
+      - name: Generate JSON file (yukicoder)
+        run: |
+          ./yukicoder/remaining.py koba-e964 >yukicoder/result.txt
+          EMIT_MD=1 ./yukicoder/remaining.py koba-e964 >yukicoder/result.md
 
       - name: Checkout contest-achievements repo
         uses: actions/checkout@v2
@@ -37,12 +43,19 @@ jobs:
         working-directory: contest-achievements
         run: |
           mkdir -p cafecoder
-          cp ../cafecoder/statuses.json ../cafecoder/summary.md cafecoder/
+          # If the job for CafeCoder is not run, there are no generated files.
+          # So we ignore errors if these files are not present.
+          cp ../cafecoder/statuses.json ../cafecoder/summary.md cafecoder/ || true
+          mkdir -p yukicoder
+          # If the job for yukicoder is not run, there are no generated files.
+          # So we ignore errors if these files are not present.
+          cp ../yukicoder/result.md ../yukicoder/result.txt yukicoder/ || true
 
           # https://zenn.dev/lollipop_onl/articles/eoz-gha-push-diffs
           git config --global user.name "${GITHUB_ACTOR}"
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
 
           git add cafecoder/
-          git commit -m 'Update CafeCoder achievements'
+          git add yukicoder/
+          git commit -m 'Update achievements' || true
           git push
