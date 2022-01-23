@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby -w
 require 'nokogiri'
 require 'mechanize'
+require 'yaml'
 
 # Reference: http://qiita.com/jun1_0803/items/9d3b26176b399e21fd61
 
@@ -14,25 +15,25 @@ if ARGV.size == 0
 end
 
 class Config
-  def initialize(mod)
-    @mod = mod
+  def initialize(username, password)
+    @username = username
+    @password = password
   end
-  # Load configuration from a file. Config file should be a valid ruby script.
+  # Load configuration from a file. Config file should be a valid YAML file.
   def self.load_from_config_file(config_path)
-    mod = Module.new
-    mod.module_eval File.read(config_path)
-    Config.new(mod)
+    term = YAML.load File.read(config_path)
+    Config.new(term['username'], term['password'])
   end
   def user_name
-    @mod::USERNAME
+    @username
   end
   def password
-    @mod::PASSWORD
+    @password
   end
 end
 
 # Configuration of submission
-config_path = File.dirname(File.absolute_path($0)) + "/atcoder_config"
+config_path = File.dirname(File.absolute_path($0)) + "/atcoder_config.yml"
 config = Config.load_from_config_file(config_path)
 
 source_name = ARGV[0]
