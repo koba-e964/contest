@@ -9,7 +9,6 @@ if ARGV.size == 0
   puts "This script submits a code to AtCoder."
   puts "Run this command in the directory where code is placed."
   puts "The directory's name must be equal to the contest name."
-  puts "It supports only \e[32mC++\e[0m code."
   puts "Usage: \e[34msubmit.rb FILENAME\e[0m"
   exit 1
 end
@@ -41,7 +40,7 @@ contest_name = File.basename(FileUtils.pwd)
 task_name = source_name.split(".")[0] # x.cpp --> x
 source_ext = source_name.split(".")[1] # x.cpp -> cpp
 task_full_name = ""
-task_id = ""
+task_id = nil
 language_name = ""
 language_id = ""
 source = ""
@@ -73,7 +72,7 @@ end
 
 
 agent.get("https://atcoder.jp/contests/#{contest_name}/submit") do |page|
-  doc = Nokogiri::HTML(page.content.toutf8)
+  doc = Nokogiri::HTML(page.content)
   problems = doc.xpath('//select[@id="select-task"]/option')
   for pr in problems
     pr_split = pr.text.split
@@ -88,8 +87,8 @@ agent.get("https://atcoder.jp/contests/#{contest_name}/submit") do |page|
       task_full_name = pr.text
     end
   end
-  if task_id == "" # A proper task_id was not found
-    raise "Task name \e[32m#{task_name}\e[0m was not found"
+  if task_id.nil? # A proper task_id was not found
+    raise "Task name #{task_name} was not found"
   end
   languages = doc.xpath("//div[@id=\"select-lang-#{task_id}\"]/select/option")
   for lang in languages
