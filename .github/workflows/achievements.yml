@@ -6,6 +6,7 @@ on:
     paths:
       - 'cafecoder/**'
       - 'yukicoder/**'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -37,8 +38,8 @@ jobs:
         with:
           repository: koba-e964/contest-achievements
           ref: master
-          token: "${{ secrets.PERSONAL_TOKEN }}"
           path: 'contest-achievements'
+          ssh-key: "${{ secrets.CONTEST_ACHIEVEMENT_PRIVATE_KEY }}"
       - name: Place JSON and git push
         working-directory: contest-achievements
         run: |
