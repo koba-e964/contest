@@ -1,3 +1,37 @@
+use std::io::{Write, BufWriter};
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes.by_ref().map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr,) => {};
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, ( $($t:tt),* )) => { ($(read_value!($next, $t)),*) };
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+    ($next:expr, usize1) => (read_value!($next, usize) - 1);
+    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+}
+
 // Dinic's algorithm for maximum flow problem.
 // This implementation uses O(n) stack space.
 // Verified by:
@@ -41,7 +75,7 @@ impl<T> Dinic<T>
 {
     fn bfs(&self, s: usize, level: &mut [Option<usize>]) {
         let n = level.len();
-        for i in 0..n {
+        for i in 0 .. n {
             level[i] = None;
         }
         let mut que = std::collections::VecDeque::new();
@@ -56,7 +90,7 @@ impl<T> Dinic<T>
             }
 	}
     }
-    // search an augment path with dfs.
+    // search augment path by dfs.
     // if f == None, f is treated as infinity.
     fn dfs(&mut self, v: usize, t: usize, f: Option<T>, level: &mut [Option<usize>]) -> T {
         if v == t {
@@ -113,4 +147,51 @@ impl<T> Dinic<T>
             }
         }
     }
+}
+
+fn main() {
+    // In order to avoid potential stack overflow, spawn a new thread.
+    let stack_size = 104_857_600; // 100 MB
+    let thd = std::thread::Builder::new().stack_size(stack_size);
+    thd.spawn(|| solve()).unwrap().join().unwrap();
+}
+
+fn solve() {
+    let out = std::io::stdout();
+    let mut out = BufWriter::new(out.lock());
+    macro_rules! puts {($($format:tt)*) => (let _ = write!(out,$($format)*););}
+    #[allow(unused)]
+    macro_rules! putvec {
+        ($v:expr) => {
+            for i in 0..$v.len() {
+                puts!("{}{}", $v[i], if i + 1 == $v.len() {"\n"} else {" "});
+            }
+        }
+    }
+    input! {
+        n: usize, m: usize,
+        ab: [(usize1, usize1); m],
+        c: [i64; n],
+    }
+    let mut din = Dinic::new(2 * n, 0i64);
+    const INF: i64 = 1 << 50;
+    for &(a, b) in &ab {
+        din.add_edge(2 * a + 1, 2 * b, INF);
+        din.add_edge(2 * b + 1, 2 * a, INF);
+    }
+    let mut c = c;
+    c[0] = INF;
+    c[n - 1] = INF;
+    for i in 0..n {
+        din.add_edge(2 * i, 2 * i + 1, c[i]);
+    }
+    let (ma, cut) = din.max_flow(0, 2 * n - 1);
+    let mut p = vec![];
+    for i in 0..n {
+        if cut.is_cut(2 * i, 2 * i + 1) {
+            p.push(i + 1);
+        }
+    }
+    puts!("{}\n{}\n", ma, p.len());
+    putvec!(p);
 }
