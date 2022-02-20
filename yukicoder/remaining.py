@@ -78,7 +78,7 @@ def main():
         ratio = 100 * (1.0 - solved_k / all_k)
         if emit_md:
             prog = percentage(solved_k, all_k)
-            print(f'|**Level {k}**| {all_k - solved_k} | {all_k} | {ratio:.3f} %| ![{prog}%](https://progress-bar.dev/{prog}?title=Level+{k})|')
+            print(f'|**Level {k}**| {all_k - solved_k} | {all_k} | {ratio:.3f} %| ![{prog}%](https://progress-bar.dev/{prog}?title=Level+{str(k).ljust(3, "+")})|')
         else:
             print(f'Level {k}: {all_k - solved_k} / {all_k} ({ratio:.3f} %)')
         level_sum += all_k * k
