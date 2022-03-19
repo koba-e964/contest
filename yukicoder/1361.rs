@@ -52,6 +52,7 @@ fn quo(a: i64, b: i64) -> i64 {
 const INF: i64 = 1 << 60;
 
 // リジャッジで落ちたので、定数倍高速化して通した。
+// またリジャッジで落ちたので log を落として通した。
 fn main() {
     input! {
         k: usize, l: usize, m: usize, n: usize, s: i64,
@@ -68,17 +69,40 @@ fn main() {
     while pass - fail > 1 {
         let mid = fail + (pass - fail) / 2;
         let mut count = 0;
+        let (mut pos, mut neg) = if mid >= 0 {
+            (snd.len(), snd.len())
+        } else {
+            (0, 0)
+        };
         for &(f, _, _) in &fst {
             if f == 0 {
                 if mid >= 0 {
                     count += snd.len() as i64;
                 }
             } else if f > 0 {
-                let idx = snd_light.binary_search(&(quo(mid, f), INF)).unwrap_err();
-                count += idx as i64;
+                let q = quo(mid, f);
+                if mid >= 0 {
+                    while pos > 0 && snd_light[pos - 1].0 > q {
+                        pos -= 1;
+                    }
+                } else {
+                    while pos < snd.len() && snd_light[pos].0 <= q {
+                        pos += 1;
+                    }
+                }
+                count += pos as i64;
             } else {
-                let idx = snd_light.binary_search(&(quo(-mid - f - 1, -f), -INF)).unwrap_err();
-                count += (snd.len() - idx) as i64;
+                let q = quo(-mid - f - 1, -f);
+                if mid >= 0 {
+                    while neg > 0 && snd_light[neg - 1].0 >= q {
+                        neg -= 1;
+                    }
+                } else {
+                    while neg < snd.len() && snd_light[neg].0 < q {
+                        neg += 1;
+                    }
+                }
+                count += (snd.len() - neg) as i64;
             }
         }
         if count >= s {
@@ -102,11 +126,12 @@ fn main() {
         }
         let q = pass / f;
         let lo = snd.binary_search(&(q, -INF, -INF)).unwrap_err();
-        let hi = snd.binary_search(&(q, INF, INF)).unwrap_err();
-        if lo < hi {
-            let (_, s1, s2) = snd[lo];
-            println!("{} {} {} {}", f1, f2, s1, s2);
-            return;
+        if lo < snd.len() {
+            let (q2, s1, s2) = snd[lo];
+            if q2 == q {
+                println!("{} {} {} {}", f1, f2, s1, s2);
+                return;
+            }
         }
     }
 }
