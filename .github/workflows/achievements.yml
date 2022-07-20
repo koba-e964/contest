@@ -27,6 +27,7 @@ jobs:
         run: |
           ./cafecoder/remaining.py
           ./cafecoder/make_summary.py
+        if: false # Cafecoder's API server is down
 
       - name: Generate JSON file (yukicoder)
         run: |
