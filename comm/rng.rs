@@ -12,11 +12,11 @@ impl Rng {
             x: hash.finish(),
         }
     }
-    fn next(&mut self) -> u64 {
+    fn next(&mut self) -> u32 {
         let a = 0xdead_c0de_0013_3331u64;
         let b = 2457;
         self.x = self.x.wrapping_mul(a).wrapping_add(b);
         let x = self.x;
-        x ^ x << 10
+        ((x ^ x << 10) >> 32) as _
     }
 }
