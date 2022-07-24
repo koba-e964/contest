@@ -31,20 +31,12 @@ func isSolutionFileName(name string) bool {
 	return true
 }
 
-func main() {
-	exec, err := os.Executable()
+func findResult(scriptDir string, pattern string) (numContests int, numSolved int, numUnsolved int) {
+	matches, err := filepath.Glob(path.Join(scriptDir, pattern))
 	if err != nil {
 		log.Fatal(err)
 	}
-	scriptDir := path.Dir(exec)
-	// ABC
-	matches, err := filepath.Glob(path.Join(scriptDir, "abc*"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	numContests := 0
-	numSolved := 0
-	numUnsolved := 0
+
 	for _, match := range matches {
 		seen := map[string]bool{}
 		remain := map[string]bool{}
@@ -79,14 +71,33 @@ func main() {
 		})
 		numContests += 1
 		for name := range seen {
-			if ok, _ := remain[name]; !ok {
+			if _, ok := remain[name]; !ok {
 				numSolved += 1
 			}
 		}
 		numUnsolved += len(remain)
 	}
-	fmt.Printf("ABC:\n")
-	fmt.Printf("#Contests: %d\n", numContests)
-	fmt.Printf("#Solved: %d\n", numSolved)
-	fmt.Printf("#Unsolved: %d\n", numUnsolved)
+	return
+}
+
+func main() {
+	exec, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	scriptDir := path.Dir(exec)
+
+	data := []struct {
+		ContestKind string
+		Pattern     string
+	}{{"ABC", "abc*"}, {"ARC", "arc*"}, {"AGC", "agc*"}}
+
+	for _, config := range data {
+		numContests, numSolved, numUnsolved := findResult(scriptDir, config.Pattern)
+		fmt.Printf("%s:\n", config.ContestKind)
+		fmt.Printf("#Contests: %d\n", numContests)
+		fmt.Printf("#Solved: %d\n", numSolved)
+		fmt.Printf("#Unsolved: %d\n", numUnsolved)
+		fmt.Printf("Solved ratio: %.2f%%\n", float64(numSolved)/float64(numSolved+numUnsolved)*100.0)
+	}
 }
