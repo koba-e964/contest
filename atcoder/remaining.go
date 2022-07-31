@@ -81,6 +81,12 @@ func findResult(scriptDir string, pattern string) (numContests int, numSolved in
 }
 
 func main() {
+	var markdown bool
+	args := os.Args
+	if len(args) >= 2 && args[1] == "md" {
+		markdown = true
+	}
+
 	exec, err := os.Executable()
 	if err != nil {
 		log.Fatal(err)
@@ -92,12 +98,25 @@ func main() {
 		Pattern     string
 	}{{"ABC", "abc*"}, {"ARC", "arc*"}, {"AGC", "agc*"}}
 
+	if markdown {
+		fmt.Printf("| ContestKind | #Contests | #Solved | #Unsolved | Solved ratio | |\n")
+		fmt.Printf("| - | - | - | - | - | - |\n")
+	}
+
 	for _, config := range data {
 		numContests, numSolved, numUnsolved := findResult(scriptDir, config.Pattern)
-		fmt.Printf("%s:\n", config.ContestKind)
-		fmt.Printf("#Contests: %d\n", numContests)
-		fmt.Printf("#Solved: %d\n", numSolved)
-		fmt.Printf("#Unsolved: %d\n", numUnsolved)
-		fmt.Printf("Solved ratio: %.2f%%\n", float64(numSolved)/float64(numSolved+numUnsolved)*100.0)
+		if markdown {
+			adjustedRatio := (numSolved*200/(numSolved+numUnsolved) + 1) / 2
+			if adjustedRatio == 100 && numUnsolved > 0 {
+				adjustedRatio = 99
+			}
+			fmt.Printf("| %s | %d | %d | %d | %.2f%% | ![%d%%](https://progress-bar.dev/%d?title=Solved) |\n", config.ContestKind, numContests, numSolved, numUnsolved, float64(numSolved)/float64(numSolved+numUnsolved)*100.0, adjustedRatio, adjustedRatio)
+		} else {
+			fmt.Printf("%s:\n", config.ContestKind)
+			fmt.Printf("#Contests: %d\n", numContests)
+			fmt.Printf("#Solved: %d\n", numSolved)
+			fmt.Printf("#Unsolved: %d\n", numUnsolved)
+			fmt.Printf("Solved ratio: %.2f%%\n", float64(numSolved)/float64(numSolved+numUnsolved)*100.0)
+		}
 	}
 }

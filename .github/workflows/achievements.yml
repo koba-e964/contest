@@ -39,6 +39,7 @@ jobs:
         run: |
           go build -o atcoder/remaining atcoder/remaining.go
           atcoder/remaining >atcoder/result.txt
+          atcoder/remaining md >atcoder/result.md
 
       - name: Checkout contest-achievements repo
         uses: actions/checkout@v2
@@ -62,7 +63,7 @@ jobs:
           mkdir -p atcoder
           # If the job for atcoder is not run, there are no generated files.
           # So we ignore errors if these files are not present.
-          cp ../atcoder/result.txt atcoder/ || true
+          cp ../atcoder/result.txt ../atcoder/result.md atcoder/ || true
 
           # https://zenn.dev/lollipop_onl/articles/eoz-gha-push-diffs
           git config --global user.name "${GITHUB_ACTOR}"
