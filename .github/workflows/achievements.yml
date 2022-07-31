@@ -6,6 +6,7 @@ on:
     paths:
       - 'cafecoder/**'
       - 'yukicoder/**'
+      - 'atcoder/**'
   workflow_dispatch:
 
 jobs:
@@ -34,6 +35,11 @@ jobs:
           ./yukicoder/remaining.py koba-e964 >yukicoder/result.txt
           EMIT_MD=1 ./yukicoder/remaining.py koba-e964 >yukicoder/result.md
 
+      - name: Generate files (AtCoder)
+        run: |
+          go build -o atcoder/remaining atcoder/remaining.go
+          atcoder/remaining >atcoder/result.txt
+
       - name: Checkout contest-achievements repo
         uses: actions/checkout@v2
         with:
@@ -53,11 +59,17 @@ jobs:
           # So we ignore errors if these files are not present.
           cp ../yukicoder/result.md ../yukicoder/result.txt yukicoder/ || true
 
+          mkdir -p atcoder
+          # If the job for atcoder is not run, there are no generated files.
+          # So we ignore errors if these files are not present.
+          cp ../atcoder/result.txt atcoder/ || true
+
           # https://zenn.dev/lollipop_onl/articles/eoz-gha-push-diffs
           git config --global user.name "${GITHUB_ACTOR}"
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
 
           git add cafecoder/
           git add yukicoder/
+          git add atcoder/
           git commit -m 'Update achievements' || true
           git push
