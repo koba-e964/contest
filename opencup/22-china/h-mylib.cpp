@@ -70,6 +70,7 @@ public:
   /* v is the number of vertices (labeled from 0 .. v-1) */
   Dinic(int v) : graph(v), level(v, -1), iter(v, 0) {}
   void add_edge(int from, int to, T cap) {
+    if (from == to) return;
     graph[from].push_back((edge) {to, cap, (int) graph[to].size()});
     graph[to].push_back((edge) {from, 0, (int) graph[from].size() - 1});
   }

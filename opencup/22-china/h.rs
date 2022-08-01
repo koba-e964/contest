@@ -120,6 +120,7 @@ impl<T> Dinic<T>
         }
     }
     pub fn add_edge(&mut self, from: usize, to: usize, cap: T) {
+        if from == to { return; }
         let added_from = Edge { to: to, cap: cap,
                             rev: self.graph[to].len() };
         let added_to = Edge { to: from, cap: self.zero,
