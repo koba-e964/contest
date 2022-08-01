@@ -1,6 +1,13 @@
+#include <cassert>
+#include <deque>
+#include <iomanip>
+#include <iostream>
+#include <string>
+#include <vector>
+
 /**
  * Dinic's algorithm for maximum flow problem.
- * Header requirement: vector, deque
+ * Header requirement: vector, queue
  * Verified by: ABC010-D(http://abc010.contest.atcoder.jp/submissions/602810)
  *              ARC031-D(http://arc031.contest.atcoder.jp/submissions/1050071)
  *              POJ 3155(http://poj.org/problem?id=3155)
@@ -99,3 +106,74 @@ public:
     }
   }
 };
+
+#define REP(i,s,n) for(int i=(int)(s);i<(int)(n);i++)
+
+using namespace std;
+typedef vector<int> VI;
+
+const int inf = 1e8;
+
+int main(void) {
+  ios::sync_with_stdio(false);
+  cin.tie(0);
+  int t;
+  cin >> t;
+  while (t--) {
+    int n, m;
+    cin >> n >> m;
+    vector<string> s(n);
+    REP(i, 0, n) cin >> s[i];
+    REP(i, 0, n) {
+      REP(j, 0, m) {
+        if ((i + j) % 2 == 0) continue;
+        if (s[i][j] == 'W') s[i][j] = 'B';
+        else if (s[i][j] == 'B') s[i][j] = 'W';
+      }
+    }
+    Dinic<int> din(2 + n * m + 2 * (n - 1) * (m - 1));
+    REP(i, 0, n) {
+      REP(j, 0, m) {
+        int x = i * m + j;
+        if (s[i][j] == 'W')
+          din.add_edge(0, 2 + x, inf);
+        if (s[i][j] == 'B')
+          din.add_edge(2 + x, 1, inf);
+      }
+    }
+    REP(i, 0, n - 1) {
+      REP(j, 0, m - 1) {
+        int x = i * (m - 1) + j;
+        din.add_edge(0, 2 + n * m + x, 1);
+        din.add_edge(2 + n * m + (n - 1) * (m - 1) + x, 1, 1);
+        REP(a, 0, 2) {
+          REP(b, 0, 2) {
+            int y = 2 + (i + a) * m + (j + b);
+            din.add_edge(2 + n * m + x, y, 1);
+            din.add_edge(y, 2 + n * m + (n - 1) * (m - 1) + x, 1);
+          }
+        }
+      }
+    }
+    pair<int, VI> macut = din.max_flow_cut(0, 1);
+    int ma = macut.first;
+    VI cut = macut.second;
+    cout << 2 * (n - 1) * (m - 1) - ma << "\n";
+    vector<string> ans(n, string(m, 'W'));
+    for (int v: cut) {
+      if (2 <= v && v < 2 + n * m) {
+        int x = (v - 2) / m;
+        int y = (v - 2) % m;
+        ans[x][y] = 'B';
+      }
+    }
+    REP(i, 0, n) {
+      REP(j, 0, m) {
+        if ((i + j) % 2 == 0) continue;
+        if (ans[i][j] == 'W') ans[i][j] = 'B';
+        else if (ans[i][j] == 'B') ans[i][j] = 'W';
+      }
+    }
+    REP(i, 0, n) cout << ans[i] << "\n";
+  }
+}
