@@ -1,6 +1,6 @@
 // Submodular minimization (up to 2-variable constraints)
 // Ref: https://theory-and-me.hatenablog.com/entry/2020/03/17/180157
-// Verified by: https://atcoder.jp/contests/abc225/submissions/28181291
+// Verified by: https://atcoder.jp/contests/abc259/submissions/33771580
 // Depends on: graph/Dinic.rs
 struct SubmodMin(Dinic<i64>, i64);
 
@@ -24,7 +24,7 @@ impl SubmodMin {
         assert!(c[0][0] + c[1][1] <= c[0][1] + c[1][0]);
         self.1 += c[0][0];
         self.add1(i, [0, c[1][0] - c[0][0]]);
-        self.add1(j, [0, c[1][1] - c[0][1]]);
+        self.add1(j, [0, c[1][1] - c[1][0]]);
         self.0.add_edge(2 + i, 2 + j, c[0][1] + c[1][0] - (c[0][0] + c[1][1]));
     }
     #[allow(unused)]
