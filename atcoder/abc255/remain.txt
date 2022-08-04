@@ -1,6 +1,3 @@
-c
-d
-e
 f
 g
 ex
