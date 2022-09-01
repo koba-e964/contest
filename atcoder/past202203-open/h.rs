@@ -1,0 +1,125 @@
+use std::io::Read;
+
+fn get_word() -> String {
+    let stdin = std::io::stdin();
+    let mut stdin=stdin.lock();
+    let mut u8b: [u8; 1] = [0];
+    loop {
+        let mut buf: Vec<u8> = Vec::with_capacity(16);
+        loop {
+            let res = stdin.read(&mut u8b);
+            if res.unwrap_or(0) == 0 || u8b[0] <= b' ' {
+                break;
+            } else {
+                buf.push(u8b[0]);
+            }
+        }
+        if buf.len() >= 1 {
+            let ret = String::from_utf8(buf).unwrap();
+            return ret;
+        }
+    }
+}
+
+fn get<T: std::str::FromStr>() -> T { get_word().parse().ok().unwrap() }
+
+// Quick-Find data structure.
+// Verified by: https://atcoder.jp/contests/cf17-tournament-round3-open/submissions/22928265
+// Verified by: https://atcoder.jp/contests/ttpc2019/submissions/23384553 (polymorphic version)
+// Verified by: https://yukicoder.me/submissions/727881 (polymorphic version)
+struct QuickFind<T = ()> {
+    root: Vec<usize>, mem: Vec<Vec<usize>>,
+    dat: Vec<T>, default: T,
+}
+
+impl QuickFind<()> {
+    #[allow(unused)]
+    fn new(n: usize) -> Self {
+        Self::with_dat(n, ())
+    }
+    #[allow(unused)]
+    fn unite(&mut self, x: usize, y: usize) {
+        self.unite_with_hooks(x, y, |&(), _| (), |(), ()| ());
+    }
+}
+impl<T: Clone> QuickFind<T> {
+    fn with_dat(n: usize, def: T) -> Self {
+        let root = (0..n).collect();
+        let mut mem = vec![vec![]; n];
+        for i in 0..n {
+            mem[i] = vec![i];
+        }
+        QuickFind { root: root, mem: mem, dat: vec![def.clone(); n], default: def }
+    }
+    fn root(&self, x: usize) -> usize {
+        self.root[x]
+    }
+    #[allow(unused)]
+    fn set(&mut self, idx: usize, val: T) {
+        self.apply(idx, move |me| *me = val);
+    }
+    #[allow(unused)]
+    fn get(&mut self, idx: usize) -> T {
+        let mut ans = self.default.clone();
+        self.apply(idx, |me| ans = me.clone());
+        ans
+    }
+    fn apply<F: FnOnce(&mut T)>(&mut self, idx: usize, f: F) {
+        let r = self.root[idx];
+        f(&mut self.dat[r]);
+    }
+    // unite always merges y to x if |x| >= |y|.
+    fn unite_with_hooks<F: FnMut(&T, i64), G: FnMut(T, T) -> T>(
+        &mut self, x: usize, y: usize,
+        mut hook: F, mut merge: G) {
+        let mut x = self.root(x);
+        let mut y = self.root(y);
+        if x == y { return }
+        if self.mem[x].len() < self.mem[y].len() {
+            std::mem::swap(&mut x, &mut y);
+        }
+        let memy = std::mem::replace(&mut self.mem[y], vec![]);
+        for &v in &memy {
+            self.root[v] = x;
+        }
+        self.mem[x].extend_from_slice(&memy);
+        // hook
+        hook(&self.dat[x], -1);
+        hook(&self.dat[y], -1);
+        self.dat[x] = merge(
+            std::mem::replace(&mut self.dat[x], self.default.clone()),
+            std::mem::replace(&mut self.dat[y], self.default.clone()),
+        );
+        hook(&self.dat[x], 1);
+    }
+    #[allow(unused)]
+    fn is_same_set(&self, x: usize, y: usize) -> bool {
+        self.root(x) == self.root(y)
+    }
+    #[allow(unused)]
+    fn size(&self, x: usize) -> usize {
+        let x = self.root(x);
+        self.mem[x].len()
+    }
+}
+
+fn main() {
+    let n: usize = get();
+    let q: usize = get();
+    let mut qf = QuickFind::new(n);
+    for _ in 0..q {
+        let ty: i32 = get();
+        let u = get::<usize>() - 1;
+        if ty == 1 {
+            let v = get::<usize>() - 1;
+            qf.unite(u, v);
+        } else {
+            let r = qf.root(u);
+            let mut v = qf.mem[r].clone();
+            v.sort();
+            for i in 0..v.len() {
+                print!("{}{}", v[i] + 1, if i + 1 == v.len() { "\n" } else { " " });
+            }
+        }
+    }
+}
