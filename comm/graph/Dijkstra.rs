@@ -1,8 +1,5 @@
-/*
- * Dijkstra's algorithm.
- * Verified by: AtCoder ABC164 (https://atcoder.jp/contests/abc164/submissions/12423853)
- */
-
+// Dijkstra's algorithm.
+// Verified by: AtCoder ABC164 (https://atcoder.jp/contests/abc164/submissions/12423853)
 struct Dijkstra {
     edges: Vec<Vec<(usize, i64)>>, // adjacent list representation
 }

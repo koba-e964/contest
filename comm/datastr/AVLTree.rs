@@ -69,6 +69,21 @@ impl<T: PartialOrd + std::fmt::Debug + Default> Node<T> {
             0
         }
     }
+    // Verified by https://atcoder.jp/contests/past202203-open/submissions/34484915.
+    fn lower_bound(t: &Option<Box<Self>>, val: &T) -> usize {
+        let t = match t {
+            None => return 0,
+            Some(l) => l,
+        };
+        if *val < t.p {
+            return Self::lower_bound(&t.ch[0], val);
+        }
+        let ll = Self::len(&t.ch[0]);
+        if t.p == *val {
+            return ll;
+        }
+        ll + 1 + Self::lower_bound(&t.ch[1], val)
+    }
     fn at(l: &Option<Box<Self>>, pos: usize) -> Option<&T> {
         let t = match l {
             None => return None,
@@ -145,6 +160,10 @@ impl<T: PartialOrd + std::fmt::Debug + Default> AVLTree<T> {
     }
     fn insert(&mut self, p: T) {
         self.root = Node::insert(self.root.take(), Node::new(p));
+    }
+    #[allow(unused)]
+    fn lower_bound(&self, val: &T) -> usize {
+        Node::lower_bound(&self.root, val)
     }
     fn at(&self, pos: usize) -> Option<&T> {
         Node::at(&self.root, pos)

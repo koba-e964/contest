@@ -1,7 +1,5 @@
 c
 d
-h
-i
 j
 k
 l

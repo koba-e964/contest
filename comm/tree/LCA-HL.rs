@@ -1,4 +1,4 @@
-struct LCA {
+pub struct LCA {
     st: Vec<usize>,
     par: Vec<usize>,
     jmp: Vec<usize>,
@@ -8,6 +8,7 @@ struct LCA {
 // Constant-factor speedup used in https://codeforces.com/contest/1083/submission/46874242.
 // Base on HL-decomposition.
 // par[root] = root should hold.
+// These functions use O(n) stack space.
 // Verified by https://codeforces.com/contest/1083/submission/51934575.
 impl LCA {
     // For each node, make the most heavy child the first child.
@@ -36,7 +37,7 @@ impl LCA {
             Self::dfs(ch, st, w, cnt, jmp);
         }
     }
-    fn new(ch: &mut [Vec<usize>], par: &[usize], root: usize) -> Self {
+    pub fn new(ch: &mut [Vec<usize>], par: &[usize], root: usize) -> Self {
         let n = ch.len();
         let mut st = vec![0; n];
         let mut cnt = 0;
@@ -55,7 +56,7 @@ impl LCA {
             dep: dep,
         }
     }
-    fn lca(&self, mut x: usize, mut y: usize) -> usize {
+    pub fn lca(&self, mut x: usize, mut y: usize) -> usize {
         let jmp = &self.jmp;
         let st = &self.st;
         while jmp[x] != jmp[y] {
