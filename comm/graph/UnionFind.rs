@@ -1,7 +1,5 @@
-/**
- * Union-Find tree.
- * Verified by https://atcoder.jp/contests/pakencamp-2019-day3/submissions/9253305
- */
+// Union-Find tree.
+// Verified by https://atcoder.jp/contests/pakencamp-2019-day3/submissions/9253305
 struct UnionFind { disj: Vec<usize>, rank: Vec<usize> }
 
 impl UnionFind {
