@@ -1,3 +1,37 @@
+use std::cmp::*;
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes.by_ref().map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr,) => {};
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, ( $($t:tt),* )) => { ($(read_value!($next, $t)),*) };
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+    ($next:expr, usize1) => (read_value!($next, usize) - 1);
+    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+}
+
 // Strong connected components.
 // This struct uses O(n) stack space.
 // Verified by: yukicoder No.470 (http://yukicoder.me/submissions/145785)
@@ -103,4 +137,66 @@ impl SCC {
             v
         }).collect()
     }
+}
+
+trait Change { fn chmax(&mut self, x: Self); fn chmin(&mut self, x: Self); }
+impl<T: PartialOrd> Change for T {
+    fn chmax(&mut self, x: T) { if *self < x { *self = x; } }
+    fn chmin(&mut self, x: T) { if *self > x { *self = x; } }
+}
+
+fn main() {
+    // In order to avoid potential stack overflow, spawn a new thread.
+    let stack_size = 104_857_600; // 100 MB
+    let thd = std::thread::Builder::new().stack_size(stack_size);
+    thd.spawn(|| solve()).unwrap().join().unwrap();
+}
+
+fn solve() {
+    input! {
+        n: usize,
+        a: usize,
+        xy: [(usize1, usize1); a],
+        b: usize,
+        uv: [(usize1, usize1); b],
+    }
+    let mut ans = 0;
+    for bits in 0..1 << b {
+        let mut ban = vec![false; n];
+        let mut scc = SCC::new(n);
+        for i in 0..b {
+            let (u, v) = uv[i];
+            if (bits & 1 << i) != 0 {
+                ban[u] = true;
+            } else {
+                scc.add_edge(v, u);
+            }
+        }
+        for &(x, y) in &xy {
+            scc.add_edge(x, y);
+        }
+        let ncc = scc.scc();
+        let dag = scc.dag();
+        let top_ord = scc.top_order();
+        let mut sz = vec![0; ncc];
+        let mut pick = vec![0; ncc];
+        for i in 0..n {
+            sz[top_ord[i]] += 1;
+            pick[top_ord[i]] = i;
+        }
+        let mut ok = vec![false; ncc];
+        'outer:
+        for i in (0..ncc).rev() {
+            for &w in &dag[i] {
+                if !ok[w] {
+                    continue 'outer;
+                }
+            }
+            if sz[i] >= 2 { continue; }
+            if ban[pick[i]] { continue; }
+            ok[i] = true;
+        }
+        ans = max(ans, ok.iter().filter(|&&x| x).count());
+    }
+    println!("{}", ans);
 }
