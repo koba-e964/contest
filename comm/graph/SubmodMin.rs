@@ -19,6 +19,9 @@ impl SubmodMin {
             self.0.add_edge(2 + i, 1, -d);
             self.1 += cost[1];
         }
+        if cost[0] == cost[1] {
+            self.1 += cost[1];
+        }
     }
     fn add2(&mut self, i: usize, j: usize, c: [[i64; 2]; 2]) {
         assert!(c[0][0] + c[1][1] <= c[0][1] + c[1][0]);
