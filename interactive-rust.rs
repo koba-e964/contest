@@ -35,12 +35,12 @@ fn get_word() -> String {
 #[allow(dead_code)]
 fn get<T: std::str::FromStr>() -> T { get_word().parse().ok().unwrap() }
 
-fn solve() {
-}
-
 fn main() {
     // In order to avoid potential stack overflow, spawn a new thread.
     let stack_size = 104_857_600; // 100 MB
     let thd = std::thread::Builder::new().stack_size(stack_size);
     thd.spawn(|| solve()).unwrap().join().unwrap();
+}
+
+fn solve() {
 }
