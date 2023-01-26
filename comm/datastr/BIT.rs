@@ -1,23 +1,20 @@
-/// Binary Indexed Tree (Fenwick Tree). Holds an array of type T.
-/// T is a commutative monoid. Indices are 1 .. n.
-/// Verified by yukicoder No.404 (http://yukicoder.me/submissions/155373)
-struct BIT<T> {
+// Binary Indexed Tree (Fenwick Tree). Holds an array of type T.
+// T is a commutative monoid. Indices are in 0..n.
+// Verified by ABC285-F (https://atcoder.jp/contests/abc285/submissions/38329093)
+#[derive(Clone, Debug)]
+pub struct BIT<T> {
     n: usize,
     ary: Vec<T>,
     e: T,
 }
 
 impl<T: Clone + std::ops::AddAssign<T>> BIT<T> {
-    fn new(n: usize, e: T) -> Self {
-        let n = n.next_power_of_two();
+    pub fn new(n: usize, e: T) -> Self {
         BIT { n: n, ary: vec![e.clone(); n + 1], e: e }
     }
-    /**
-     * gets the sum in [1 .. idx]
-     * @param idx
-     * @return sum
-     */
-    fn accum(&self, mut idx: usize) -> T {
+    // Usage: self.accum(..idx)
+    fn accum(&self, idx: std::ops::RangeTo<usize>) -> T {
+        let mut idx = idx.end;
         let mut sum = self.e.clone();
         while idx > 0 {
             sum += self.ary[idx].clone();
@@ -25,23 +22,31 @@ impl<T: Clone + std::ops::AddAssign<T>> BIT<T> {
         }
         sum
     }
-    /**
-     * performs data[idx] += val;
-     */
-    fn add<U: Clone>(&mut self, mut idx: usize, val: U)
+    // Usage: self.accum(l..r)
+    #[inline(always)]
+    pub fn range(&self, rng: std::ops::Range<usize>) -> T
+        where T: std::ops::Sub<Output = T> {
+        self.accum(..rng.end) - self.accum(..rng.start)
+    }
+    // performs data[idx] += val;
+    // 0 <= idx, idx < n
+    pub fn add<U: Clone>(&mut self, mut idx: usize, val: U)
         where T: std::ops::AddAssign<U> {
-        assert!(idx > 0);
+        debug_assert!(idx < self.n);
+        idx += 1;
         let n = self.n;
         while idx <= n {
             self.ary[idx] += val.clone();
-            idx += (idx as i64 & (-(idx as i64))) as usize;
+            idx += idx & idx.wrapping_neg();
         }
     }
-    /// Make sure that 1 <= idx <= n.
+    // Make sure that 0 <= idx < n.
     #[allow(unused)]
-    fn single(&self, idx: usize) -> T
+    #[inline(always)]
+    pub fn get(&self, idx: usize) -> T
         where T: std::ops::Sub<Output = T> {
-        self.accum(idx) - self.accum(idx - 1)
+        debug_assert!(idx < self.n);
+        self.accum(..idx + 1) - self.accum(..idx)
     }
 }
 /// This implementation of AddAssign is useful when you want to make a 2D BIT.
