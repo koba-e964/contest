@@ -1,7 +1,3 @@
-#[allow(unused_imports)]
-use std::cmp::*;
-#[allow(unused_imports)]
-use std::collections::*;
 // https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
 macro_rules! input {
     ($($r:tt)*) => {
