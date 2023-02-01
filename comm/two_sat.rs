@@ -1,28 +1,24 @@
-/**
- * 2-SAT solver.
- * n: the number of variables (v_1, ..., v_n)
- * cons: constraints, given in 2-cnf
- * i (1 <= i <= n) means v_i, -i (1 <= i <= n) means not v_i.
- * Returns: None if there's no assignment that satisfies cons.
- * Otherwise, it returns an assignment that safisfies cons. (true: true, false: false)
- * Dependencies: SCC.rs
- * Verified by: Codeforces #400 D
- *              (http://codeforces.com/contest/776/submission/24957215)
- */
-fn two_sat(n: usize, cons: &[(i32, i32)]) -> Option<Vec<bool>> {
+// 2-SAT solver.
+// n: the number of variables (v_1, ..., v_n)
+// banned: prohibited combinations
+// (if ((i1, v1), (i2, v2)) is in banned, x[i1] == v1 && x[i2] == v2 does not hold.)
+// Returns: None if there's no assignment that satisfies banned.
+// Otherwise, it returns an assignment that safisfies banned. (true: true, false: false)
+// Depends on: graph/SCC.rs
+// Verified by: ABC277-Ex (https://atcoder.jp/contests/abc277/submissions/38516994)
+fn two_sat(n: usize, banned: &[((usize, bool), (usize, bool))]) -> Option<Vec<bool>> {
     let mut scc = SCC::new(2 * n);
-    let ni = n as i32;
-    for &(c1, c2) in cons.iter() {
-        let x = if c1 > 0 {
-            c1 - 1 + ni
+    for &((c1, v1), (c2, v2)) in banned {
+        let x = if !v1 {
+            c1 + n
         } else {
-            -c1 - 1
-        } as usize;
-        let y = if c2 > 0 {
-            c2 - 1
+            c1
+        };
+        let y = if !v2 {
+            c2
         } else {
-            -c2 - 1 + ni
-        } as usize;
+            c2 + n
+        };
         scc.add_edge(x, y);
         scc.add_edge((y + n) % (2 * n), (x + n) % (2 * n));
     }
