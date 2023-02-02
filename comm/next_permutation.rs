@@ -1,8 +1,6 @@
-/**
- * Returns the least index of elements that are modified, wrapped with Some.
- * If the entire array is reversed, it returns None instead.
- * v's elements must be pairwise distinct.
- */
+// Returns the least index of elements that are modified, wrapped with Some.
+// If the entire array is reversed, it returns None instead.
+// v's elements must be pairwise distinct.
 fn next_permutation<T: Ord>(v: &mut [T]) -> Option<usize> {
     let mut tail_dec: usize = 1;
     let n = v.len();
@@ -19,7 +17,7 @@ fn next_permutation<T: Ord>(v: &mut [T]) -> Option<usize> {
         let mut y = n;
         {
             let pivot = &v[x];
-            for i in (n - tail_dec .. n).rev() {
+            for i in (n - tail_dec..n).rev() {
                 if v[i] > *pivot {
                     y = i;
                     break;
@@ -29,7 +27,7 @@ fn next_permutation<T: Ord>(v: &mut [T]) -> Option<usize> {
         }
         v.swap(x, y);
     }
-    v[n - tail_dec .. n].reverse();
+    v[n - tail_dec..].reverse();
     if tail_dec < n {
         Some(n - tail_dec - 1)
     } else {
