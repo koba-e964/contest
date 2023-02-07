@@ -1,7 +1,3 @@
-#[allow(unused_imports)]
-use std::cmp::*;
-#[allow(unused_imports)]
-use std::collections::*;
 // https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
 macro_rules! input {
     ($($r:tt)*) => {
@@ -22,7 +18,6 @@ macro_rules! input {
 macro_rules! input_inner {
     ($next:expr) => {};
     ($next:expr, ) => {};
-
     ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
         let $var = read_value!($next, $t);
         input_inner!{$next $($r)*}
@@ -33,24 +28,12 @@ macro_rules! read_value {
     ($next:expr, ( $($t:tt),* )) => {
         ( $(read_value!($next, $t)),* )
     };
-
     ($next:expr, [ $t:tt ; $len:expr ]) => {
         (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
     };
-
-    ($next:expr, chars) => {
-        read_value!($next, String).chars().collect::<Vec<char>>()
-    };
-
     ($next:expr, usize1) => {
         read_value!($next, usize) - 1
     };
-
-    ($next:expr, [ $t:tt ]) => {{
-        let len = read_value!($next, usize);
-        (0..len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
-    }};
-
     ($next:expr, $t:ty) => {
         $next().parse::<$t>().expect("Parse error")
     };
@@ -141,17 +124,17 @@ macro_rules! define_mod {
 }
 const MOD: i64 = 1_000_000_007;
 define_mod!(P, MOD);
-type ModInt = mod_int::ModInt<P>;
+type MInt = mod_int::ModInt<P>;
 
 // https://en.wikipedia.org/wiki/Berlekamp%E2%80%93Massey_algorithm
-// Depends on ModInt.rs
+// Depends on MInt.rs
 fn berlekamp_massey<P: mod_int::Mod + PartialEq>(
     n: usize,
     s: &[mod_int::ModInt<P>],
 ) -> Vec<mod_int::ModInt<P>>{
-    type ModInt<P> = mod_int::ModInt<P>;
-    let mut b = ModInt::new(1);
-    let mut cp = vec![ModInt::new(0); n + 1];
+    type MInt<P> = mod_int::ModInt<P>;
+    let mut b = MInt::new(1);
+    let mut cp = vec![MInt::new(0); n + 1];
     let mut bp = vec![mod_int::ModInt::new(0); n];
     cp[0] = mod_int::ModInt::new(1);
     bp[0] = mod_int::ModInt::new(1);
@@ -165,7 +148,7 @@ fn berlekamp_massey<P: mod_int::Mod + PartialEq>(
         for j in 1..l + 1 {
             d += cp[j] * s[i - j];
         }
-        if d == ModInt::new(0) {
+        if d == MInt::new(0) {
             m += 1;
             continue;
         }
@@ -191,12 +174,12 @@ fn berlekamp_massey<P: mod_int::Mod + PartialEq>(
     cp[0..l + 1].to_vec()
 }
 
-fn polymul(a: &[ModInt], b: &[ModInt], mo: &[ModInt]) -> Vec<ModInt> {
+fn polymul(a: &[MInt], b: &[MInt], mo: &[MInt]) -> Vec<MInt> {
     let n = a.len();
     debug_assert_eq!(b.len(), n);
     debug_assert_eq!(mo.len(), n + 1);
     debug_assert_eq!(mo[n], 1.into());
-    let mut ret = vec![ModInt::new(0); 2 * n - 1];
+    let mut ret = vec![MInt::new(0); 2 * n - 1];
     for i in 0..n {
         for j in 0..n {
             ret[i + j] += a[i] * b[j];
@@ -210,12 +193,11 @@ fn polymul(a: &[ModInt], b: &[ModInt], mo: &[ModInt]) -> Vec<ModInt> {
     }
     ret[..n].to_vec()
 }
-    
 
-fn polypow(a: &[ModInt], mut e: i64, mo: &[ModInt]) -> Vec<ModInt> {
+fn polypow(a: &[MInt], mut e: i64, mo: &[MInt]) -> Vec<MInt> {
     let n = a.len();
     debug_assert_eq!(mo.len(), n + 1);
-    let mut prod = vec![ModInt::new(0); n];
+    let mut prod = vec![MInt::new(0); n];
     prod[0] += 1;
     let mut cur = a.to_vec();
     while e > 0 {
@@ -229,22 +211,19 @@ fn polypow(a: &[ModInt], mut e: i64, mo: &[ModInt]) -> Vec<ModInt> {
 }
 
 // Finds u a^e v^T by using Berlekamp-massey algorithm.
-fn eval_matpow(a: &[Vec<ModInt>], e: i64, u: &[ModInt], v: &[ModInt]) -> ModInt {
-    let k = a.len();
+// The linear map a is given as a closure.
+// Complexity: O(n^2 log e + nT(n)) where n = |u| and T(n) = complexity of a.
+// Ref: https://yukicoder.me/wiki/black_box_linear_algebra
+fn eval_matpow<F: FnMut(&[MInt]) -> Vec<MInt>>(mut a: F, e: i64, u: &[MInt], v: &[MInt]) -> MInt {
+    let k = u.len();
     // Find first 2k terms
-    let mut terms = vec![ModInt::new(0); 2 * k];
+    let mut terms = vec![MInt::new(0); 2 * k];
     let mut cur = u.to_vec();
     for pos in 0..2 * k {
         for i in 0..k {
             terms[pos] += cur[i] * v[i];
         }
-        let mut nxt = vec![ModInt::new(0); k];
-        for i in 0..k {
-            for j in 0..k {
-                nxt[j] += cur[i] * a[i][j];
-            }
-        }
-        cur = nxt;
+        cur = a(&cur);
     }
     let mut poly = berlekamp_massey(k, &terms);
     poly.reverse();
@@ -252,30 +231,38 @@ fn eval_matpow(a: &[Vec<ModInt>], e: i64, u: &[ModInt], v: &[ModInt]) -> ModInt 
         let r = -poly[0];
         return terms[0] * r.pow(e);
     }
-    let mut base = vec![ModInt::new(0); poly.len() - 1];
+    let mut base = vec![MInt::new(0); poly.len() - 1];
     base[1] += 1;
     let powpoly = polypow(&base, e, &poly);
-    let mut ans = ModInt::new(0);
+    let mut ans = MInt::new(0);
     for i in 0..poly.len() - 1 {
         ans += powpoly[i] * terms[i];
     }
     ans
 }
 
+// Tags: black-box-linear-algebra
 fn main() {
     input! {
         k: usize, m: usize, n: i64,
         pqr: [(usize1, usize1, usize1); m],
     }
-    let mut a = vec![vec![ModInt::new(0); k * k]; k * k];
+    let mut a = vec![vec![MInt::new(0); k * k]; k * k];
     for &(p, q, r) in &pqr {
         a[p * k + q][q * k + r] += 1;
     }
-    let mut u = vec![ModInt::new(0); k * k];
-    let mut v = vec![ModInt::new(0); k * k];
+    let mut u = vec![MInt::new(0); k * k];
+    let mut v = vec![MInt::new(0); k * k];
     for i in 0..k {
         u[i] += 1;
         v[i * k] += 1;
     }
-    println!("{}", eval_matpow(&a, n - 2, &u, &v));
+    let a = |u: &[MInt]| {
+        let mut v = vec![MInt::new(0); k * k];
+        for &(p, q, r) in &pqr {
+            v[q * k + r] += u[p * k + q];
+        }
+        v
+    };
+    println!("{}", eval_matpow(a, n - 2, &u, &v));
 }
