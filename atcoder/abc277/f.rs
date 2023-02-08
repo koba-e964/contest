@@ -1,3 +1,35 @@
+use std::cmp::*;
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes.by_ref().map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr,) => {};
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+}
+
 // Strong connected components.
 // This struct uses O(n) stack space.
 // Verified by: yukicoder No.470 (http://yukicoder.me/submissions/145785)
@@ -103,4 +135,67 @@ impl SCC {
             v
         }).collect()
     }
+}
+
+// Tags: topological-sort
+fn main() {
+    input! {
+        h: usize, w: usize,
+        a: [[i32; w]; h],
+    }
+    let mut rngs = vec![];
+    for i in 0..h {
+        let mut mi = 1 << 28;
+        let mut ma = 0;
+        for j in 0..w {
+            if a[i][j] > 0 {
+                mi = min(mi, a[i][j]);
+                ma = max(ma, a[i][j]);
+            }
+        }
+        if mi <= ma {
+            rngs.push((mi, ma, a[i].clone()));
+        }
+    }
+    rngs.sort_by_key(|&(x, y, _)| (x, y));
+    let m = rngs.len();
+    for i in 1..m {
+        if rngs[i - 1].1 > rngs[i].0 {
+            println!("No");
+            return;
+        }
+    }
+    let mut edges = vec![];
+    let mut nv = w;
+    for (_, _, row) in rngs {
+        let mut coo = vec![];
+        for i in 0..w {
+            if row[i] > 0 {
+                coo.push(row[i]);
+            }
+        }
+        if coo.is_empty() { continue; }
+        coo.sort(); coo.dedup();
+        let m = coo.len();
+        for i in 0..w {
+            if row[i] == 0 { continue; }
+            let idx = coo.binary_search(&row[i]).unwrap();
+            if idx > 0 {
+                edges.push((nv + 2 * idx - 1, i));
+            }
+            if idx + 1 < m {
+                edges.push((i, nv + 2 * idx));
+            }
+        }
+        for i in 0..m - 1 {
+            edges.push((nv + 2 * i, nv + 2 * i + 1));
+        }
+        nv += 2 * m - 2;
+    }
+    let mut scc = SCC::new(nv);
+    for (u, v) in edges {
+        scc.add_edge(u, v);
+    }
+    let ncc = scc.scc();
+    println!("{}", if ncc == nv { "Yes" } else { "No" });
 }
