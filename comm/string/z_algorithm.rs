@@ -1,11 +1,9 @@
-/*
- * Z algorithm. Calculates an array a[i] = |lcp(s, s[i...|s|])|,
- * where s is the given string.
- * If n = s.length(), the returned array has length n + 1.
- * E.g. z_algorithm("ababa") = {5, 0, 3, 0, 1, 0}
- * Reference: http://snuke.hatenablog.com/entry/2014/12/03/214243
- * Verified by: AtCoder ARC055-C (http://arc055.contest.atcoder.jp/submissions/1061771)
- */
+// Z algorithm. Calculates an array a[i] = |lcp(s, &s[i..])|,
+// where s is the given slice.
+// If n = s.length(), the returned array has length n + 1.
+// E.g. z_algorithm(b"ababa") = vec![5, 0, 3, 0, 1, 0]
+// Reference: http://snuke.hatenablog.com/entry/2014/12/03/214243
+// Verified by: ABC284-F (https://atcoder.jp/contests/abc284/submissions/38752029)
 fn z_algorithm<T: PartialEq>(s: &[T]) -> Vec<usize> {
     let n = s.len();
     let mut ret = vec![0; n + 1];
