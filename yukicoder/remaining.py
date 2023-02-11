@@ -32,11 +32,11 @@ def main():
         print(f"Usage: {sys.argv[0]} USERNAME", file=sys.stderr)
         sys.exit(1)
     username = sys.argv[1]
-    resp = requests.get(ALL_ENDPOINT)
+    resp = requests.get(ALL_ENDPOINT, timeout=5)
     problems = json.loads(resp.text)
     whole = sum(1 for _ in filter(lambda entry: entry['ProblemType'] == 0, problems))
 
-    resp = requests.get(SOLVED_ENDPOINT.format(username))
+    resp = requests.get(SOLVED_ENDPOINT.format(username), timeout=5)
     solved = json.loads(resp.text)
 
     levels = {}

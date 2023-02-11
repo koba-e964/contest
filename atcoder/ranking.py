@@ -10,7 +10,7 @@ import gzip
 import json
 
 ENDPOINT = 'https://kenkoooo.com/atcoder/resources/lang.json'
-ENDPOINT_SUM = 'https://kenkoooo.com/atcoder/resources/sums.json'
+ENDPOINT_SUM = 'https://kenkoooo.com/atcoder/atcoder-api/v3/rated_point_sum_ranking?from=0&to=50'
 LANGUAGE = 'Rust'
 USERNAME = 'kobae964'
 
