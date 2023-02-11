@@ -48,7 +48,7 @@ def list_files(problem_id, which, api_key):
     resp = requests.get(url, headers={
         'Authorization': "bearer " + api_key,
         'Accept': 'application/json'
-    })
+    }, timeout=5)
     response = json.loads(resp.text)
     return response
 
@@ -61,7 +61,7 @@ def delete_file(problem_id, which, filename, api_key):
     resp = requests.delete(url, headers={
         'Authorization': "bearer " + api_key,
         'Accept': 'application/json'
-    })
+    }, timeout=5)
     response = json.loads(resp.text)
     return response
 
@@ -78,7 +78,7 @@ def upload_files(problem_id, which, filenames, api_key):
         resp = requests.post(url, headers={
             'Authorization': "bearer " + api_key,
             'Accept': 'application/json'
-        }, files={'newfiles': file_obj})
+        }, files={'newfiles': file_obj}, timeout=10)
 
     response = json.loads(resp.text)
     return response
@@ -92,7 +92,7 @@ def main():
         sys.exit(1)
 
     # TODO: support dry-run
-    dir = sys.argv[1]
+    target_dir = sys.argv[1]
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     # yukicoder_config
@@ -101,7 +101,7 @@ def main():
     api_key = yukicoder_config['api_key']
 
     # problem_config
-    problem_config_path = os.path.join(dir, 'problem.yml')
+    problem_config_path = os.path.join(target_dir, 'problem.yml')
     problem_config = read_problem_config(problem_config_path)
     problem_id = problem_config['problem_id']
 

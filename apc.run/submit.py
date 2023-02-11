@@ -20,7 +20,7 @@ def read_apc_config(apc_config_path):
         'password': {'required': True, 'type': 'string'},
     })
     if not val.validate(config):
-        print('Invalid config: {} {}'.format(apc_config_path, val.errors),
+        print(f'Invalid config: {apc_config_path} {val.errors}',
               file=sys.stderr)
         sys.exit(1)
     return config
@@ -80,7 +80,7 @@ def get_csrftoken(dry_run):
         print("> Would get CSRF token from {}".format(url))
         return 'CSRFTokenDummy'
     # This endpoint provides csrf_token for free.
-    resp = requests.get(url)
+    resp = requests.get(url, timeout=5)
     if resp.status_code // 100 != 2:
         print(resp.status_code, file=sys.stderr)
         print(resp.text, file=sys.stderr)
@@ -94,7 +94,7 @@ def get_contest_info(contest_id):
     """
     This function does not need cookies
     """
-    resp = requests.get('https://apc.run/api/contest', {'id': contest_id})
+    resp = requests.get('https://apc.run/api/contest', {'id': contest_id}, timeout=5)
     if resp.status_code // 100 != 2:
         print(resp.status_code, file=sys.stderr)
         print(resp.text, file=sys.stderr)
@@ -111,7 +111,7 @@ def get_problem_info(problem_name):
     """
     This function does not need cookies
     """
-    resp = requests.get('https://apc.run/api/problem', {'problem_id': problem_name})
+    resp = requests.get('https://apc.run/api/problem', {'problem_id': problem_name}, timeout=5)
     if resp.status_code // 100 != 2:
         print(resp.status_code, file=sys.stderr)
         print(resp.text, file=sys.stderr)
@@ -141,7 +141,7 @@ def login(payload, cookies, dry_run):
         print('> Would POST to https://apc.run/api/login as {}'.format(payload['username']))
         cookies.sessionid = 'DummySessionId'
     else:
-        resp = requests.post("https://apc.run/api/login", payload, headers=headers)
+        resp = requests.post("https://apc.run/api/login", payload, headers=headers, timeout=5)
         cookies.csrftoken = resp.cookies['csrftoken']
         cookies.sessionid = resp.cookies['sessionid']
 
@@ -159,7 +159,7 @@ def submit(payload, cookies, dry_run):
     if dry_run:
         print('> Would POST to https://apc.run/api/submission, {}'.format(payload))
     else:
-        resp = requests.post('https://apc.run/api/submission', payload, headers=headers)
+        resp = requests.post('https://apc.run/api/submission', payload, headers=headers, timeout=5)
         if resp.status_code // 100 != 2:
             print("Submission failed!", file=sys.stderr)
             print(resp.status_code, file=sys.stderr)
@@ -183,7 +183,7 @@ def logout(cookies, dry_run):
     if dry_run:
         print('> Would GET https://apc.run/api/logout')
     else:
-        resp = requests.get('https://apc.run/api/logout', headers=headers)
+        resp = requests.get('https://apc.run/api/logout', headers=headers, timeout=5)
         if resp.status_code // 100 != 2:
             print("Logout failed!", file=sys.stderr)
             print(resp.status_code, file=sys.stderr)

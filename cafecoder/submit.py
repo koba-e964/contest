@@ -56,7 +56,7 @@ def read_language_config(language_config_path):
 def sign_in(cafecoder_config):
     sign_in_url = 'https://api.cafecoder.top/api/auth/sign_in'
     resp = requests.post(sign_in_url, cafecoder_config, headers={
-    })
+    }, timeout=5)
     if resp.status_code == http.HTTPStatus.UNAUTHORIZED:
         print('Login failed! name or password in cafecoder_config is wrong.')
         sys.exit(1)
@@ -68,7 +68,7 @@ def sign_in(cafecoder_config):
 
 def get_contest_info(contest_name):
     contest_info_url = f'https://api.cafecoder.top/api/contests/{contest_name}'
-    resp = requests.get(contest_info_url)
+    resp = requests.get(contest_info_url, timeout=5)
     value = json.loads(resp.text)
     task_schema = {
         'slug': {'type': 'string'},
@@ -99,7 +99,7 @@ def get_contest_info(contest_name):
 
 def sign_out(auth):
     url = 'https://api.cafecoder.top/api/auth/sign_out'
-    resp = requests.delete(url, headers=auth)
+    resp = requests.delete(url, headers=auth, timeout=5)
     value = json.loads(resp.text)
     if value['success'] is not True:
         print("Error!", file=sys.stderr)
@@ -133,7 +133,7 @@ def submit_to_task(problem_info, task, filename, languages, auth):
     url = f'https://api.cafecoder.top/api/contests/{problem_info["contest_name"]}/tasks/{task["slug"]}/submit'
     with open(filename, encoding='utf-8') as file:
         body = file.read()
-    resp = requests.post(url, body, headers=headers)
+    resp = requests.post(url, body, headers=headers, timeout=5)
     if resp.status_code != 204:
         print(resp.status_code, file=sys.stderr)
         print(resp.headers, file=sys.stderr)
