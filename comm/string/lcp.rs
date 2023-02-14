@@ -2,7 +2,7 @@
 // Verified by: https://yukicoder.me/submissions/704334
 struct LCP {
     inv_sa: Vec<usize>,
-    spt: Vec<Vec<usize>>
+    spt: Vec<Vec<usize>>,
 }
 
 impl LCP {
