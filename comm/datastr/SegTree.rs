@@ -1,11 +1,7 @@
-/**
- * Segment Tree. This data structure is useful for fast folding on intervals of an array
- * whose elements are elements of monoid I. Note that constructing this tree requires the identity
- * element of I and the operation of I.
- * Verified by: yukicoder No. 259 (http://yukicoder.me/submissions/100581)
- *              AGC015-E (http://agc015.contest.atcoder.jp/submissions/1461001)
- *              yukicoder No. 833 (https://yukicoder.me/submissions/703521)
- */
+// Segment Tree. This data structure is useful for fast folding on intervals of an array
+// whose elements are elements of monoid I. Note that constructing this tree requires the identity
+// element of I and the operation of I.
+// Verified by: yukicoder No. 2220 (https://yukicoder.me/submissions/841554)
 struct SegTree<I, BiOp> {
     n: usize,
     orign: usize,
@@ -22,7 +18,7 @@ impl<I, BiOp> SegTree<I, BiOp>
         while n < n_ { n *= 2; } // n is a power of 2
         SegTree {n: n, orign: n_, dat: vec![e; 2 * n - 1], op: op, e: e}
     }
-    /* ary[k] <- v */
+    // ary[k] <- v
     pub fn update(&mut self, idx: usize, v: I) {
         debug_assert!(idx < self.orign);
         let mut k = idx + self.n - 1;
@@ -32,10 +28,11 @@ impl<I, BiOp> SegTree<I, BiOp>
             self.dat[k] = (self.op)(self.dat[2 * k + 1], self.dat[2 * k + 2]);
         }
     }
-    /* [a, b) (note: half-inclusive)
-     * http://proc-cpuinfo.fixstars.com/2017/07/optimize-segment-tree/ */
+    // [a, b) (half-inclusive)
+    // http://proc-cpuinfo.fixstars.com/2017/07/optimize-segment-tree/
     #[allow(unused)]
-    pub fn query(&self, mut a: usize, mut b: usize) -> I {
+    pub fn query(&self, rng: std::ops::Range<usize>) -> I {
+        let (mut a, mut b) = (rng.start, rng.end);
         debug_assert!(a <= b);
         debug_assert!(b <= self.orign);
         let mut left = self.e;

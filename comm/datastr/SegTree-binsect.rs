@@ -1,13 +1,14 @@
 // Depends on: datastr/SegTree.rs
-// Verified by: https://yukicoder.me/submissions/717436
+// Verified by: yukicoder No. 2220 (https://yukicoder.me/submissions/841554)
 impl<I, BiOp> SegTree<I, BiOp>
     where BiOp: Fn(I, I) -> I,
           I: Copy {
     // Port from https://github.com/atcoder/ac-library/blob/master/atcoder/segtree.hpp
     #[allow(unused)]
     fn max_right<F: Fn(I) -> bool>(
-        &self, mut l: usize, f: &F,
+        &self, rng: std::ops::RangeFrom<usize>, f: &F,
     ) -> usize {
+        let mut l = rng.start;
         assert!(f(self.e));
         if l == self.orign {
             return self.orign;
@@ -38,8 +39,9 @@ impl<I, BiOp> SegTree<I, BiOp>
     // Port from https://github.com/atcoder/ac-library/blob/master/atcoder/segtree.hpp
     #[allow(unused)]
     fn min_left<F: Fn(I) -> bool>(
-        &self, mut r: usize, f: &F,
+        &self, rng: std::ops::RangeTo<usize>, f: &F,
     ) -> usize {
+        let mut r = rng.end;
         if !f(self.e) {
             return r + 1;
         }
