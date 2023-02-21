@@ -1,9 +1,7 @@
-b
 c
 d
 g
 h
-j
 l
 m
 n
