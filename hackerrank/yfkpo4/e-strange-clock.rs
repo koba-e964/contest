@@ -1,3 +1,34 @@
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes.by_ref().map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr,) => {};
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+}
+
 // Verified by https://atcoder.jp/contests/arc084/submissions/3935443
 #[derive(Clone)]
 struct BitSet {
@@ -57,7 +88,6 @@ impl BitSet {
         }
         ans
     }
-    // Verified by: https://www.hackerrank.com/contests/yfkpo4/challenges/e-strange-clock/submissions/code/1357435235
     #[allow(unused)]
     fn shr(&self, val: usize) -> Self {
         if val >= self.size { return Self::new(self.size); }
@@ -109,4 +139,46 @@ impl std::ops::BitOrAssign for BitSet {
             self.buf[i] |= other.buf[i];
         }
     }
+}
+
+fn main() {
+    input! {
+        n: usize,
+        a: [usize; n],
+    }
+    const W: usize = 200_064;
+    let mut g = BitSet::new(W);
+    for &a in &a {
+        g.set(a, true);
+    }
+    let mut f = BitSet::new(W);
+    for &a in &a {
+        f |= g.shr(a);
+    }
+    for i in 1..W {
+        let mut ok = false;
+        for j in 1..(W - 1) / i + 1 {
+            ok |= f.get(i * j);
+        }
+        f.set(i, ok);
+    }
+    let mut phi = vec![0; W];
+    for i in 1..W {
+        phi[i] = i;
+    }
+    for i in 2..W {
+        if phi[i] != i {
+            continue;
+        }
+        for j in 1..(W - 1) / i + 1 {
+            phi[i * j] = phi[i * j] / i * (i - 1);
+        }
+    }
+    let mut ans = 0i64;
+    for i in 1..W {
+        if f.get(i) {
+            ans += phi[i] as i64;
+        }
+    }
+    println!("{}", ans);
 }
