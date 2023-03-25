@@ -13,3 +13,25 @@ fn kmp_ff<T: PartialEq>(pat: &[T]) -> Vec<usize> {
     }
     pi
 }
+
+// Verified by: https://yukicoder.me/submissions/852992
+fn contains<T: PartialEq>(s: &[T], pat: &[T]) -> bool {
+    if pat.is_empty() {
+        return true;
+    }
+    let ff = kmp_ff(pat);
+    let mut pos = 0;
+    for i in 0..s.len() {
+        let c = &s[i];
+        while pos > 0 && &pat[pos] != c {
+            pos = ff[pos - 1];
+        }
+        if &pat[pos] == c {
+            pos += 1;
+        }
+        if pos == pat.len() {
+            return true;
+        }
+    }
+    false
+}
