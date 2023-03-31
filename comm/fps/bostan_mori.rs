@@ -16,7 +16,11 @@ fn convolution(a: &[MInt], b: &[MInt]) -> Vec<MInt> {
 // Finds [x^n] p(x)/q(x)
 // Ref: https://qiita.com/ryuhe1/items/da5acbcce4ac1911f47a
 // Verified by: https://atcoder.jp/contests/tdpc/submissions/24583334
+// Depends on: MInt.rs
 fn bostan_mori(p: &[MInt], q: &[MInt], mut n: i64) -> MInt {
+    if p.is_empty() {
+        return 0.into();
+    }
     assert!(p.len() < q.len());
     let mut p = p.to_vec();
     let mut q = q.to_vec();
