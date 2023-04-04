@@ -40,45 +40,40 @@ impl<T: PartialOrd> Change for T {
     fn chmin(&mut self, x: T) { if *self > x { *self = x; } }
 }
 
-fn conn_unite(conns: &[u8], x: usize, y: usize) -> Vec<u8> {
-    let mut conns = conns.to_vec();
-    for i in 0..conns.len() {
-        if (conns[i] & 1 << x) == 0 { continue; }
-        for j in 0..conns.len() {
-            if i == j || (conns[j] & 1 << y) == 0 {
-                continue;
-            }
-            let old = conns[j];
-            conns[i] |= old;
-            conns.remove(j);
-            return conns;
-        }
-    }
-    conns
-}
-
 fn conn_forget(conns: &[u8], pat: u8) -> Option<Vec<u8>> {
     let mut new_conns = vec![];
-    let mut rem = pat;
     for &c in conns {
         if (c & pat) == 0 {
             return None;
         }
         new_conns.push(c & pat);
-        rem &= !c;
     }
-    for i in 0..7 {
-        if (rem & 1 << i) != 0 {
-            new_conns.push(1 << i);
+    let mut cur = vec![];
+    {
+        let mut rem = pat;
+        while rem > 0 {
+            let lsb = rem & rem.wrapping_neg();
+            let cont = rem - (rem & (rem + lsb));
+            cur.push(cont);
+            rem -= cont;
         }
     }
-    for i in 0..6 {
-        if (pat & 3 << i) == 3 << i {
-            new_conns = conn_unite(&new_conns, i, i + 1);
+    for &v in &new_conns {
+        for i in 0..cur.len() {
+            for j in 0..i {
+                if (cur[i] & v) != 0 && (cur[j] & v) != 0 {
+                    cur[j] |= cur[i];
+                    cur[i] = 0;
+                }
+            }
         }
     }
-    new_conns.sort_unstable();
-    Some(new_conns)
+    cur.sort_unstable();
+    let mut pos = 0;
+    while pos < cur.len() && cur[pos] == 0 {
+        pos += 1;
+    }
+    Some(cur[pos..].to_vec())
 }
 
 // 状態は連結成分を並べた Vec である。これにより連結状態とどのセルが黒かを同時に管理できる。
