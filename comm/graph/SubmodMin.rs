@@ -37,9 +37,9 @@ impl SubmodMin {
     }
     #[allow(unused)]
     fn calc_with_sol(&mut self) -> (i64, Vec<bool>) {
-        let (ans, p) = self.0.max_flow(0, 1);
+        let (ans, cut) = self.0.max_flow(0, 1);
         let mut sol = vec![false; self.0.graph.len() - 2];
-        for v in p {
+        for v in cut.t() {
             if v >= 2 {
                 sol[v - 2] = true;
             }
