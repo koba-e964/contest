@@ -1,11 +1,9 @@
-/**
- * Sparse Table.
- * BiOp should be the type of a binary operator which is
- * associative, commutative and idempotent.
- * (For example, both min and gcd satisfy these properties.)
- * Verified by: AtCoder CODE FESTIVAL 2016 Tournament Round 3 (Parallel) B
- * (http://cf16-tournament-round3-open.contest.atcoder.jp/submissions/1026294)
- */
+// Sparse Table.
+// BiOp should be the type of a binary operator which is
+// associative, commutative and idempotent.
+// (For example, both min and gcd satisfy these properties.)
+// Verified by: yukicoder No. 2171
+// (https://yukicoder.me/submissions/883410)
 struct SparseTable<T, BiOp> {
     biop: BiOp,
     st: Vec<Vec<T>>,
@@ -38,7 +36,8 @@ impl<T, BiOp> SparseTable<T, BiOp>
     fn top_bit(t: usize) -> usize {
         8 * std::mem::size_of::<usize>() - 1 - t.leading_zeros() as usize
     }
-    pub fn query(&self, f: usize, s: usize) -> T {
+    pub fn query(&self, range: std::ops::Range<usize>) -> T {
+        let (f, s) = (range.start, range.end - 1);
         assert!(f <= s);
         let b = Self::top_bit(s + 1 - f);
         let endpoint = s + 1 - (1 << b);
