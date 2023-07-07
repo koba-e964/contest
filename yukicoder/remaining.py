@@ -64,9 +64,9 @@ def main():
         print('| |unsolved|whole|ratio|progress|')
         print('|----|----|----|----|----|')
         prog = percentage(sl_count, whole)
-        print(f'|**All**| {whole - sl_count} | {whole} | {ratio:.3f} %| ![{prog}%](https://progress-bar.dev/{prog}?title=All) |')
+        print(f'|**All**| {whole - sl_count} | {whole} | {ratio:.3f}%| ![{prog}%](https://progress-bar.dev/{prog}?title=All) |')
     else:
-        print(f'Unsolved: {whole - sl_count} / {whole} ({ratio:.3f} %)')
+        print(f'Unsolved: {whole - sl_count} / {whole} ({ratio:.3f}%)')
         print()
         print('remaining:')
     level_sum = 0.0
@@ -78,9 +78,9 @@ def main():
         ratio = 100 * (1.0 - solved_k / all_k)
         if emit_md:
             prog = percentage(solved_k, all_k)
-            print(f'|**Level {k}**| {all_k - solved_k} | {all_k} | {ratio:.3f} %| ![{prog}%](https://progress-bar.dev/{prog}?title=Level+{str(k).ljust(3, "+")})|')
+            print(f'|**Level {k}**| {all_k - solved_k} | {all_k} | {ratio:.3f}%| ![{prog}%](https://progress-bar.dev/{prog}?title=Level+{str(k).ljust(3, "+")})|')
         else:
-            print(f'Level {k}: {all_k - solved_k} / {all_k} ({ratio:.3f} %)')
+            print(f'Level {k}: {all_k - solved_k} / {all_k} ({ratio:.3f}%)')
         level_sum += all_k * k
         solved_sum += solved_k * k
 
