@@ -239,6 +239,7 @@ impl ActionRing for Affine {
     }
 }
 
+// The author read the solution before implementing this.
 // Tags: segment-tree-beats
 fn main() {
     let n: usize = get();
