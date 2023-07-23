@@ -22,51 +22,50 @@ fn get_word() -> String {
     }
 }
 
-#[allow(dead_code)]
 fn get<T: std::str::FromStr>() -> T { get_word().parse().ok().unwrap() }
 
 // https://yukicoder.me/problems/no/873 (3)
-// ナップサックで最小の長さを求める。ただし使用する優先度は 1 > 3 > 5 > ... > 6 > 4 > 2 // である。-> そうでもない。偶数を使った後は優先順位が逆転する。
-// Tags: knapsack
+// ナップサックで最小の長さを求める。ただし使用する優先度は 1 > 3 > 5 > ... > 6 > 4 > 2
+// である。-> そうでもない。偶数を使った後は優先順位が逆転する。
+// -> DP の計算ではなく経路復元のときに優先度を考慮すべき。
+// Tags: knapsack, path-recovery
 fn main() {
     let n: usize = get();
     const INF: usize = 1 << 20;
-    let mut dp = vec![(INF, 0); n + 1];
-    let mut dpe = vec![(INF, 0); n + 1];
-    dp[0] = (0, 0);
-    for i in 1..275 {
-        let v = 2 * i;
-        for j in v * v..n + 1 {
-            let (p, _) = dp[j - v * v];
-            dp[j] = min(dp[j], (p + v, v));
-        }
-    }
-    for i in (0..275).rev() {
-        let v = 2 * i + 1;
-        for j in v * v..n + 1 {
-            let (p, _) = dp[j - v * v];
-            dp[j] = min(dp[j], (p + v, v));
-        }
-    }
-    dpe[0] = (0, 0);
-    for i in (1..275).rev() {
-        let v = 2 * i;
-        for j in v * v..n + 1 {
-            let (p, _) = dpe[j - v * v];
-            dpe[j] = min(dpe[j], (p + v, v));
+    let mut dp = vec![INF; n + 1];
+    dp[0] = 0;
+    for i in 1..551 {
+        for j in i * i..n + 1 {
+            let p = dp[j - i * i];
+            dp[j] = min(dp[j], p + i);
         }
     }
     let mut path = vec![];
     let mut cur = n;
     let mut even = false;
     while cur > 0 {
-        let t = if even { dpe[cur].1 } else { dp[cur].1 };
+        let mut now = n + 1;
         if even {
-            assert_eq!(dpe[cur].0, dp[cur].0);
+            for i in 1..551 {
+                let v = if i <= 275 { 2 * i } else { 2 * (550 - i) + 1 };
+                if cur >= v * v && dp[cur - v * v] + v == dp[cur] {
+                    now = v;
+                    break;
+                }
+            }
+        } else {
+            for i in 1..551 {
+                let v = if i <= 275 { 2 * i - 1 } else { 2 * (551 - i) };
+                if cur >= v * v && dp[cur - v * v] + v == dp[cur] {
+                    now = v;
+                    break;
+                }
+            }
         }
-        path.push(t);
-        cur -= t * t;
-        if t % 2 == 0 {
+        assert!(now <= n);
+        path.push(now);
+        cur -= now * now;
+        if now % 2 == 0 {
             even = !even;
         }
     }
