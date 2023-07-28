@@ -104,7 +104,7 @@ mod mod_int {
 macro_rules! define_mod {
     ($struct_name: ident, $modulo: expr) => {
         #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-        struct $struct_name {}
+        pub struct $struct_name {}
         impl mod_int::Mod for $struct_name { fn m() -> i64 { $modulo } }
     }
 }
