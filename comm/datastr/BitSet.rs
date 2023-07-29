@@ -103,10 +103,41 @@ impl std::ops::BitXorAssign for BitSet {
     }
 }
 impl std::ops::BitOrAssign for BitSet {
+    #[inline(always)]
     fn bitor_assign(&mut self, other: BitSet) {
+        *self |= &other;
+    }
+}
+impl std::ops::BitOrAssign<&BitSet> for BitSet {
+    fn bitor_assign(&mut self, other: &BitSet) {
         debug_assert_eq!(self.size, other.size);
         for i in 0..self.buf.len() {
             self.buf[i] |= other.buf[i];
+        }
+    }
+}
+impl std::ops::BitOr for BitSet {
+    type Output = Self;
+    fn bitor(self, other: BitSet) -> Self {
+        debug_assert_eq!(self.size, other.size);
+        let mut ans = BitSet::new(self.size);
+        for i in 0..self.buf.len() {
+            ans.buf[i] = self.buf[i] | other.buf[i];
+        }
+        ans
+    }
+}
+impl std::ops::BitAndAssign for BitSet {
+    #[inline(always)]
+    fn bitand_assign(&mut self, other: BitSet) {
+        *self &= &other;
+    }
+}
+impl std::ops::BitAndAssign<&BitSet> for BitSet {
+    fn bitand_assign(&mut self, other: &BitSet) {
+        debug_assert_eq!(self.size, other.size);
+        for i in 0..self.buf.len() {
+            self.buf[i] &= other.buf[i];
         }
     }
 }
