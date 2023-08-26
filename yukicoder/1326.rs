@@ -233,16 +233,17 @@ impl Bicomp {
             }
         }
         let mut tree = vec![vec![]; bc.len() + art.len()];
+        let mut tmp = vec![];
         for i in 0..art.len() {
             let j = i + bc.len();
             cmp_node[art[i]] = Some(j);
             let u = art[i];
-            let mut tmp = std::collections::HashSet::new();
             for &v in &g[u] {
                 let t = cmp[e2i[&(std::cmp::min(u, v), std::cmp::max(v, u))]].unwrap();
-                tmp.insert(t);
+                tmp.push(t);
             }
-            for v in tmp {
+            tmp.sort_unstable(); tmp.dedup();
+            for v in tmp.drain(..) {
                 tree[j].push(v);
                 tree[v].push(j);
             }
