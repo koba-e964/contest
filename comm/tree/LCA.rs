@@ -1,7 +1,7 @@
 // Lowest Common Ancestor. Call lca(x, y) to get the lca of them.
 // Many-rooted version.
 // Verified by: https://yukicoder.me/submissions/714482
-// This library uses O(n) stack space. 
+// These functions use O(n) stack space. 
 pub struct LCA {
     n: usize,
     bn: usize,
@@ -52,8 +52,8 @@ impl LCA {
         }
         for l in (0..self.bn + 1).rev() {
             if self.lca_tbl[x][l] != self.lca_tbl[y][l] {
-	        x = self.lca_tbl[x][l];
-	        y = self.lca_tbl[y][l];
+                x = self.lca_tbl[x][l];
+                y = self.lca_tbl[y][l];
             }
         }
         self.lca_tbl[x][0]

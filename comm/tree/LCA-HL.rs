@@ -6,7 +6,7 @@ pub struct LCA {
 }
 
 // Constant-factor speedup used in https://codeforces.com/contest/1083/submission/46874242.
-// Base on HL-decomposition.
+// Based on HL-decomposition.
 // par[root] = root should hold.
 // These functions use O(n) stack space.
 // Verified by https://codeforces.com/contest/1083/submission/51934575.

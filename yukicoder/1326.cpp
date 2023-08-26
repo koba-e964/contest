@@ -17,7 +17,7 @@ typedef pair<int, int> PI;
 //e2i[edge] -> index of the edge
 //tree index : [0, 1, ..., bc.size() - 1] -> component
 //tree index : [bc.size(), bc.size() + 1, ..., bc.size() + art.size() - 1] -> articulation
-//cmp[index of edge] -> index of the node of the contructed tree
+//cmp[index of edge] -> index of the node of the constructed tree
 //cmp_node[index of node] -> -1 if it's not articulation, otherwise index of the node of the constructed tree
 struct BiconnectedComponentTree {
         vector<int> ord, low, art, cmp, cmp_node;
@@ -217,8 +217,6 @@ int main(void) {
   bct.build();
   VI dep(bct.tree.size());
   dfs(0, bct.tree.size(), bct.tree, 0, dep);
-  for (int v: dep) cerr << " " << v;
-  cerr << endl;
   LowestCommonAncestor lca(bct.tree.size(), bct.tree);
   int q;
   cin >> q;
