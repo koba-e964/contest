@@ -1,6 +1,8 @@
 name: Publish achievements
 
 on:
+  schedule:
+    - cron: '10 17 * * *'
   push:
     branches: [ master ]
     paths:
