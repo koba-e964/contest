@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       # TODO remaining.py doesn't need secrets. We can place name and password in separate files and do away with this trick.
       - name: Use dummy config file (CafeCoder)
         run: |
@@ -44,7 +44,7 @@ jobs:
           atcoder/remaining md >atcoder/result.md
 
       - name: Checkout contest-achievements repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: koba-e964/contest-achievements
           ref: master
