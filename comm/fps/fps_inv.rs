@@ -2,7 +2,7 @@
 // Reference: https://codeforces.com/blog/entry/56422
 // Complexity: O(n log n)
 // Verified by: https://judge.yosupo.jp/submission/3219
-// Depends on: MInt.rs, fft.rs
+// Depends on: MInt.rs, fft.rs, fps/FPSOps.rs
 fn fps_inv<P: mod_int::Mod + PartialEq>(
     f: &[mod_int::ModInt<P>],
     gen: mod_int::ModInt<P>
@@ -39,4 +39,15 @@ fn fps_inv<P: mod_int::Mod + PartialEq>(
         sz *= 2;
     }
     r
+}
+impl<M: mod_int::Mod + PartialEq> FPSOps<M> {
+    pub fn inv(&self, mut a: Vec<mod_int::ModInt<M>>) -> Vec<mod_int::ModInt<M>> {
+        let n = a.len();
+        let mut p = 1;
+        while p < n { p *= 2; }
+        a.resize(p, 0.into());
+        let mut a = fps_inv(&a, self.gen);
+        a.truncate(n);
+        a
+    }
 }

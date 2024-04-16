@@ -22,6 +22,9 @@ impl<M: mod_int::Mod> FPSOps<M> {
     }
     pub fn mul(&self, a: Vec<mod_int::ModInt<M>>, b: Vec<mod_int::ModInt<M>>) -> Vec<mod_int::ModInt<M>> {
         type MInt<M> = mod_int::ModInt<M>;
+        if a.is_empty() || b.is_empty() {
+            return vec![];
+        }
         let n = a.len() - 1;
         let m = b.len() - 1;
         let mut p = 1;
