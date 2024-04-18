@@ -1,9 +1,7 @@
-/*
- * Online monotone minima dp. For example, monge dp can be efficiently computed
- * by online_dc.
- * Verified by: https://yukicoder.me/problems/no/705
- * submission: https://yukicoder.me/submissions/566775
- */
+// Online monotone minima dp. For example, monge dp can be efficiently computed
+// by online_dc.
+// Verified by: https://yukicoder.me/problems/no/705
+// submission: https://yukicoder.me/submissions/566775
 const INF: i64 = 1 << 60;
 
 // Complexity: O(n log m + m) where n = r - l, m = b - a.
