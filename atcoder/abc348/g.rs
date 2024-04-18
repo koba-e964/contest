@@ -68,13 +68,13 @@ fn min_plus_conv(a: &[i64], b: &[i64]) -> Vec<i64> {
     }
     let mut dp = vec![INF; n + m - 1];
     let cost_fun = |j: usize, i: usize| {
-        if i >= j && j < n && i < j + m {
-            a[j] + b[i - j]
+        if i >= j && i < j + m {
+            b[i - j]
         } else {
             INF / 2
         }
     };
-    monotone_minima(0, n, 0, n + m - 1, &vec![0; n], &mut dp, &cost_fun);
+    monotone_minima(0, n, 0, n + m - 1, &a, &mut dp, &cost_fun);
     dp
 }
 
