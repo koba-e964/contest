@@ -40,14 +40,12 @@ fn main() {
 
 fn centroid(v: usize, par: usize, g: &[Vec<usize>], c: &[i64], half: i64) -> Result<i64, usize> {
     let mut sub = c[v];
-    let mut ch = vec![];
     for &w in &g[v] {
         if w == par {
             continue;
         }
         let s = centroid(w, v, g, c, half)?;
         sub += s;
-        ch.push(s);
     }
     if sub > half {
         return Err(v);
