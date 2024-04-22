@@ -1,3 +1,38 @@
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes.by_ref().map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr,) => {};
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, ( $($t:tt),* )) => { ($(read_value!($next, $t)),*) };
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+    ($next:expr, chars) => {
+        read_value!($next, String).chars().collect::<Vec<char>>()
+    };
+    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+}
+
 // Lazy Segment Tree. This data structure is useful for fast folding and updating on intervals of an array
 // whose elements are elements of monoid T. Note that constructing this tree requires the identity
 // element of T and the operation of T. This is monomorphised, because of efficiency. T := i64, biop = max, upop = (+)
@@ -153,102 +188,6 @@ impl<R: ActionRing> LazySegTree<R> {
     }
 }
 
-enum Affine {}
-
-type AffineInt = i64; // Change here to change type
-impl ActionRing for Affine {
-    type T = (AffineInt, AffineInt); // data, size
-    type U = (AffineInt, AffineInt); // action, (a, b) |-> x |-> ax + b
-    fn biop((x, s): Self::T, (y, t): Self::T) -> Self::T {
-        (x + y, s + t)
-    }
-    fn update((x, s): Self::T, (a, b): Self::U) -> Self::T {
-        (x * a + b * s, s)
-    }
-    fn upop(fst: Self::U, snd: Self::U) -> Self::U {
-        let (a, b) = fst;
-        let (c, d) = snd;
-        (a * c, b * c + d)
-    }
-    fn e() -> Self::T {
-        (0.into(), 0.into())
-    }
-    fn upe() -> Self::U { // identity for upop
-        (1.into(), 0.into())
-    }
-}
-
-enum AddMax {}
-
-impl ActionRing for AddMax {
-    type T = i32; // data
-    type U = i32; // action, a |-> x |-> a + x
-    fn biop(x: Self::T, y: Self::T) -> Self::T {
-        std::cmp::max(x, y)
-    }
-    fn update(x: Self::T, a: Self::U) -> Self::T {
-        x + a
-    }
-    fn upop(fst: Self::U, snd: Self::U) -> Self::U {
-        fst + snd
-    }
-    fn e() -> Self::T {
-        0
-    }
-    fn upe() -> Self::U { // identity for upop
-        0
-    }
-}
-
-enum V {}
-
-type VInt = i64;
-const VB: usize = 3;
-
-impl ActionRing for V {
-    type T = [VInt; VB]; // data
-    type U = [[VInt; VB]; VB]; // action, (a, b) |-> x |-> ax + b
-    fn biop(x: Self::T, y: Self::T) -> Self::T {
-        let mut ans = [0.into(); VB];
-        for i in 0..VB {
-            ans[i] = x[i] + y[i];
-        }
-        ans
-    }
-    fn update(x: Self::T, o: Self::U) -> Self::T {
-        let mut ans = [0.into(); VB];
-        for i in 0..VB {
-            for j in 0..VB {
-                ans[j] += x[i] * o[i][j];
-            }
-        }
-        ans
-    }
-    fn upop(fst: Self::U, snd: Self::U) -> Self::U {
-        let mut ans = [[0.into(); VB]; VB];
-        for i in 0..VB {
-            for j in 0..VB {
-                for k in 0..VB {
-                    ans[i][k] += fst[i][j] * snd[j][k];
-                }
-            }
-        }
-        ans
-    }
-    fn e() -> Self::T {
-        [0.into(); VB]
-    }
-    fn upe() -> Self::U { // identity for upop
-        let mut ans = [[0.into(); VB]; VB];
-        for i in 0..VB {
-            ans[i][i] = 1.into();
-        }
-        ans
-    }
-}
-
-// Continuous segments
-// Verified by: https://atcoder.jp/contests/abc322/submissions/52689838
 enum Cont {}
 
 impl ActionRing for Cont {
@@ -282,5 +221,31 @@ impl ActionRing for Cont {
     }
     fn upe() -> Self::U { // identity for upop
         false
+    }
+}
+
+fn main() {
+    input! {
+        n: usize, q: usize,
+        s: chars,
+        clr: [(i32, usize, usize); q],
+    }
+    let mut st = LazySegTree::<Cont>::new(n);
+    for i in 0..n {
+        let mut val = [Ok((0, 0, 0)); 2];
+        val[s[i] as usize - '0' as usize] = Err(1);
+        st.set(i, val);
+    }
+    for (c, l, r) in clr {
+        let l = l - 1;
+        if c == 1 {
+            st.update(l..r, true);
+        } else {
+            let res = match st.query(l..r)[1] {
+                Ok((_, b, _)) => b,
+                Err(a) => a,
+            };
+            println!("{}", res);
+        }
     }
 }
