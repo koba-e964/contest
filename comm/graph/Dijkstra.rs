@@ -11,9 +11,7 @@ impl Dijkstra {
     fn add_edge(&mut self, from: usize, to: usize, cost: i64) {
         self.edges[from].push((to, cost));
     }
-    /*
-     * This function returns a Vec consisting of the distances from vertex source.
-     */
+    // This function returns a Vec consisting of the distances from vertex source.
     fn solve(&self, source: usize, inf: i64) -> Vec<i64> {
         let n = self.edges.len();
         let mut d = vec![inf; n];
