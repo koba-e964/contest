@@ -43,6 +43,9 @@ func readAOJConfig(baseDir string) (*aojConfig, string, error) {
 		yamlContent, err := os.ReadFile(aojConfigPath)
 		// If the file is not found, recurse into the parent directory.
 		if _, ok := err.(*fs.PathError); ok {
+			if baseDir == "/" {
+				return nil, "", fmt.Errorf("aoj_config.yml not found")
+			}
 			baseDir = path.Clean(path.Join(baseDir, ".."))
 			continue
 		}
@@ -108,8 +111,45 @@ func login(aojConfig *aojConfig) (*session, error) {
 	return &session{JSessionID: jSessionID}, nil
 }
 
+func (s *session) submit(problemID, language, source string) error {
+	// https://judgeapi.u-aizu.ac.jp/submissions
+	url := Endpoint + "/submissions"
+	client := &http.Client{}
+
+	// example:
+	// problemId: "4023"
+	// language: "C++17"
+	// sourceCode: "a"
+	jsonStream, err := json.Marshal(map[string]string{
+		"problemId":  problemID,
+		"language":   language,
+		"sourceCode": source,
+	})
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewReader(jsonStream))
+	if err != nil {
+		log.Println("NewRequest failed")
+		return err
+	}
+	req.AddCookie(&http.Cookie{
+		Name:  JSessionIDName,
+		Value: s.JSessionID,
+	})
+	req.Header.Add("Content-Type", "application/json") // Without this, the judge server fails with Internal Error.
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode/100 != 2 {
+		return fmt.Errorf("StatusCode = %d != 2xx", resp.StatusCode)
+	}
+	return nil
+}
+
 // http://developers.u-aizu.ac.jp/api?key=judgeapi%2Farenas%2F%7BarenaId%7D%2Fsubmissions_POST
-func (session *session) submitInArena(arenaID, ID, language, source string) error {
+func (s *session) submitInArena(arenaID, ID, language, source string) error {
 	url := fmt.Sprintf("%s/arenas/%s/submissions", Endpoint, arenaID)
 
 	client := &http.Client{}
@@ -135,7 +175,7 @@ func (session *session) submitInArena(arenaID, ID, language, source string) erro
 	}
 	req.AddCookie(&http.Cookie{
 		Name:  JSessionIDName,
-		Value: session.JSessionID,
+		Value: s.JSessionID,
 	})
 	req.Header.Add("Content-Type", "application/json") // Without this, the judge server fails with Internal Error.
 	resp, err := client.Do(req)
@@ -241,8 +281,14 @@ func main() {
 			log.Fatalf("%w", err)
 		}
 	} else if len(segments) == 1 {
-		log.Panicf("TODO: not implemented")
+		problemId := segments[0]
+		err := session.submit(problemId, language, string(source))
+		if err != nil {
+			log.Fatalf("%w", err)
+		}
 	} else {
 		log.Fatalf("Invalid relative path: %s", relfilename)
 	}
+	submissionURL := fmt.Sprintf("https://onlinejudge.u-aizu.ac.jp/status/users/%s/submissions/1", aojConfig.UserID)
+	log.Printf(submissionURL)
 }

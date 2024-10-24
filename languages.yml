@@ -2,6 +2,7 @@
   file: wiz.cpp
   extension: cpp
   yukicoder_name: cpp17
+  aoj_name: C++17
 - name: Erlang
   file: erl.erl
   extension: erl
@@ -9,6 +10,7 @@
   file: rust.rs
   extension: rs
   yukicoder_name: rust
+  aoj_name: Rust
 - name: Go
   file: go.go
   extension: go
