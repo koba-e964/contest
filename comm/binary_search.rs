@@ -1,3 +1,4 @@
+#[allow(unused)]
 trait Bisect<T> {
     fn lower_bound(&self, val: &T) -> usize;
     fn upper_bound(&self, val: &T) -> usize;
