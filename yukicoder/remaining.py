@@ -10,7 +10,7 @@ import requests
 SOLVED_ENDPOINT = 'https://yukicoder.me/api/v1/solved/name/{}'
 ALL_ENDPOINT = 'https://yukicoder.me/api/v1/problems'
 
-def percentage(nominator, denominator):
+def percentage(nominator: int, denominator: int) -> int:
     """Get the percentage (integer, rounded to nearest)
     If the value rounded to nearest is 100 and nominator < denominator,
     this function returns 99.
@@ -21,7 +21,12 @@ def percentage(nominator, denominator):
     return perc
 
 
-def main():
+def progress_bar(percentage: int) -> str:
+    """A progress bar in HTML"""
+    return f'![{percentage}%](https://progress-bar.xyz/{percentage}?title=All)'
+
+
+def main() -> None:
     """main function
     """
     emit_md = False
@@ -64,7 +69,7 @@ def main():
         print('| |unsolved|whole|ratio|progress|')
         print('|----|----|----|----|----|')
         prog = percentage(sl_count, whole)
-        print(f'|**All**| {whole - sl_count} | {whole} | {ratio:.3f}%| ![{prog}%](https://progress-bar.dev/{prog}?title=All) |')
+        print(f'|**All**| {whole - sl_count} | {whole} | {ratio:.3f}%| {progress_bar(prog)} |')
     else:
         print(f'Unsolved: {whole - sl_count} / {whole} ({ratio:.3f}%)')
         print()
@@ -78,7 +83,7 @@ def main():
         ratio = 100 * (1.0 - solved_k / all_k)
         if emit_md:
             prog = percentage(solved_k, all_k)
-            print(f'|**Level {k}**| {all_k - solved_k} | {all_k} | {ratio:.3f}%| ![{prog}%](https://progress-bar.dev/{prog}?title=Level+{str(k).ljust(3, "+")})|')
+            print(f'|**Level {k}**| {all_k - solved_k} | {all_k} | {ratio:.3f}%| {progress_bar(prog)} |')
         else:
             print(f'Level {k}: {all_k - solved_k} / {all_k} ({ratio:.3f}%)')
         level_sum += all_k * k
@@ -87,7 +92,7 @@ def main():
     ratio = 100 * (1.0 - solved_sum / level_sum)
     if emit_md:
         prog = percentage(int(10 * solved_sum), int(10 * level_sum))
-        print(f'|**Star**|{level_sum - solved_sum} | {level_sum} |{ratio:.3f}%| ![{prog}%](https://progress-bar.dev/{prog}?title=Star) |')
+        print(f'|**Star**|{level_sum - solved_sum} | {level_sum} |{ratio:.3f}%| {progress_bar(prog)} |')
     else:
         print()
         print(f'Star {level_sum - solved_sum} / {level_sum} ({ratio:.3f}%)')

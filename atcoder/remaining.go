@@ -118,7 +118,7 @@ func main() {
 			if adjustedRatio == 100 && numUnsolved > 0 {
 				adjustedRatio = 99
 			}
-			fmt.Printf("| %s | %d | %d | %d | %.2f%% | ![%d%%](https://progress-bar.dev/%d?title=Solved) |\n", config.ContestKind, numContests, numSolved, numUnsolved, float64(numSolved)/float64(numSolved+numUnsolved)*100.0, adjustedRatio, adjustedRatio)
+			fmt.Printf("| %s | %d | %d | %d | %.2f%% | ![%d%%](https://progress-bar.xyz/%d?title=Solved) |\n", config.ContestKind, numContests, numSolved, numUnsolved, float64(numSolved)/float64(numSolved+numUnsolved)*100.0, adjustedRatio, adjustedRatio)
 		} else {
 			fmt.Printf("%s:\n", config.ContestKind)
 			fmt.Printf("#Contests: %d\n", numContests)
