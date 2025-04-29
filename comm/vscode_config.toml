@@ -1,0 +1,55 @@
+location = "/Users/kobas-mac/Library/Application Support/Code/User/snippets/comp-prog.json.code-snippets"
+
+[[rust.entries]]
+prefix = "bs"
+filename = "binary_search.rs"
+
+[[rust.entries]]
+prefix = "mint"
+filename = "MInt.rs"
+
+[[rust.entries]]
+prefix = "fact"
+filename = "fact_init.rs"
+depends_on = ["MInt.rs"]
+
+[[rust.entries]]
+prefix = "2sat"
+filename = "two_sat.rs"
+
+[[rust.entries]]
+prefix = "perm"
+filename = "perm.rs"
+
+[[rust.entries]]
+prefix = "subsets"
+filename = "subsets.rs"
+
+[[rust.entries]]
+prefix = "rng"
+filename = "rng.rs"
+
+[[rust.entries]]
+prefix = "uf"
+filename = "graph/UnionFind.rs"
+
+[[rust.entries]]
+prefix = "scc"
+filename = "graph/SCC.rs"
+
+[[rust.entries]]
+prefix = "dinic"
+filename = "graph/Dinic.rs"
+
+[[rust.entries]]
+prefix = "min-cost-flow"
+filename = "graph/MinCostFlow.rs"
+
+[[rust.entries]]
+prefix = "submodular-min"
+filename = "graph/SubmodMin.rs"
+depends_on = ["graph/Dinic.rs"]
+
+[[cpp.entries]]
+prefix = "uf"
+filename = "graph/UnionFind.cpp"
