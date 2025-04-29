@@ -189,5 +189,4 @@ impl WaveletMatrix {
                       -> usize {
         self.at_least(first, last, x) - self.at_least(first, last, y)
     }
-        
 }

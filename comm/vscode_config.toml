@@ -9,6 +9,14 @@ prefix = "mint"
 filename = "MInt.rs"
 
 [[rust.entries]]
+prefix = "next_permutation"
+filename = "next_permutation.rs"
+
+[[rust.entries]]
+prefix = "floor_sum"
+filename = "floor_sum.rs"
+
+[[rust.entries]]
 prefix = "fact"
 filename = "fact_init.rs"
 depends_on = ["MInt.rs"]
@@ -49,6 +57,35 @@ filename = "graph/MinCostFlow.rs"
 prefix = "submodular-min"
 filename = "graph/SubmodMin.rs"
 depends_on = ["graph/Dinic.rs"]
+
+[[rust.entries]]
+prefix = "segtree"
+filename = "datastr/SegTree.rs"
+
+[[rust.entries]]
+prefix = "wm"
+filename = "datastr/WaveletMatrix.rs"
+
+[[rust.entries]]
+prefix = "bitset"
+filename = "datastr/BitSet.rs"
+
+[[rust.entries]]
+prefix = "cht"
+filename = "datastr/MinCHT.rs"
+
+[[rust.entries]]
+prefix = "zalgo"
+filename = "string/z_algorithm.rs"
+
+[[rust.entries]]
+prefix = "suffix"
+filename = "string/sa_is.rs"
+
+[[rust.entries]]
+prefix = "lcp"
+filename = "string/lcp.rs"
+depends_on = ["string/sa_is.rs"]
 
 [[cpp.entries]]
 prefix = "uf"
