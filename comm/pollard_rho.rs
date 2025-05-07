@@ -20,17 +20,11 @@ mod pollard_rho {
         if z >= n { z - n } else { z }
     }
 
-    fn mul_mod(x: i64, mut y: i64, n: i64) -> i64 {
+    fn mul_mod(x: i64, y: i64, n: i64) -> i64 {
         assert!(x >= 0);
         assert!(x < n);
-        let mut sum = 0;
-        let mut cur = x;
-        while y > 0 {
-            if (y & 1) == 1 { sum = add_mod(sum, cur, n); }
-            cur = add_mod(cur, cur, n);
-            y >>= 1;
-        }
-        sum
+        let prod = x as i128 * y as i128;
+        (prod % n as i128) as i64
     }
 
     fn mod_pow(x: i64, mut e: i64, n: i64) -> i64 {
