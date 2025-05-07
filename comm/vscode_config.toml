@@ -1,6 +1,10 @@
 location = "/Users/kobas-mac/Library/Application Support/Code/User/snippets/comp-prog.json.code-snippets"
 
 [[rust.entries]]
+prefix = "getline"
+filename = "vscode/getline.rs"
+
+[[rust.entries]]
 prefix = "bs"
 filename = "binary_search.rs"
 
