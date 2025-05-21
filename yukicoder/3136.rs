@@ -86,22 +86,14 @@ fn f(n: i64) -> i64 {
     let rem = (n - len(pass)) as usize;
     let cur_str;
     if pass % 15 == 0 {
-        cur_str = vec![0xf, 0, 0, 0, 0xb, 0, 0, 0]
+        cur_str = "FizzBuzz".to_string();
     } else if pass % 5 == 0 || pass % 3 == 0 {
-        cur_str = vec![0xb, 0, 0, 0]
+        cur_str = "Fizz".to_string();
     } else {
-        let mut x = pass;
-        let mut digs = vec![];
-        while x > 0 {
-            let d = x % 16;
-            digs.push(d);
-            x /= 16;
-        }
-        digs.reverse();
-        cur_str = digs;
+        cur_str = format!("{:X}", pass);
     }
-    for &d in &cur_str[..rem] {
-        if d == 0xb || d == 0xf {
+    for d in cur_str[..rem].chars() {
+        if d == 'B' || d == 'F' {
             ret += 1;
         }
     }
