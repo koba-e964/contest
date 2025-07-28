@@ -1,0 +1,6 @@
+{
+  "chat.agent.enabled": false,
+  "github.copilot.chat.agent.runTasks": false,
+  "github.copilot.chat.copilotDebugCommand.enabled": false,
+  "github.copilot.chat.reviewSelection.enabled": false
+}
