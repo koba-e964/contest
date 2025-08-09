@@ -1,6 +1,11 @@
+fn getline() -> String {
+    let mut ret = String::new();
+    std::io::stdin().read_line(&mut ret).ok().unwrap();
+    ret
+}
+
 // Verified by https://atcoder.jp/contests/arc084/submissions/3935443
-// https://yukicoder.me/submissions/1111471
-#[derive(Clone)]
+#[derive(Clone, PartialEq, PartialOrd, Eq, Ord)]
 struct BitSet {
     size: usize,
     buf: Vec<usize>,
@@ -92,7 +97,6 @@ impl BitSet {
         }
         None
     }
-    #[allow(unused)]
     fn is_empty(&self) -> bool {
         self.buf.iter().all(|&x| x == 0)
     }
@@ -149,4 +153,38 @@ impl std::ops::BitAndAssign<&BitSet> for BitSet {
             self.buf[i] &= other.buf[i];
         }
     }
+}
+
+// Tags: noshi-basis, rank-nullity-theorem
+fn main() {
+    let ints = getline().trim().split_whitespace()
+        .map(|s| s.parse::<usize>().unwrap()).collect::<Vec<_>>();
+    let [n, m, k] = ints[..] else { panic!() };
+    const W: usize = 2560;
+    let mut basis = vec![];
+    for _ in 0..m {
+        let l = getline().trim().chars().collect::<Vec<_>>();
+        let mut cur = BitSet::new(W);
+        for i in 0..n {
+            if l[i] == '1' {
+                cur.set(i, true);
+            }
+        }
+        for b in &basis {
+            let mut cp = cur.clone();
+            cp ^= b;
+            if cur > cp {
+                cur = cp;
+            }
+        }
+        if !cur.is_empty() {
+            basis.push(cur);
+        }
+    }
+    let dim = n - basis.len();
+    let mut ans = 1;
+    for _ in 0..dim {
+        ans = ans * 2 % k;
+    }
+    println!("{ans}");
 }
