@@ -1,12 +1,12 @@
 // Depends on: fft.rs, MInt.rs
 // Verified by: ABC269-Ex (https://atcoder.jp/contests/abc269/submissions/39116328)
 pub struct FPSOps<M: mod_int::Mod> {
-    gen: mod_int::ModInt<M>,
+    r#gen: mod_int::ModInt<M>,
 }
 
 impl<M: mod_int::Mod> FPSOps<M> {
-    pub fn new(gen: mod_int::ModInt<M>) -> Self {
-        FPSOps { gen: gen }
+    pub fn new(r#gen: mod_int::ModInt<M>) -> Self {
+        FPSOps { r#gen: r#gen }
     }
 }
 
@@ -34,7 +34,7 @@ impl<M: mod_int::Mod> FPSOps<M> {
         for i in 0..n + 1 { f[i] = a[i]; }
         for i in 0..m + 1 { g[i] = b[i]; }
         let fac = MInt::new(p as i64).inv();
-        let zeta = self.gen.pow((M::m() - 1) / p as i64);
+        let zeta = self.r#gen.pow((M::m() - 1) / p as i64);
         fft::fft(&mut f, zeta, 1.into());
         fft::fft(&mut g, zeta, 1.into());
         for i in 0..p { f[i] *= g[i] * fac; }
