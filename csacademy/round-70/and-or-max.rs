@@ -177,95 +177,65 @@ impl<R: ActionRing> LazySegTreeBeats<R> {
     }
 }
 
-fn gcd(mut x: i64, mut y: i64) -> i64 {
-    while y != 0 {
-        let r = x % y;
-        x = y;
-        y = r;
-    }
-    x
-}
+enum CSAR70AOM {}
 
-enum Affine {}
-
-type AffineInt = i64; // Change here to change type
-const INF: i64 = 1 << 40;
-impl ActionRing for Affine {
-    type T = (AffineInt, AffineInt, AffineInt, AffineInt); // data, size, max, lcm
-    type U = Result<AffineInt, AffineInt>; // action, Ok(g): x |-> gcd(x, g), Err(v): _x |-> v
-    fn biop((x, s, ma1, lcm1): Self::T, (y, t, ma2, lcm2): Self::T) -> Self::T {
-        let l = if lcm1 >= INF || lcm2 >= INF {
-            INF
-        } else {
-            let g = gcd(lcm1, lcm2);
-            std::cmp::min((lcm1 / g).saturating_mul(lcm2), INF)
-        };
-        (x + y, s + t, std::cmp::max(ma1, ma2), l)
+type Int = u32; // Change here to change type
+const FULL: Int = (1 << 20) - 1;
+impl ActionRing for CSAR70AOM {
+    type T = (Int, Int, Int); // and, or, max
+    type U = (Int, Int); // (a, b): x |-> (x & a) | b
+    fn biop((and1, or1, max1): Self::T, (and2, or2, max2): Self::T) -> Self::T {
+        (and1 & and2, or1 | or2, max1.max(max2))
     }
-    // Complexity note: potential = ma * s == x ? 0 : sum of num of factors(values)
-    // (ma * s == x is necessary because without this condition one range_assign can increase potential by N log_2(val))
-    // If update fails, potential decreases by >= 1.
-    fn update((x, s, ma, lcm): Self::T, up: Self::U) -> Result<Self::T, ()> {
-        let g = match up {
-            Ok(g) => g,
-            Err(v) => return Ok((v * s, s, v, v)),
-        };
-        if g == 0 {
-            return Ok((x, s, ma, lcm));
-        }
-        if x == s * ma {
-            // All elements are equal. Cannot fail.
-            let newval = gcd(ma, g);
-            return Ok((newval * s, s, newval, newval));
-        }
-        if lcm < INF && g % lcm == 0 {
+    // Complexity note: potential = (or ^ and).count_ones()
+    fn update((and, or, max): Self::T, up: Self::U) -> Result<Self::T, ()> {
+        let relevant = (up.0 ^ FULL) | up.1;
+        if relevant == 0 {
             // NOP
-            return Ok((x, s, ma, lcm));
+            return Ok((and, or, max));
+        }
+        if (and & relevant) == (or & relevant) {
+            return Ok(((and & up.0) | up.1, (or & up.0) | up.1, (max & up.0) | up.1));
         }
         Err(())
     }
-    fn upop(fst: Self::U, snd: Self::U) -> Self::U {
-        let g2 = match snd {
-            Ok(g) => g,
-            Err(_) => return snd,
-        };
-        match fst {
-            Ok(g) => Ok(gcd(g, g2)),
-            Err(v) => Err(gcd(g2, v)),
-        }
+    fn upop((fst1, fst2): Self::U, (snd1, snd2): Self::U) -> Self::U {
+        (fst1 & snd1, (fst2 & snd1) | snd2)
     }
     fn e() -> Self::T {
-        (0.into(), 0.into(), 0.into(), 1.into())
+        (FULL, 0, 0)
     }
     fn upe() -> Self::U { // identity for upop
-        Ok(0)
+        (FULL, 0)
     }
 }
 
 // The author read the solution before implementing this.
 // Tags: segment-tree-beats
+// https://rsm9.hatenablog.com/entry/2021/02/01/220408
 fn main() {
     let n: usize = get();
     let q: usize = get();
-    let a: Vec<_> = (0..n).map(|_| {
-        let x: i64 = get();
-        (x, 1, x, x)
-    }).collect();
-    let mut st = LazySegTreeBeats::<Affine>::with(&a);
+    let mut st = LazySegTreeBeats::<CSAR70AOM>::new(n);
+    for i in 0..n {
+        let x: Int = get();
+        st.set(i, (x, x, x));
+    }
     for _ in 0..q {
         let ty: i32 = get();
         let l = get::<usize>() - 1;
-        let r: usize = get();
-        if ty == 1 || ty == 2 {
-            let x: i64 = get();
-            if ty == 1 {
-                st.update(l..r, Err(x));
+        let r = get::<usize>();
+        if ty != 3 {
+            let x: Int = get();
+            let op = if ty == 1 {
+                (x, 0)
             } else {
-                st.update(l..r, Ok(x));
-            }
+                (FULL, x)
+            };
+            st.update(l..r, op);
         } else {
-            let val = st.query(l..r);
-            println!("{}", if ty == 3 { val.2 } else { val.0 });
+            let res = st.query(l..r);
+            println!("{}", res.2);
         }
     }
 }
