@@ -122,7 +122,7 @@ fn calc_lower(acc: &[i64], qs: &[(i64, usize, usize)]) -> Vec<i64> {
     res
 }
 
-// Tags: linear-programming, dual
+// Tags: dual-of-linear-programming, dual, flow-feasibility, min-cost-flow-on-special-graphs
 fn main() {
     let ints: Vec<usize> = getline()
         .trim()
@@ -147,10 +147,6 @@ fn main() {
 
     // Find medians
     let med = find_medians(&qs, &acc);
-    for i in 0..0 {
-        let (l, r) = qs[i];
-        eprintln!("{:?} {:?} {:?}", qs[i], &acc[l..r], med[i]);
-    }
 
     // find sum
     let qsm = (0..q).map(|i| (med[i], qs[i].0, qs[i].1)).collect::<Vec<_>>();
@@ -160,8 +156,5 @@ fn main() {
     let upper = calc_lower(&neg_acc, &neg_qsm);
     for i in 0..q {
         println!("{}", -upper[i] - lower[i]);
-    }
-    for i in 0..0 {
-        eprintln!("{i}: {:?} {} {}", qs[i], lower[i], -upper[i]);
     }
 }
