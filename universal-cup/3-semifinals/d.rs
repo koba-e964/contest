@@ -122,7 +122,7 @@ fn calc_lower(acc: &[i64], qs: &[(i64, usize, usize)]) -> Vec<i64> {
     res
 }
 
-// Tags: dual-of-linear-programming, dual, flow-feasibility, min-cost-flow-on-special-graphs
+// Tags: dual-of-linear-programming, dual, flow-feasibility, min-cost-flow-on-special-graphs, parallel-binary-search
 fn main() {
     let ints: Vec<usize> = getline()
         .trim()
