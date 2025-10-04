@@ -3,7 +3,9 @@
 // ref: https://gist.github.com/brunodccarvalho/fb9f2b47d7f8469d209506b336013473
 // ref: https://people.orie.cornell.edu/dpw/orie633/LectureNotes/lecture11.pdf
 // Depends on: graph/MinCostFlow.rs
-// Verified by: https://atcoder.jp/contests/abc231/submissions/27885174
+// Verified by:
+// - https://atcoder.jp/contests/abc231/submissions/27885174
+// - https://atcoder.jp/contests/abc421/submissions/69813019
 pub struct MinCostCirc {
     mcf: MinCostFlow,
     sup: Vec<Cap>,

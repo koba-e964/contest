@@ -1,34 +1,7 @@
-// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
-macro_rules! input {
-    ($($r:tt)*) => {
-        let stdin = std::io::stdin();
-        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
-        let mut next = move || -> String{
-            bytes.by_ref().map(|r|r.unwrap() as char)
-                .skip_while(|c|c.is_whitespace())
-                .take_while(|c|!c.is_whitespace())
-                .collect()
-        };
-        input_inner!{next, $($r)*}
-    };
-}
-
-macro_rules! input_inner {
-    ($next:expr) => {};
-    ($next:expr,) => {};
-    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
-        let $var = read_value!($next, $t);
-        input_inner!{$next $($r)*}
-    };
-}
-
-macro_rules! read_value {
-    ($next:expr, ( $($t:tt),* )) => { ($(read_value!($next, $t)),*) };
-    ($next:expr, [ $t:tt ; $len:expr ]) => {
-        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
-    };
-    ($next:expr, usize1) => (read_value!($next, usize) - 1);
-    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+fn getline() -> String {
+    let mut ret = String::new();
+    std::io::stdin().read_line(&mut ret).unwrap();
+    ret
 }
 
 // Minimum cost flow.
@@ -145,6 +118,8 @@ impl MinCostFlow {
 // ref: https://atcoder.jp/contests/abc231/submissions/27857324
 // ref: https://gist.github.com/brunodccarvalho/fb9f2b47d7f8469d209506b336013473
 // ref: https://people.orie.cornell.edu/dpw/orie633/LectureNotes/lecture11.pdf
+// Depends on: graph/MinCostFlow.rs
+// Verified by: https://atcoder.jp/contests/abc231/submissions/27885174
 pub struct MinCostCirc {
     mcf: MinCostFlow,
     sup: Vec<Cap>,
@@ -190,31 +165,40 @@ impl MinCostCirc {
     }
 }
 
-fn main() {
-    // In order to avoid potential stack overflow, spawn a new thread.
-    let stack_size = 104_857_600; // 100 MB
-    let thd = std::thread::Builder::new().stack_size(stack_size);
-    thd.spawn(|| solve()).unwrap().join().unwrap();
-}
-
-// Solved with hints
 // Tags: min-cost-flow-with-min-flow-constraints, minimum-cost-circulation, linear-programming, integer-programming
-// Similar problems: https://atcoder.jp/contests/abc421/tasks/abc421_g
-fn solve() {
-    input! {
-        h: usize, w: usize, n: usize,
-        abc: [(usize1, usize1, i64); n],
+// Similar problems: https://atcoder.jp/contests/abc231/tasks/abc231_h
+fn main() {
+    let ints = getline().trim().split_whitespace()
+        .map(|x| x.parse::<usize>().unwrap())
+        .collect::<Vec<_>>();
+    let [n, m] = ints[..] else { panic!() };
+    let a = getline().trim().split_whitespace()
+        .map(|x| x.parse::<Cap>().unwrap())
+        .collect::<Vec<_>>();
+    let lr = (0..m).map(|_| {
+        let ints = getline().trim().split_whitespace()
+            .map(|x| x.parse::<usize>().unwrap())
+            .collect::<Vec<_>>();
+        (ints[0] - 1, ints[1])
+    }).collect::<Vec<_>>();
+
+    let mut diff = vec![0; n - 1];
+    for i in 0..n - 1 {
+        diff[i] = a[i + 1] - a[i];
     }
-    const INF: isize = 300_000;
-    let mut mcf = MinCostCirc::new(1 + h + w);
-    for &(a, b, c) in &abc {
-        mcf.add_edge(1 + a, 1 + h + b, (0, 1), c);
+
+    let mut mcc = MinCostCirc::new(n);
+    const INF: isize = 100000;
+    for i in 0..n - 1 {
+        mcc.add_edge(i + 1, 0, (-diff[i], INF), 0);
     }
-    for i in 0..h {
-        mcf.add_edge(0, 1 + i, (1, INF), 0);
+    for &(l, r) in &lr {
+        if l == 0 { continue; }
+        if r == n {
+            mcc.add_edge(0, l, (0, INF), 1);
+        } else {
+            mcc.add_edge(r, l, (0, INF), 1);
+        }
     }
-    for i in 0..w {
-        mcf.add_edge(1 + h + i, 0, (1, INF), 0);
-    }
-    println!("{}", mcf.min_cost().unwrap());
+    println!("{}", mcc.min_cost().unwrap_or(-1));
 }
