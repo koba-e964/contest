@@ -1,3 +1,9 @@
+fn getline() -> String {
+    let mut ret = String::new();
+    std::io::stdin().read_line(&mut ret).unwrap();
+    ret
+}
+
 // References:
 // - https://scrapbox.io/data-structures/Wavelet_Matrix
 // - https://github.com/noshi91/n91lib_rs/blob/master/src/data_structure/wavelet_matrix.rs
@@ -246,5 +252,56 @@ impl WaveletMatrix {
 
     fn base_iter(&self) -> impl DoubleEndedIterator<Item = (usize, &(usize, BitVector))> {
         self.data.iter().enumerate()
+    }
+}
+
+// Tags: wavelet-matrix
+fn main() {
+    getline();
+    let a = getline().trim().split_whitespace()
+        .map(|x| x.parse::<usize>().unwrap())
+        .collect::<Vec<_>>();
+    let n = a.len();
+    let wm = WaveletMatrix::new(18, a);
+    let q = getline().trim().parse::<i32>().unwrap();
+    let mut arrays = vec![(0, n, 0, n + 1)];
+    for _ in 0..q {
+        let ints = getline().trim().split_whitespace()
+            .map(|x| x.parse::<usize>().unwrap())
+            .collect::<Vec<_>>();
+        let [ty, s, x] = ints[..] else { panic!() };
+        let (old, new) = if ty == 1 {
+            if x == 0 {
+                (
+                    (arrays[s].0, arrays[s].0, arrays[s].2, arrays[s].3),
+                    arrays[s],
+                )
+            } else {
+                let mut pass = arrays[s].1;
+                let mut fail = arrays[s].0;
+                while pass - fail > 1 {
+                    let mid = (pass + fail) / 2;
+                    let c = wm.count(arrays[s].0..mid, arrays[s].2..arrays[s].3);
+                    if c >= x {
+                        pass = mid;
+                    } else {
+                        fail = mid;
+                    }
+                }
+                (
+                    (arrays[s].0, pass, arrays[s].2, arrays[s].3),
+                    (pass, arrays[s].1, arrays[s].2, arrays[s].3),
+                )
+            }
+        } else {
+            let thresh = arrays[s].3.min(x + 1).max(arrays[s].2);
+            (
+                (arrays[s].0, arrays[s].1, arrays[s].2, thresh),
+                (arrays[s].0, arrays[s].1, thresh, arrays[s].3),
+            )
+        };
+        arrays[s] = old;
+        arrays.push(new);
+        println!("{}", wm.count(new.0..new.1, new.2..new.3));
     }
 }
