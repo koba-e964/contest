@@ -4,11 +4,12 @@
 // ref: https://people.orie.cornell.edu/dpw/orie633/LectureNotes/lecture11.pdf
 // Depends on: graph/MinCostFlow.rs
 // Verified by:
-// - https://atcoder.jp/contests/abc231/submissions/27885174
-// - https://atcoder.jp/contests/abc421/submissions/69813019
+// - https://atcoder.jp/contests/practice2/submissions/70013398
 pub struct MinCostCirc {
     mcf: MinCostFlow,
     sup: Vec<Cap>,
+    cost: Cost,
+    edges: Vec<(usize, usize, Cap)>, // (u, index in graph[u], cap)
 }
 
 impl MinCostCirc {
@@ -17,13 +18,19 @@ impl MinCostCirc {
         MinCostCirc {
             mcf: mcf,
             sup: vec![0; n],
+            cost: 0,
+            edges: vec![],
         }
     }
     pub fn add_edge(&mut self, a: usize, b: usize, (dem, cap): (Cap, Cap), cost: Cost) {
         assert!(dem <= cap);
+        assert!(cost >= 0);
+        self.cost += dem as Cost * cost;
+        let index = self.mcf.graph[2 + a].len();
         self.mcf.add_edge(2 + a, 2 + b, cap - dem, cost);
         self.sup[b] += dem;
         self.sup[a] -= dem;
+        self.edges.push((a, index, cap));
     }
     pub fn min_cost(&mut self) -> Option<Cost> {
         let s: Cap = self.sup.iter().sum();
@@ -46,7 +53,19 @@ impl MinCostCirc {
         if cost < 0 {
             None
         } else {
-            Some(cost)
+            Some(cost + self.cost)
         }
+    }
+    // Call it only after calling min_cost.
+    #[allow(unused)]
+    pub fn sol(&self) -> Vec<(usize, usize, Cap)> {
+        let mut ans = vec![];
+        for &(i, j, cap) in &self.edges {
+            let e = &self.mcf.graph[2 + i][j];
+            if e.cap != cap && e.to >= 2 {
+                ans.push((i, e.to - 2, cap - e.cap));
+            }
+        }
+        ans
     }
 }
