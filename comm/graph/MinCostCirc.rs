@@ -5,6 +5,7 @@
 // Depends on: graph/MinCostFlow.rs
 // Verified by:
 // - https://atcoder.jp/contests/practice2/submissions/70013984
+// - https://atcoder.jp/contests/practice2/submissions/70014032
 pub struct MinCostCirc {
     mcf: MinCostFlow,
     sup: Vec<Cap>,
@@ -48,7 +49,7 @@ impl MinCostCirc {
             self.edges.push((b, index, -dem));
         } else {
             // If after min_cost() e.cap = cap - dem - x holds,
-            // the actual flow is dem + x = cap - e.cap = 
+            // the actual flow is dem + x = cap - e.cap
             self.edges.push((a, index, cap));
         }
     }

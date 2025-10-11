@@ -189,7 +189,7 @@ impl MinCostCirc {
             self.edges.push((b, index, -dem));
         } else {
             // If after min_cost() e.cap = cap - dem - x holds,
-            // the actual flow is dem + x = cap - e.cap = 
+            // the actual flow is dem + x = cap - e.cap
             self.edges.push((a, index, cap));
         }
     }
@@ -241,19 +241,25 @@ fn main() {
     let mut mcc = MinCostCirc::new(2 * n + 1);
     for i in 0..n {
         for j in 0..n {
-            mcc.add_edge(1 + i, 1 + n + j, (0, 1), -a[i][j]);
+            mcc.add_edge(1 + i, 1 + n + j, (1, 2), -a[i][j]);
         }
-        mcc.add_edge(0, 1 + i, (0, k as isize), 0);
-        mcc.add_edge(1 + n + i, 0, (0, k as isize), 0);
+        mcc.add_edge(0, 1 + i, (n as isize, (n + k) as isize), 0);
+        mcc.add_edge(1 + n + i, 0, (n as isize, (n + k) as isize), 0);
     }
     let ans = mcc.min_cost().unwrap();
     let mut used = vec![vec!['.'; n]; n];
     for (u, v, flow) in mcc.sol() {
-        if flow > 0 && u >= 1 && v >= 1 {
+        if flow > 1 && u >= 1 && v >= 1 {
             used[u - 1][v - n - 1] = 'X';
         }
     }
-    println!("{}", -ans);
+    let mut ans = -ans;
+    for i in 0..n {
+        for j in 0..n {
+            ans -= a[i][j];
+        }
+    }
+    println!("{}", ans);
     for i in 0..n {
         println!("{}", used[i].iter().cloned().collect::<String>());
     }
