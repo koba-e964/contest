@@ -15,6 +15,10 @@ filename = "vscode/parse.rs"
 has_parameters = true
 
 [[rust.entries]]
+prefix = "digitsum"
+filename = "vscode/digitsum.rs"
+
+[[rust.entries]]
 prefix = "bs"
 filename = "binary_search.rs"
 
