@@ -19,6 +19,10 @@ prefix = "digitsum"
 filename = "vscode/digitsum.rs"
 
 [[rust.entries]]
+prefix = "count_matching_with_size"
+filename = "vscode/count_matching_with_size.rs"
+
+[[rust.entries]]
 prefix = "bs"
 filename = "binary_search.rs"
 
