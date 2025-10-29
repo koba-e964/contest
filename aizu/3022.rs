@@ -1,6 +1,38 @@
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes.by_ref().map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr,) => {};
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, ( $($t:tt),* )) => { ($(read_value!($next, $t)),*) };
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+    ($next:expr, usize1) => (read_value!($next, usize) - 1);
+    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+}
+
 // Ported and modified from https://kokiymgch.hatenablog.com/entry/2018/03/21/174958
 // This library uses O(n) stack space.
-// Verified by: <https://onlinejudge.u-aizu.ac.jp/problems/3022>
 
 //tree index : [0, 1, ..., bc.size() - 1] -> component
 //tree index : [bc.size(), bc.size() + 1, ..., bc.size() + art.size() - 1] -> articulation point
@@ -126,6 +158,74 @@ impl Bicomp {
             e2i: e2i,
             tree: tree,
             bc: bc.len(),
+        }
+    }
+}
+
+fn main() {
+    // In order to avoid potential stack overflow, spawn a new thread.
+    let stack_size = 104_857_600; // 100 MB
+    let thd = std::thread::Builder::new().stack_size(stack_size);
+    thd.spawn(|| solve()).unwrap().join().unwrap();
+}
+
+fn dfs(v: usize, par: usize, g: &[Vec<usize>], a: &[i64], dp: &mut [i64]) -> i64 {
+    let mut s = a[v];
+    for &w in &g[v] {
+        if w == par { continue; }
+        s += dfs(w, v, g, a, dp);
+    }
+    dp[v] = s;
+    s
+}
+
+fn dfs2(v: usize, par: usize, g: &[Vec<usize>], bc: usize, a: &[i64], dp: &[i64], res: &mut [i64]) {
+    let mut rem = dp[0] - a[v];
+    let mut ma = 0;
+    for &w in &g[v] {
+        if w == par { continue };
+        dfs2(w, v, g, bc, a, dp, res);
+        if v >= bc {
+            rem -= dp[w];
+            ma = ma.max(dp[w]);
+        }
+    }
+    res[v] = rem.max(ma);
+}
+
+// Tags: articulation-points, biconnected-components, block-cut-trees
+// Similar problems: https://yukicoder.me/problems/no/1326
+fn solve() {
+    input! {
+        n: usize, m: usize,
+        w: [i64; n],
+        uv: [(usize1, usize1); m],
+    }
+    let mut g = vec![vec![]; n];
+    for i in 0..m {
+        let (u, v) = uv[i];
+        g[u].push(i);
+        g[v].push(i);
+    }
+    let bct = Bicomp::new(n, &uv);
+    let mut dp = vec![0; bct.tree.len()];
+    let mut w_tree = vec![0; bct.tree.len()];
+    for i in 0..n {
+        if let Some(idx) = bct.cmp_node[i] {
+            w_tree[idx] += w[i];
+        } else {
+            let idx = bct.cmp[g[i][0]];
+            w_tree[idx] += w[i];
+        }
+    }
+    dfs(0, bct.tree.len(), &bct.tree, &w_tree, &mut dp);
+    let mut res = vec![0; bct.tree.len()];
+    dfs2(0, bct.tree.len(), &bct.tree, bct.bc, &w_tree, &dp, &mut res);
+    for i in 0..n {
+        if let Some(x) = bct.cmp_node[i] {
+            println!("{}", res[x]);
+        } else {
+            println!("{}", dp[0] - w[i]);
         }
     }
 }
