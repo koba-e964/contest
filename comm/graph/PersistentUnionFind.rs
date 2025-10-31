@@ -1,60 +1,54 @@
-/*
- * Persistent Union Find tree.
- * Reference: https://misteer.hatenablog.com/entry/persistentUF
- * Verified by https://beta.atcoder.jp/contests/agc002/submissions/3194355
- */
-struct PersistentUnionFind {
-    par: Vec<usize>,
-    time: Vec<i32>,
-    rank: Vec<i32>,
-    num: Vec<Vec<(i32, usize)>>, // [(time, size of this component)]
-    now: i32,
+// Ported and modified from:
+// - <https://blog.tiramister.net/posts/persistent-unionfind/>
+// - <https://kopricky.github.io/code/DataStructure_OnGraph/partial_persistent_union_find.html>
+// - <https://nyaannyaan.github.io/library/data-structure/rollback-union-find.hpp.html>
+// Verified by:
+// - <https://yukicoder.me/problems/no/416> <https://yukicoder.me/submissions/1129953>
+struct PartiallyPersistentUnionFind {
+    history: Vec<(usize, usize)>,
+    par: Vec<(PPUFTime, i32)>,
+    sz: Vec<Vec<(PPUFTime, i32)>>,
 }
-impl PersistentUnionFind {
-    fn new(n: usize) -> Self {
-        let mut par = vec![0; n];
-        let time = vec![i32::max_value(); n];
-        let rank = vec![0; n];
-        let num = vec![vec![(-1, 1)]; n];
-        for i in 0 .. n {
-            par[i] = i;
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct PPUFTime(i32);
+
+impl PartiallyPersistentUnionFind {
+    pub fn new(n: usize) -> Self {
+        let mut par = Vec::with_capacity(n);
+        let mut sz = vec![vec![]; n];
+        for i in 0..n {
+            par.push((PPUFTime(i32::max_value()), i as i32));
+            sz[i].push((PPUFTime(-1), 1));
         }
-        PersistentUnionFind {
-            par: par,
-            time: time,
-            rank: rank,
-            num: num,
-            now: 0
-        }
-    }
-    fn root(&self, mut x: usize, t: i32) -> usize {
-        loop {
-            if self.time[x] > t { return x; }
-            x = self.par[x];
+        Self {
+            history: vec![],
+            par,
+            sz,
         }
     }
-    // returns the current time
-    #[allow(dead_code)]
-    fn unite(&mut self, x: usize, y: usize) -> i32 {
-        let mut now = self.now;
-        let mut x = self.root(x, now);
-        let mut y = self.root(y, now);
-        if x == y { return now; }
-        now += 1;
-        if self.rank[x] <= self.rank[y] { std::mem::swap(&mut x, &mut y); }
-        self.par[y] = x;
-        self.time[y] = now;
-        self.rank[x] = std::cmp::max(self.rank[x], self.rank[y] + 1);
-        let size0 = self.num[x].last().unwrap().1;
-        let size1 = self.num[y].last().unwrap().1;
-        self.num[x].push((now, size0 + size1));
-        self.now = now;
-        now
+    pub fn find(&self, mut u: usize, time: PPUFTime) -> usize {
+        while self.par[u].0 <= time { u = self.par[u].1 as usize; }
+        u
     }
-    #[allow(dead_code)]
-    fn size(&self, x: usize, t: i32) -> usize {
-        let x = self.root(x, t);
-        let idx = self.num[x].binary_search(&(t, usize::max_value())).err().unwrap() - 1;
-        self.num[x][idx].1
+    #[allow(unused)]
+    pub fn same(&self, u: usize, v: usize, time: PPUFTime) -> bool {
+        self.find(u, time) == self.find(v, time)
+    }
+    pub fn unite(&mut self, mut u: usize, mut v: usize) -> bool {
+        let time = PPUFTime(self.history.len() as i32 + 1);
+        u = self.find(u, time);
+        v = self.find(v, time);
+        if u == v { return false; }
+        if self.sz[u].last().unwrap().1 < self.sz[v].last().unwrap().1 {
+            std::mem::swap(&mut u, &mut v);
+        }
+        self.par[v] = (time, u as i32);
+        let whole = self.sz[u].last().unwrap().1 + self.sz[v].last().unwrap().1;
+        self.sz[u].push((time, whole));
+        self.history.push((u, v));
+        true
+    }
+    pub fn now(&self) -> PPUFTime {
+        PPUFTime(self.history.len() as i32)
     }
 }
