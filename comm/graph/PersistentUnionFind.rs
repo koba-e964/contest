@@ -4,6 +4,7 @@
 // - <https://nyaannyaan.github.io/library/data-structure/rollback-union-find.hpp.html>
 // Verified by:
 // - <https://yukicoder.me/problems/no/416> <https://yukicoder.me/submissions/1129953>
+// - <https://codeforces.com/contest/1444/problem/C> <https://codeforces.com/contest/1444/submission/347096667>
 struct PartiallyPersistentUnionFind {
     history: Vec<(usize, usize)>,
     par: Vec<(PPUFTime, i32)>,
@@ -50,5 +51,13 @@ impl PartiallyPersistentUnionFind {
     }
     pub fn now(&self) -> PPUFTime {
         PPUFTime(self.history.len() as i32)
+    }
+    pub fn rollback(&mut self, time: PPUFTime) {
+        let time = time.0 as usize;
+        while self.history.len() > time {
+            let (u, v) = self.history.pop().unwrap();
+            let _ = self.sz[u].pop();
+            self.par[v] = (PPUFTime(i32::max_value()), v as i32);
+        }
     }
 }
