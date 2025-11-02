@@ -1,3 +1,51 @@
+use std::io::{Write, BufWriter};
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    (source = $s:expr, $($r:tt)*) => {
+        let mut iter = $s.split_whitespace();
+        let mut next = || { iter.next().unwrap() };
+        input_inner!{next, $($r)*}
+    };
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes
+                .by_ref()
+                .map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr, ) => {};
+
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, ( $($t:tt),* )) => {
+        ( $(read_value!($next, $t)),* )
+    };
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+    ($next:expr, usize1) => {
+        read_value!($next, usize) - 1
+    };
+    ($next:expr, $t:ty) => {
+        $next().parse::<$t>().expect("Parse error")
+    };
+}
+
 // Ported and modified from:
 // - <https://blog.tiramister.net/posts/persistent-unionfind/>
 // - <https://kopricky.github.io/code/DataStructure_OnGraph/partial_persistent_union_find.html>
@@ -5,7 +53,6 @@
 // Verified by:
 // - <https://yukicoder.me/problems/no/416> <https://yukicoder.me/submissions/1129953>
 // - <https://codeforces.com/contest/1444/problem/C> <https://codeforces.com/contest/1444/submission/347096667>
-// - <https://atcoder.jp/contests/agc002/tasks/agc002_d> <https://atcoder.jp/contests/agc002/submissions/70649128>
 struct PartiallyPersistentUnionFind {
     history: Vec<(usize, usize)>,
     par: Vec<(PPUFTime, i32)>,
@@ -67,5 +114,49 @@ impl PartiallyPersistentUnionFind {
             let _ = self.sz[u].pop();
             self.par[v] = (PPUFTime(i32::max_value()), v as i32);
         }
+    }
+}
+
+// Tags: partially-persistent-union-find
+fn main() {
+    let out = std::io::stdout();
+    let mut out = BufWriter::new(out.lock());
+    macro_rules! puts {
+        ($format:expr) => (write!(out,$format).unwrap());
+        ($format:expr, $($args:expr),+) => (write!(out,$format,$($args),*).unwrap())
+    }
+    input!{
+        n: usize,
+        m: usize,
+        ab: [(usize1, usize1); m],
+        q: usize,
+        xyz: [(usize1, usize1, usize); q],
+    }
+    let mut uf = PartiallyPersistentUnionFind::new(n);
+    let mut time = vec![PPUFTime(0); m];
+    for (i, (a, b)) in ab.into_iter().enumerate() {
+        uf.unite(a, b);
+        time[i] = uf.now();
+    }
+    for (x, y, z) in xyz {
+        let mut pass = m;
+        let mut fail = 0;
+        while pass - fail > 1 {
+            let mid = (pass + fail) / 2;
+            let t = time[mid - 1];
+            let rx = uf.find(x, t);
+            let ry = uf.find(y, t);
+            let size = if rx == ry {
+                uf.size(rx, t)
+            } else {
+                uf.size(rx, t) + uf.size(ry, t)
+            };
+            if size >= z {
+                pass = mid;
+            } else {
+                fail = mid;
+            }
+        }
+        puts!("{pass}\n");
     }
 }
