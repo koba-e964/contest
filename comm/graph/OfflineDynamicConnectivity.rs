@@ -1,16 +1,18 @@
 // Ported and modified from:
 // - <https://ei1333.github.io/luzhiled/snippets/other/offline-dynamic-connectivity.html>
+// Depends on: graph/PersistentUnionFind.rs
 // Verified by:
 // - <https://codeforces.com/contest/938/problem/G> <https://codeforces.com/contest/938/submission/347960635>
 struct OfflineDynamicConnectivity<T, Op> {
     n: usize,
     q: usize,
-    pend: Vec<((usize, usize), (usize, usize))>,
-    cnt: std::collections::HashMap<(usize, usize), u32>,
-    appear: std::collections::HashMap<(usize, usize), usize>,
+    pend: Vec<((u32, u32), E)>,
+    cnt: std::collections::HashMap<E, u32>,
+    appear: std::collections::HashMap<E, u32>,
     assoc: Vec<T>,
     ops: Vec<Op>,
 }
+type E = (u32, u32);
 
 impl<T: Clone + Default> OfflineDynamicConnectivity<T, Op> {
     pub fn new(n: usize, q: usize) -> Self {
@@ -25,22 +27,22 @@ impl<T: Clone + Default> OfflineDynamicConnectivity<T, Op> {
         }
     }
     pub fn insert(&mut self, idx: usize, s: usize, t: usize) {
-        let e = (s.min(t), s.max(t));
+        let e = (s.min(t) as u32, s.max(t) as u32);
         let old = self.cnt.get(&e).cloned().unwrap_or(0);
         self.cnt.insert(e, old + 1);
         if old == 0 {
-            self.appear.insert(e, idx);
+            self.appear.insert(e, idx as _);
         }
         self.q = self.q.max(idx + 1);
     }
     pub fn erase(&mut self, idx: usize, s: usize, t: usize) {
-        let e = (s.min(t), s.max(t));
+        let e = (s.min(t) as u32, s.max(t) as u32);
         let old = self.cnt[&e];
         assert!(old >= 1);
         self.cnt.insert(e, old - 1);
         if old == 1 {
             let ap = self.appear[&e];
-            self.pend.push(((ap, idx), e));
+            self.pend.push(((ap, idx as u32), e));
         }
     }
     pub fn run(mut self,
@@ -58,66 +60,66 @@ impl<T: Clone + Default> OfflineDynamicConnectivity<T, Op> {
         with_unite: &mut impl FnMut(&PartiallyPersistentUnionFind, usize, usize, usize, bool, &mut [T]) -> Op,
         with_same: &mut impl FnMut(&PartiallyPersistentUnionFind, usize, usize, &mut [T]) -> Op,
         with_erase: &mut impl FnMut(&PartiallyPersistentUnionFind, &mut [T], Op),
-        k: usize,
+        k: u32,
         uf: &mut PartiallyPersistentUnionFind,
-        seg: &[Vec<(usize, (usize, usize))>],
+        seg: &[Vec<(u32, E)>],
     ) {
         let start = uf.now();
-        for &(idx, (x, y)) in &seg[k] {
+        for &(idx, (x, y)) in &seg[k as usize] {
             let now = uf.now();
-            let rx = uf.find(x, now);
-            let ry = uf.find(y, now);
-            let united = uf.unite(x, y);
+            let rx = uf.find(x as _, now);
+            let ry = uf.find(y as _, now);
+            let united = uf.unite(x as _, y as _);
             let r = uf.find(rx, uf.now());
             let flipped = r == ry;
             let op = if united {
-                with_unite(&uf, idx, r, rx + ry - r, flipped, &mut self.assoc)
+                with_unite(&uf, idx as _, r as _, (rx + ry - r) as _, flipped, &mut self.assoc)
             } else {
-                with_same(&uf, idx, r, &mut self.assoc)
+                with_same(&uf, idx as _, r as _, &mut self.assoc)
             };
             self.ops.push(op);
         }
-        let segsz = (seg.len() + 1) / 2;
+        let segsz = (seg.len() as u32 + 1) / 2;
         if k < segsz - 1 {
             self.run_inner(f, with_unite, with_same, with_erase, 2 * k + 1, uf, seg);
             self.run_inner(f, with_unite, with_same, with_erase, 2 * k + 2, uf, seg);
-        } else if k - (segsz - 1) < self.q {
+        } else if k - (segsz - 1) < self.q as u32 {
             let query_index = k - (segsz - 1);
-            f(&uf, query_index, &self.assoc);
+            f(&uf, query_index as _, &self.assoc);
         }
-        for _ in seg[k].iter().rev() {
+        for _ in seg[k as usize].iter().rev() {
             let op = self.ops.pop().unwrap();
             with_erase(&uf, &mut self.assoc, op);
         }
         uf.rollback(start);
     }
-    fn build(&mut self) -> Vec<Vec<(usize, (usize, usize))>> {
+    fn build(&mut self) -> Vec<Vec<(u32, E)>> {
         let mut pend = std::mem::take(&mut self.pend);
         for (&e, &v) in &self.cnt {
             if v >= 1 {
-                pend.push(((self.appear[&e], self.q), e));
+                pend.push(((self.appear[&e], self.q as u32), e));
             }
         }
         let mut segsz = 1;
         while segsz < self.q { segsz <<= 1; }
         let mut seg = vec![vec![]; segsz * 2 - 1];
         for ((l, r), e) in pend {
-            self.add(l, r, e, 0, 0, segsz, &mut seg)
+            self.add(l, r, e, 0, 0, segsz as u32, &mut seg)
         }
         seg
     }
     fn add(
         &self,
-        a: usize, b: usize, e: (usize, usize),
-        k: usize, l: usize, r: usize,
-        segs: &mut [Vec<(usize, (usize, usize))>],
+        a: u32, b: u32, e: E,
+        k: u32, l: u32, r: u32,
+        seg: &mut [Vec<(u32, E)>],
     ) {
         if r <= a || b <= l  { return; }
         if a <= l && r <= b {
-            segs[k].push((a, e));
+            seg[k as usize].push((a, e));
             return;
         }
-        self.add(a, b, e, 2 * k + 1, l, (l + r) >> 1, segs);
-        self.add(a, b, e, 2 * k + 2, (l + r) >> 1, r, segs);
+        self.add(a, b, e, 2 * k + 1, l, (l + r) >> 1, seg);
+        self.add(a, b, e, 2 * k + 2, (l + r) >> 1, r, seg);
     }
 }
