@@ -23,6 +23,10 @@ prefix = "count_matching_with_size"
 filename = "vscode/count_matching_with_size.rs"
 
 [[rust.entries]]
+prefix = "quot"
+filename = "vscode/quot.rs"
+
+[[rust.entries]]
 prefix = "bs"
 filename = "binary_search.rs"
 
