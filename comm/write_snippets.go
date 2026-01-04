@@ -13,9 +13,10 @@ import (
 )
 
 type Entry struct {
-	Prefix    string   `json:"prefix"`
-	Filename  string   `json:"filename"`
-	DependsOn []string `json:"depends_on,omitempty"`
+	Prefix        string   `json:"prefix"`
+	Filename      string   `json:"filename"`
+	DependsOn     []string `json:"depends_on,omitempty"`
+	HasParameters bool     `json:"has_parameters,omitempty"`
 }
 
 type Config struct {
@@ -65,6 +66,11 @@ func main() {
 			fmt.Printf("Error reading snippet file %s: %v\n", snippetPath, err)
 			hasError = true
 			return
+		}
+		if !entry.HasParameters {
+			// verbatim mode: replace $ with $$
+			// https://stackoverflow.com/a/43427442
+			snippetContent = []byte(strings.Replace(string(snippetContent), "$", "\\$", -1))
 		}
 		snippetLines := strings.Split(string(snippetContent), "\n")
 
