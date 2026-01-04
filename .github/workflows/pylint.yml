@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.13"]
         python-script:
           - apc.run/submit.py
           - atcoder/ranking.py
@@ -17,6 +17,7 @@ jobs:
           - cafecoder/submit.py
           - yukicoder/remaining.py
           - yukicoder/upload.py
+          - script/list_rust_functions.py
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
