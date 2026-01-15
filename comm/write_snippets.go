@@ -13,10 +13,10 @@ import (
 )
 
 type Entry struct {
-	Prefix        string   `json:"prefix"`
-	Filename      string   `json:"filename"`
-	DependsOn     []string `json:"depends_on,omitempty"`
-	HasParameters bool     `json:"has_parameters,omitempty"`
+	Prefix        string   `toml:"prefix"`
+	Filename      string   `toml:"filename"`
+	DependsOn     []string `toml:"depends_on,omitempty"`
+	HasParameters bool     `toml:"has_parameters,omitempty"`
 }
 
 type Config struct {
