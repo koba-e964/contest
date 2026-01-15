@@ -27,6 +27,10 @@ prefix = "quot"
 filename = "vscode/quot.rs"
 
 [[rust.entries]]
+prefix = "neg_comb"
+filename = "vscode/neg_comb.rs"
+
+[[rust.entries]]
 prefix = "bs"
 filename = "binary_search.rs"
 
