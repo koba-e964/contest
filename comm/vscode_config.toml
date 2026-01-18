@@ -27,8 +27,17 @@ prefix = "quot"
 filename = "vscode/quot.rs"
 
 [[rust.entries]]
+prefix = "comb"
+filename = "vscode/comb.rs"
+
+[[rust.entries]]
 prefix = "neg_comb"
 filename = "vscode/neg_comb.rs"
+
+[[rust.entries]]
+prefix = "inv"
+filename = "vscode/inv.rs"
+has_parameters = true
 
 [[rust.entries]]
 prefix = "bs"
