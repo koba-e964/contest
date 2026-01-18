@@ -81,6 +81,10 @@ prefix = "uf"
 filename = "graph/UnionFind.rs"
 
 [[rust.entries]]
+prefix = "dijk"
+filename = "graph/Dijkstra.rs"
+
+[[rust.entries]]
 prefix = "scc"
 filename = "graph/SCC.rs"
 
@@ -91,6 +95,11 @@ filename = "graph/Dinic.rs"
 [[rust.entries]]
 prefix = "min-cost-flow"
 filename = "graph/MinCostFlow.rs"
+
+[[rust.entries]]
+prefix = "min-cost-circ"
+filename = "graph/MinCostCirc.rs"
+depends_on = ["graph/MinCostFlow.rs"]
 
 [[rust.entries]]
 prefix = "submodular-min"

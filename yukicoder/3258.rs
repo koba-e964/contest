@@ -94,7 +94,7 @@ fn rec(a: &[u32], mut s: Stat) -> i32 {
 // (alone な要素は、BTreeSet で持ち、分割する時に操作することにする。)
 // そうすれば全体で O(N log N) になるはず。
 // -> alone な要素は index を持つ必要があり、分割するときの便宜のため頻度表は (値 => index の集合) とする必要がある。
-// Tags: inverse-of-weighted-union-heuristics
+// Tags: inverse-of-weighted-union-heuristics, divide-segments
 fn main() {
     getline();
     let f = getline().trim().split_whitespace()

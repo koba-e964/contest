@@ -257,6 +257,8 @@ fn rec<F>(ma_pos: &F, l: usize, r: usize, lwall: bool, rwall: bool, fac: &[MInt]
     ans
 }
 
+// Tags: divide-and-conquer, divide-by-max, inverse-of-weighted-union-heuristics, divide-segments, cartesian-trees
+// Similar problems: https://yukicoder.me/problems/no/3258
 fn solve() {
     input! {
         n: usize,
