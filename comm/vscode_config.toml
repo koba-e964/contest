@@ -10,6 +10,10 @@ filename = "vscode/ints.rs"
 has_parameters = true
 
 [[rust.entries]]
+prefix = "decomp_ints"
+filename = "vscode/decomp_ints.rs"
+
+[[rust.entries]]
 prefix = "parse"
 filename = "vscode/parse.rs"
 has_parameters = true
