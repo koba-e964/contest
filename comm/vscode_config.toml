@@ -44,6 +44,10 @@ filename = "vscode/inv.rs"
 has_parameters = true
 
 [[rust.entries]]
+prefix = "yesno"
+filename = "vscode/yn.rs"
+
+[[rust.entries]]
 prefix = "bs"
 filename = "binary_search.rs"
 
