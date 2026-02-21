@@ -48,6 +48,10 @@ prefix = "yesno"
 filename = "vscode/yn.rs"
 
 [[rust.entries]]
+prefix = "mo"
+filename = "vscode/mo.rs"
+
+[[rust.entries]]
 prefix = "bs"
 filename = "binary_search.rs"
 
