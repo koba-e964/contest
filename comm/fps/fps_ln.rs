@@ -5,7 +5,7 @@
 // Depends on: MInt.rs, fact_init.rs, fft.rs, fps/fps_inv.rs
 fn fps_ln<P: mod_int::Mod + PartialEq>(
     f: &[mod_int::ModInt<P>],
-    gen: mod_int::ModInt<P>,
+    fpgen: mod_int::ModInt<P>,
     fac: &[mod_int::ModInt<P>],
     invfac: &[mod_int::ModInt<P>],
 ) -> Vec<mod_int::ModInt<P>> {
@@ -18,7 +18,7 @@ fn fps_ln<P: mod_int::Mod + PartialEq>(
         der[i - 1] = f[i] * i as i64;
     }
     inv.resize(2 * n, 0.into());
-    let zeta = gen.pow((P::m() - 1) / n as i64 / 2);
+    let zeta = fpgen.pow((P::m() - 1) / n as i64 / 2);
     fft::fft(&mut der, zeta, 1.into());
     fft::fft(&mut inv, zeta, 1.into());
     let invlen = mod_int::ModInt::new(2 * n as i64).inv();

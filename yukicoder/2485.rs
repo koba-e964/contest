@@ -1,5 +1,4 @@
 use std::cmp::*;
-use std::io::{Write, BufWriter};
 // https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
 macro_rules! input {
     ($($r:tt)*) => {
@@ -56,6 +55,9 @@ mod mod_int {
         }
         #[allow(dead_code)]
         pub fn inv(self) -> Self { self.pow(M::m() - 2) }
+    }
+    impl<M: Mod> Default for ModInt<M> {
+        fn default() -> Self { Self::new_internal(0) }
     }
     impl<M: Mod, T: Into<ModInt<M>>> Add<T> for ModInt<M> {
         type Output = Self;
@@ -134,13 +136,27 @@ mod mod_int {
 macro_rules! define_mod {
     ($struct_name: ident, $modulo: expr) => {
         #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-        struct $struct_name {}
+        pub struct $struct_name {}
         impl mod_int::Mod for $struct_name { fn m() -> i64 { $modulo } }
     }
 }
 const MOD: i64 = 998_244_353;
 define_mod!(P, MOD);
 type MInt = mod_int::ModInt<P>;
+
+// Depends on MInt.rs
+fn fact_init(w: usize) -> (Vec<MInt>, Vec<MInt>) {
+    let mut fac = vec![MInt::new(1); w];
+    let mut invfac = vec![0.into(); w];
+    for i in 1..w {
+        fac[i] = fac[i - 1] * i as i64;
+    }
+    invfac[w - 1] = fac[w - 1].inv();
+    for i in (0..w - 1).rev() {
+        invfac[i] = invfac[i + 1] * (i as i64 + 1);
+    }
+    (fac, invfac)
+}
 
 // FFT (in-place, verified as NTT only)
 // R: Ring + Copy
@@ -243,120 +259,111 @@ mod fft {
 }
 
 // Depends on: fft.rs, MInt.rs
-// Primitive root defaults to 3 (for 998244353); for other moduli change the value of it.
-fn conv(a: Vec<MInt>, b: Vec<MInt>) -> Vec<MInt> {
-    let n = a.len() - 1;
-    let m = b.len() - 1;
-    let mut p = 1;
-    while p <= n + m { p *= 2; }
-    let mut f = vec![MInt::new(0); p];
-    let mut g = vec![MInt::new(0); p];
-    for i in 0..n + 1 { f[i] = a[i]; }
-    for i in 0..m + 1 { g[i] = b[i]; }
-    let fac = MInt::new(p as i64).inv();
-    let zeta = MInt::new(3).pow((MOD - 1) / p as i64);
-    fft::fft(&mut f, zeta, 1.into());
-    fft::fft(&mut g, zeta, 1.into());
-    for i in 0..p { f[i] *= g[i] * fac; }
-    fft::inv_fft(&mut f, zeta.inv(), 1.into());
-    f[..n + m + 1].to_vec()
+// Verified by: ABC269-Ex (https://atcoder.jp/contests/abc269/submissions/39116328)
+pub struct FPSOps<M: mod_int::Mod> {
+    fpgen: mod_int::ModInt<M>,
 }
 
-// Computes f^{-1} mod x^{f.len()}.
-// Reference: https://codeforces.com/blog/entry/56422
-// Complexity: O(n log n)
-// Verified by: https://judge.yosupo.jp/submission/3219
-// Depends on: MInt.rs, fft.rs
-fn fps_inv<P: mod_int::Mod + PartialEq>(
-    f: &[mod_int::ModInt<P>],
-    fpgen: mod_int::ModInt<P>
-) -> Vec<mod_int::ModInt<P>> {
-    let n = f.len();
-    assert!(n.is_power_of_two());
-    assert_eq!(f[0], 1.into());
-    let mut sz = 1;
-    let mut r = vec![mod_int::ModInt::new(0); n];
-    let mut tmp_f = vec![mod_int::ModInt::new(0); n];
-    let mut tmp_r = vec![mod_int::ModInt::new(0); n];
-    r[0] = 1.into();
-    // Adopts the technique used in https://judge.yosupo.jp/submission/3153
-    while sz < n {
-        let zeta = fpgen.pow((P::m() - 1) / sz as i64 / 2);
-        tmp_f[..2 * sz].copy_from_slice(&f[..2 * sz]);
-        tmp_r[..2 * sz].copy_from_slice(&r[..2 * sz]);
-        fft::fft(&mut tmp_r[..2 * sz], zeta, 1.into());
-        fft::fft(&mut tmp_f[..2 * sz], zeta, 1.into());
-        let fac = mod_int::ModInt::new(2 * sz as i64).inv().pow(2);
-        for i in 0..2 * sz {
-            tmp_f[i] *= tmp_r[i];
-        }
-        fft::inv_fft(&mut tmp_f[..2 * sz], zeta.inv(), 1.into());
-        for v in &mut tmp_f[..sz] {
-            *v = 0.into();
-        }
-        fft::fft(&mut tmp_f[..2 * sz], zeta, 1.into());
-        for i in 0..2 * sz {
-            tmp_f[i] = -tmp_f[i] * tmp_r[i] * fac;
-        }
-        fft::inv_fft(&mut tmp_f[..2 * sz], zeta.inv(), 1.into());
-        r[sz..2 * sz].copy_from_slice(&tmp_f[sz..2 * sz]);
-        sz *= 2;
+impl<M: mod_int::Mod> FPSOps<M> {
+    pub fn new(fpgen: mod_int::ModInt<M>) -> Self {
+        FPSOps { fpgen: fpgen }
     }
-    r
 }
 
-fn dfs(polys: &[Vec<MInt>]) -> (Vec<MInt>, Vec<MInt>) {
-    let len = polys.len();
-    if len == 0 {
-        return (vec![MInt::new(0)], vec![MInt::new(1)]);
-    }
-    if len == 1 {
-        return (vec![MInt::new(1)], polys[0].to_vec());
-    }
-    let mid = len / 2;
-    let (n0, d0) = dfs(&polys[..mid]);
-    let (n1, d1) = dfs(&polys[mid..]);
-    let mut n = conv(n0, d1.clone());
-    {
-        let sub = conv(n1, d0.clone());
-        let to = max(n.len(), sub.len());
-        n.resize(to, 0.into());
-        for i in 0..sub.len() {
-            n[i] += sub[i];
+impl<M: mod_int::Mod> FPSOps<M> {
+    pub fn add(&self, mut a: Vec<mod_int::ModInt<M>>, mut b: Vec<mod_int::ModInt<M>>) -> Vec<mod_int::ModInt<M>> {
+        if a.len() < b.len() {
+            std::mem::swap(&mut a, &mut b);
         }
+        for i in 0..b.len() {
+            a[i] += b[i];
+        }
+        a
     }
-    let d = conv(d0, d1);
-    (n, d)
+    pub fn mul(&self, a: Vec<mod_int::ModInt<M>>, b: Vec<mod_int::ModInt<M>>) -> Vec<mod_int::ModInt<M>> {
+        type MInt<M> = mod_int::ModInt<M>;
+        if a.is_empty() || b.is_empty() {
+            return vec![];
+        }
+        let n = a.len() - 1;
+        let m = b.len() - 1;
+        let mut p = 1;
+        while p <= n + m { p *= 2; }
+        let mut f = vec![MInt::new(0); p];
+        let mut g = vec![MInt::new(0); p];
+        for i in 0..n + 1 { f[i] = a[i]; }
+        for i in 0..m + 1 { g[i] = b[i]; }
+        let fac = MInt::new(p as i64).inv();
+        let zeta = self.fpgen.pow((M::m() - 1) / p as i64);
+        fft::fft(&mut f, zeta, 1.into());
+        fft::fft(&mut g, zeta, 1.into());
+        for i in 0..p { f[i] *= g[i] * fac; }
+        fft::inv_fft(&mut f, zeta.inv(), 1.into());
+        f.truncate(n + m + 1);
+        f
+    }
 }
 
-// Tags: binary-splitting, fps
+// https://yukicoder.me/problems/no/2484 (3.5)
+// 操作をそれぞれ S, T_{k+1}, U_{k+1}, V と名付ける。T_k U_{k+1} と SV は同じ結果をもたらすが、それ以外はほとんど自由度がなく 1 通りに定まる。
+// c[i] = B[i+1]-B[i] (i >= 1), c[0] = B[1] とすると、各操作は以下のようになる:
+// S: なにもしない
+// T_{k+1}: 0 番目を +1, k+1 番目を -1 する (0 <= k <= N-2)
+// U_{k+1}: k 番目を +1 する (1 <= k <= N-1)
+// V: 0 番目を +1 する
+// 最終的にすべてゼロの配列を操作によって c と等しくできればよい。
+// c[0] + sum_{i>=1} min(c[i], 0) < 0 であれば不可能なので 0 通り。
+// そうでないとき、T_? と U_? の必須回数、および追加で必要な V の回数は簡単に求められる。
+// V を何個 T_1 U_2, T_2 U_3, T_3 U_4 にするかを全探索すれば、それぞれに対して組み合わせの和を計算すれば良い。
+// これは畳み込みでできる。
 fn main() {
-    let out = std::io::stdout();
-    let mut out = BufWriter::new(out.lock());
-    macro_rules! puts {($($format:tt)*) => (let _ = write!(out,$($format)*););}
-    #[allow(unused)]
-    macro_rules! putvec {
-        ($v:expr) => {
-            for i in 0..$v.len() {
-                puts!("{}{}", $v[i], if i + 1 == $v.len() {"\n"} else {" "});
-            }
-        }
-    }
     input! {
         n: usize, m: usize,
-        a: [i64; n],
+        b: [i64; n],
     }
-    let mut polys = vec![vec![MInt::new(1), MInt::new(0)]; n];
-    for i in 0..n {
-        polys[i][1] = -MInt::new(a[i]);
+    let (fac, invfac) = fact_init(m + 1);
+    let mut c = vec![0; n];
+    c[0] = b[0];
+    for i in 1..n {
+        c[i] = b[i] - b[i - 1];
     }
-    let (num, mut den) = dfs(&polys);
-    let mut p = 1;
-    while p < max(m + 1, den.len()) {
-        p *= 2;
+    let mut negsum = 0;
+    let mut possum = 0;
+    for i in 1..n {
+        negsum += min(0, c[i]);
+        possum += max(0, c[i]);
     }
-    den.resize(p, 0.into());
-    let invden = fps_inv(&den, 3.into());
-    let res = conv(num, invden);
-    putvec!(res[1..m + 1]);
+    if negsum + c[0] < 0 {
+        println!("0");
+        return;
+    }
+    // Rules out e.g. m m-1 m
+    if possum + c[0] > m as i64 {
+        println!("0");
+        return;
+    }
+    let rest = m - (possum + c[0]) as usize;
+    let t = (c[0] + negsum) as usize;
+    let mut prod = vec![MInt::new(1)];
+    let fps = FPSOps::new(MInt::new(3));
+    for i in 1..n {
+        let mut a = vec![MInt::new(0); m + 1];
+        let x = c[i].abs() as usize;
+        for j in 0..m + 1 {
+            if 2 * j + x <= m {
+                a[2 * j + x] += invfac[j + x] * invfac[j];
+            }
+        }
+        prod = fps.mul(prod, a);
+        prod.truncate(m + 1);
+    }
+    let mut a = vec![MInt::new(0); m + 1];
+    for j in 0..min(t, rest) + 1 {
+        if t - j + rest - j <= m {
+            a[t - j + rest - j] += invfac[t - j] * invfac[rest - j];
+        }
+    }
+    prod = fps.mul(prod, a);
+    prod.truncate(m + 1);
+    println!("{}", prod[m] * fac[m]);
 }

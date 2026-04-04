@@ -5,7 +5,7 @@
 // Depends on: MInt.rs, fft.rs, fps/FPSOps.rs
 fn fps_inv<P: mod_int::Mod + PartialEq>(
     f: &[mod_int::ModInt<P>],
-    gen: mod_int::ModInt<P>
+    fpgen: mod_int::ModInt<P>
 ) -> Vec<mod_int::ModInt<P>> {
     let n = f.len();
     assert!(n.is_power_of_two());
@@ -17,7 +17,7 @@ fn fps_inv<P: mod_int::Mod + PartialEq>(
     r[0] = 1.into();
     // Adopts the technique used in https://judge.yosupo.jp/submission/3153
     while sz < n {
-        let zeta = gen.pow((P::m() - 1) / sz as i64 / 2);
+        let zeta = fpgen.pow((P::m() - 1) / sz as i64 / 2);
         tmp_f[..2 * sz].copy_from_slice(&f[..2 * sz]);
         tmp_r[..2 * sz].copy_from_slice(&r[..2 * sz]);
         fft::fft(&mut tmp_r[..2 * sz], zeta, 1.into());
