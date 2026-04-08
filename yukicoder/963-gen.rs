@@ -257,7 +257,7 @@ fn fact_init(w: usize) -> (Vec<ModInt>, Vec<ModInt>) {
 /// Verified by: https://yukicoder.me/submissions/415310
 fn formal_power_series_inv<P: mod_int::Mod + PartialOrd>(
     f: &[mod_int::ModInt<P>],
-    gen: mod_int::ModInt<P>
+    fpgen: mod_int::ModInt<P>
 ) -> Vec<mod_int::ModInt<P>> {
     let n = f.len();
     assert!(n.is_power_of_two());
@@ -268,7 +268,7 @@ fn formal_power_series_inv<P: mod_int::Mod + PartialOrd>(
     while sz < n {
         sz *= 2;
         // r_{i + 1} = 2 * r_i - r_i^2 * f
-        let zeta = gen.pow((P::m() - 1) / sz as i64 / 2);
+        let zeta = fpgen.pow((P::m() - 1) / sz as i64 / 2);
         let mut tmp_r = vec![mod_int::ModInt::new(0); 2 * sz];
         let mut tmp_f = vec![mod_int::ModInt::new(0); 2 * sz];
         for i in 0..sz {

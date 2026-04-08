@@ -277,7 +277,7 @@ fn conv(a: Vec<MInt>, b: Vec<MInt>) -> Vec<MInt> {
     f[..n + m + 1].to_vec()
 }
 
-fn fps_taylor_shift(a: &[MInt], c: MInt, gen: MInt, fac: &[MInt], invfac: &[MInt]) -> Vec<MInt> {
+fn fps_taylor_shift(a: &[MInt], c: MInt, fpgen: MInt, fac: &[MInt], invfac: &[MInt]) -> Vec<MInt> {
     let n = a.len();
     let mut p = 1;
     while p < 2 * n {
@@ -291,7 +291,7 @@ fn fps_taylor_shift(a: &[MInt], c: MInt, gen: MInt, fac: &[MInt], invfac: &[MInt
         g[(p - i) % p] = cur * invfac[i];
         cur *= c;
     }
-    let zeta = gen.pow((MOD - 1) / p as i64);
+    let zeta = fpgen.pow((MOD - 1) / p as i64);
     let factor = MInt::new(p as i64).inv();
     fft::fft(&mut f, zeta, 1.into());
     fft::fft(&mut g, zeta, 1.into());

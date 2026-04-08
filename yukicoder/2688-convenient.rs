@@ -240,12 +240,12 @@ mod fft {
 // Depends on: fft.rs, MInt.rs
 // Verified by: ABC269-Ex (https://atcoder.jp/contests/abc269/submissions/39116328)
 pub struct FPSOps<M: mod_int::Mod> {
-    gen: mod_int::ModInt<M>,
+    fpgen: mod_int::ModInt<M>,
 }
 
 impl<M: mod_int::Mod> FPSOps<M> {
-    pub fn new(gen: mod_int::ModInt<M>) -> Self {
-        FPSOps { gen: gen }
+    pub fn new(fpgen: mod_int::ModInt<M>) -> Self {
+        FPSOps { fpgen: fpgen }
     }
 }
 
@@ -261,6 +261,9 @@ impl<M: mod_int::Mod> FPSOps<M> {
     }
     pub fn mul(&self, a: Vec<mod_int::ModInt<M>>, b: Vec<mod_int::ModInt<M>>) -> Vec<mod_int::ModInt<M>> {
         type MInt<M> = mod_int::ModInt<M>;
+        if a.is_empty() || b.is_empty() {
+            return vec![];
+        }
         let n = a.len() - 1;
         let m = b.len() - 1;
         let mut p = 1;
@@ -270,7 +273,7 @@ impl<M: mod_int::Mod> FPSOps<M> {
         for i in 0..n + 1 { f[i] = a[i]; }
         for i in 0..m + 1 { g[i] = b[i]; }
         let fac = MInt::new(p as i64).inv();
-        let zeta = self.gen.pow((M::m() - 1) / p as i64);
+        let zeta = self.fpgen.pow((M::m() - 1) / p as i64);
         fft::fft(&mut f, zeta, 1.into());
         fft::fft(&mut g, zeta, 1.into());
         for i in 0..p { f[i] *= g[i] * fac; }
@@ -287,7 +290,7 @@ impl<M: mod_int::Mod> FPSOps<M> {
 // Depends on: MInt.rs, fft.rs
 fn fps_inv<P: mod_int::Mod + PartialEq>(
     f: &[mod_int::ModInt<P>],
-    gen: mod_int::ModInt<P>
+    fpgen: mod_int::ModInt<P>
 ) -> Vec<mod_int::ModInt<P>> {
     let n = f.len();
     assert!(n.is_power_of_two());
@@ -299,7 +302,7 @@ fn fps_inv<P: mod_int::Mod + PartialEq>(
     r[0] = 1.into();
     // Adopts the technique used in https://judge.yosupo.jp/submission/3153
     while sz < n {
-        let zeta = gen.pow((P::m() - 1) / sz as i64 / 2);
+        let zeta = fpgen.pow((P::m() - 1) / sz as i64 / 2);
         tmp_f[..2 * sz].copy_from_slice(&f[..2 * sz]);
         tmp_r[..2 * sz].copy_from_slice(&r[..2 * sz]);
         fft::fft(&mut tmp_r[..2 * sz], zeta, 1.into());
@@ -328,7 +331,7 @@ impl<M: mod_int::Mod + PartialEq> FPSOps<M> {
         let mut p = 1;
         while p < n { p *= 2; }
         a.resize(p, 0.into());
-        let mut a = fps_inv(&a, self.gen);
+        let mut a = fps_inv(&a, self.fpgen);
         a.truncate(n);
         a
     }

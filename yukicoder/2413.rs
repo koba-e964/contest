@@ -244,7 +244,7 @@ mod fft {
 // Depends on: MInt.rs, fft.rs
 fn fps_inv<P: mod_int::Mod + PartialEq>(
     f: &[mod_int::ModInt<P>],
-    gen: mod_int::ModInt<P>
+    fpgen: mod_int::ModInt<P>
 ) -> Vec<mod_int::ModInt<P>> {
     let n = f.len();
     assert!(n.is_power_of_two());
@@ -256,7 +256,7 @@ fn fps_inv<P: mod_int::Mod + PartialEq>(
     r[0] = 1.into();
     // Adopts the technique used in https://judge.yosupo.jp/submission/3153
     while sz < n {
-        let zeta = gen.pow((P::m() - 1) / sz as i64 / 2);
+        let zeta = fpgen.pow((P::m() - 1) / sz as i64 / 2);
         tmp_f[..2 * sz].copy_from_slice(&f[..2 * sz]);
         tmp_r[..2 * sz].copy_from_slice(&r[..2 * sz]);
         fft::fft(&mut tmp_r[..2 * sz], zeta, 1.into());
@@ -300,7 +300,7 @@ fn fact_init(w: usize) -> (Vec<MInt>, Vec<MInt>) {
 // Depends on: MInt.rs, fact_init.rs, fft.rs
 fn fps_exp<P: mod_int::Mod + PartialEq>(
     h: &[mod_int::ModInt<P>],
-    gen: mod_int::ModInt<P>,
+    fpgen: mod_int::ModInt<P>,
     fac: &[mod_int::ModInt<P>],
     invfac: &[mod_int::ModInt<P>],
 ) -> Vec<mod_int::ModInt<P>> {
@@ -321,7 +321,7 @@ fn fps_exp<P: mod_int::Mod + PartialEq>(
         // g = exp(-h) (mod x^(m/2))
         // Complexity: 4 * fft(2 * m) + 2 * fft(m) + 2 * inv_fft(2 * m) + 3 * inv_fft(m)
         // ~= 8.5 * fft(2 * m)
-        let zeta2m = gen.pow((P::m() - 1) / m as i64 / 2);
+        let zeta2m = fpgen.pow((P::m() - 1) / m as i64 / 2);
         let zeta = zeta2m * zeta2m;
         // 2.a': g = 2g - fg^2 mod x^m
         let factor2m = mod_int::ModInt::new(m as i64 * 2).inv();
@@ -405,20 +405,20 @@ fn fps_exp<P: mod_int::Mod + PartialEq>(
 // Depends on: MInt.rs, fact_init.rs, fft.rs, fps/fps_inv.rs
 fn fps_ln<P: mod_int::Mod + PartialEq>(
     f: &[mod_int::ModInt<P>],
-    gen: mod_int::ModInt<P>,
+    fpgen: mod_int::ModInt<P>,
     fac: &[mod_int::ModInt<P>],
     invfac: &[mod_int::ModInt<P>],
 ) -> Vec<mod_int::ModInt<P>> {
     let n = f.len();
     assert!(n.is_power_of_two());
     assert_eq!(f[0], 1.into());
-    let mut inv = fps_inv(&f, gen);
+    let mut inv = fps_inv(&f, fpgen);
     let mut der = vec![mod_int::ModInt::new(0); 2 * n];
     for i in 1..n {
         der[i - 1] = f[i] * i as i64;
     }
     inv.resize(2 * n, 0.into());
-    let zeta = gen.pow((P::m() - 1) / n as i64 / 2);
+    let zeta = fpgen.pow((P::m() - 1) / n as i64 / 2);
     fft::fft(&mut der, zeta, 1.into());
     fft::fft(&mut inv, zeta, 1.into());
     let invlen = mod_int::ModInt::new(2 * n as i64).inv();

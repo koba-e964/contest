@@ -258,7 +258,7 @@ mod fft {
 // Depends on: MInt.rs, fact_init.rs, fft.rs
 fn fps_exp<P: mod_int::Mod + PartialEq>(
     h: &[mod_int::ModInt<P>],
-    gen: mod_int::ModInt<P>,
+    fpgen: mod_int::ModInt<P>,
     fac: &[mod_int::ModInt<P>],
     invfac: &[mod_int::ModInt<P>],
 ) -> Vec<mod_int::ModInt<P>> {
@@ -279,7 +279,7 @@ fn fps_exp<P: mod_int::Mod + PartialEq>(
         // g = exp(-h) (mod x^(m/2))
         // Complexity: 4 * fft(2 * m) + 2 * fft(m) + 2 * inv_fft(2 * m) + 3 * inv_fft(m)
         // ~= 8.5 * fft(2 * m)
-        let zeta2m = gen.pow((P::m() - 1) / m as i64 / 2);
+        let zeta2m = fpgen.pow((P::m() - 1) / m as i64 / 2);
         let zeta = zeta2m * zeta2m;
         // 2.a': g = 2g - fg^2 mod x^m
         let factor2m = mod_int::ModInt::new(m as i64 * 2).inv();

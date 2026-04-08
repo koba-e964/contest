@@ -246,13 +246,13 @@ mod fft {
 
 // Depends on: fft.rs, MInt.rs
 // Verified by: ABC269-Ex (https://atcoder.jp/contests/abc269/submissions/39116328)
-pub struct FPSOps<M: mod_int::Mod = P> {
-    gen: mod_int::ModInt<M>,
+pub struct FPSOps<M: mod_int::Mod> {
+    fpgen: mod_int::ModInt<M>,
 }
 
 impl<M: mod_int::Mod> FPSOps<M> {
-    pub fn new(gen: mod_int::ModInt<M>) -> Self {
-        FPSOps { gen: gen }
+    pub fn new(fpgen: mod_int::ModInt<M>) -> Self {
+        FPSOps { fpgen: fpgen }
     }
 }
 
@@ -268,6 +268,9 @@ impl<M: mod_int::Mod> FPSOps<M> {
     }
     pub fn mul(&self, a: Vec<mod_int::ModInt<M>>, b: Vec<mod_int::ModInt<M>>) -> Vec<mod_int::ModInt<M>> {
         type MInt<M> = mod_int::ModInt<M>;
+        if a.is_empty() || b.is_empty() {
+            return vec![];
+        }
         let n = a.len() - 1;
         let m = b.len() - 1;
         let mut p = 1;
@@ -277,7 +280,7 @@ impl<M: mod_int::Mod> FPSOps<M> {
         for i in 0..n + 1 { f[i] = a[i]; }
         for i in 0..m + 1 { g[i] = b[i]; }
         let fac = MInt::new(p as i64).inv();
-        let zeta = self.gen.pow((M::m() - 1) / p as i64);
+        let zeta = self.fpgen.pow((M::m() - 1) / p as i64);
         fft::fft(&mut f, zeta, 1.into());
         fft::fft(&mut g, zeta, 1.into());
         for i in 0..p { f[i] *= g[i] * fac; }
@@ -294,7 +297,7 @@ impl<M: mod_int::Mod> FPSOps<M> {
 // Depends on: MInt.rs, fft.rs
 fn fps_inv<P: mod_int::Mod + PartialEq>(
     f: &[mod_int::ModInt<P>],
-    gen: mod_int::ModInt<P>
+    fpgen: mod_int::ModInt<P>
 ) -> Vec<mod_int::ModInt<P>> {
     let n = f.len();
     assert!(n.is_power_of_two());
@@ -306,7 +309,7 @@ fn fps_inv<P: mod_int::Mod + PartialEq>(
     r[0] = 1.into();
     // Adopts the technique used in https://judge.yosupo.jp/submission/3153
     while sz < n {
-        let zeta = gen.pow((P::m() - 1) / sz as i64 / 2);
+        let zeta = fpgen.pow((P::m() - 1) / sz as i64 / 2);
         tmp_f[..2 * sz].copy_from_slice(&f[..2 * sz]);
         tmp_r[..2 * sz].copy_from_slice(&r[..2 * sz]);
         fft::fft(&mut tmp_r[..2 * sz], zeta, 1.into());
@@ -330,11 +333,9 @@ fn fps_inv<P: mod_int::Mod + PartialEq>(
     r
 }
 
-type M = MInt;
-
 // Copied and modified from https://judge.yosupo.jp/submission/133199.
 // Originally by sansen.
-fn middle_product(c: &[M], a: &[M]) -> Vec<M> {
+fn middle_product<M: mod_int::Mod>(c: &[mod_int::ModInt<M>], a: &[mod_int::ModInt<M>]) -> Vec<mod_int::ModInt<M>> {
     assert!(c.len() >= a.len());
     if a.len() <= (1 << 5) {
         return c
@@ -342,20 +343,20 @@ fn middle_product(c: &[M], a: &[M]) -> Vec<M> {
             .map(|c| {
                 c.iter()
                     .zip(a.iter())
-                    .fold(MInt::new(0), |s, a| s + *a.0 * *a.1)
+                    .fold(mod_int::ModInt::new(0), |s, a| s + *a.0 * *a.1)
             })
             .collect();
     }
     let size = c.len().next_power_of_two();
     let mut x = Vec::from(c);
-    x.resize(size, MInt::new(0));
+    x.resize(size, mod_int::ModInt::new(0));
     let mut y = Vec::from(a);
     y.reverse();
-    y.resize(size, MInt::new(0));
-    let zeta = MInt::new(3).pow((MOD - 1) / size as i64);
+    y.resize(size, mod_int::ModInt::new(0));
+    let zeta = mod_int::ModInt::new(3).pow((MOD - 1) / size as i64);
     fft::fft(&mut x, zeta, 1.into());
     fft::fft(&mut y, zeta, 1.into());
-    let factor = MInt::new(size as i64).inv();
+    let factor = mod_int::ModInt::new(size as i64).inv();
     for i in 0..size {
         x[i] *= y[i] * factor;
     }
@@ -363,7 +364,7 @@ fn middle_product(c: &[M], a: &[M]) -> Vec<M> {
     (a.len()..=c.len()).map(|z| x[z - 1]).collect()
 }
 
-fn multipoint_evaluation(ops: &FPSOps, c: &[MInt], p: &[MInt]) -> Vec<M> {
+fn multipoint_evaluation<M: mod_int::Mod + PartialEq>(ops: &FPSOps<M>, c: &[mod_int::ModInt<M>], p: &[mod_int::ModInt<M>]) -> Vec<mod_int::ModInt<M>> {
     if p.is_empty() {
         return vec![];
     }
@@ -371,7 +372,7 @@ fn multipoint_evaluation(ops: &FPSOps, c: &[MInt], p: &[MInt]) -> Vec<M> {
     let m = p.len();
     let mut prod = vec![vec![]; 2 * m];
     for (prod, p) in prod[m..].iter_mut().zip(p.iter()) {
-        *prod = vec![MInt::new(1), -*p];
+        *prod = vec![mod_int::ModInt::<M>::new(1), -*p];
     }
     for i in (1..m).rev() {
         prod[i] = ops.mul(prod[2 * i].clone(), prod[2 * i + 1].clone());
@@ -383,7 +384,7 @@ fn multipoint_evaluation(ops: &FPSOps, c: &[MInt], p: &[MInt]) -> Vec<M> {
     let mut inv = fps_inv(&prod1, 3.into());
     inv.truncate(n);
     let mut c = c.to_vec();
-    c.resize(n + m - 1, MInt::new(0));
+    c.resize(n + m - 1, mod_int::ModInt::<M>::new(0));
     let mut dp = vec![vec![]; 2 * m];
     dp[1] = middle_product(&c, &inv);
     for i in 1..m {
@@ -394,7 +395,7 @@ fn multipoint_evaluation(ops: &FPSOps, c: &[MInt], p: &[MInt]) -> Vec<M> {
 }
 // End of copy-pasted part.
 
-fn fps_mul_all(ops: &FPSOps, f: &[Vec<MInt>]) -> Vec<MInt> {
+fn fps_mul_all<M: mod_int::Mod + PartialEq>(ops: &FPSOps<M>, f: &[Vec<mod_int::ModInt<M>>]) -> Vec<mod_int::ModInt<M>> {
     let m = f.len();
     let mut seg = vec![vec![]; 2 * m];
     for i in 0..m {
@@ -409,7 +410,7 @@ fn fps_mul_all(ops: &FPSOps, f: &[Vec<MInt>]) -> Vec<MInt> {
     std::mem::replace(&mut seg[1], vec![])
 }
 
-fn fps_common_denom(ops: &FPSOps, frac: &[(Vec<MInt>, Vec<MInt>)]) -> (Vec<MInt>, Vec<MInt>) {
+fn fps_common_denom<M: mod_int::Mod>(ops: &FPSOps<M>, frac: &[(Vec<mod_int::ModInt<M>>, Vec<mod_int::ModInt<M>>)]) -> (Vec<mod_int::ModInt<M>>, Vec<mod_int::ModInt<M>>) {
     let m = frac.len();
     let mut seg = vec![(vec![], vec![]); 2 * m];
     for i in 0..m {
@@ -432,21 +433,21 @@ fn fps_common_denom(ops: &FPSOps, frac: &[(Vec<MInt>, Vec<MInt>)]) -> (Vec<MInt>
 }
 
 // https://37zigen.com/lagrange-interpolation/
-fn lagrange_interpolate(ops: &FPSOps, xy: &[(MInt, MInt)]) -> Vec<MInt> {
+fn lagrange_interpolate<M: mod_int::Mod + PartialEq>(ops: &FPSOps<M>, xy: &[(mod_int::ModInt<M>, mod_int::ModInt<M>)]) -> Vec<mod_int::ModInt<M>> {
     let n = xy.len();
-    let mut xs = vec![MInt::new(0); n];
+    let mut xs = vec![mod_int::ModInt::<M>::new(0); n];
     let mut ps = vec![vec![]; n];
     for i in 0..n {
         xs[i] = xy[i].0;
         ps[i] = vec![-xy[i].0, 1.into()];
     }
     let g = fps_mul_all(ops, &ps);
-    let mut gdash = vec![MInt::new(0); n];
+    let mut gdash = vec![mod_int::ModInt::<M>::new(0); n];
     for i in 0..n {
         gdash[i] = g[i + 1] * (i + 1) as i64;
     }
     let vals = multipoint_evaluation(ops, &gdash, &xs);
-    let mut fracs = vec![(vec![MInt::new(1)], vec![]); n];
+    let mut fracs = vec![(vec![mod_int::ModInt::<M>::new(1)], vec![]); n];
     for i in 0..n {
         fracs[i].0[0] = vals[i].inv() * xy[i].1;
         fracs[i].1 = vec![-xy[i].0, 1.into()];
@@ -467,9 +468,7 @@ fn main() {
         n: usize, bigx: i64,
         xy: [(i64, i64); n],
     }
-    let ops = FPSOps {
-        gen: 3.into(),
-    };
+    let ops = FPSOps::new(MInt::new(3));
     let xy: Vec<_> = xy.into_iter().map(|(x, y)| (MInt::new(x), MInt::new(y))).collect();
     let mut idx = n;
     for i in 0..n {

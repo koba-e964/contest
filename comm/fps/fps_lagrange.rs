@@ -4,7 +4,7 @@ fn fps_lagrange<P: mod_int::Mod + PartialEq>(
     k: usize,
     f: &[mod_int::ModInt<P>],
     g: &[mod_int::ModInt<P>],
-    gen: mod_int::ModInt<P>,
+    fpgen: mod_int::ModInt<P>,
     fac: &[mod_int::ModInt<P>],
     invfac: &[mod_int::ModInt<P>],
 ) -> mod_int::ModInt<P> {
@@ -28,11 +28,11 @@ fn fps_lagrange<P: mod_int::Mod + PartialEq>(
     for i in 0..l - 1 {
         gg[i] *= gg0inv;
     }
-    let mut lngg = fps_ln(&gg, gen, fac, invfac);
+    let mut lngg = fps_ln(&gg, fpgen, fac, invfac);
     for i in 0..p {
         lngg[i] *= -mod_int::ModInt::new(k as i64);
     }
-    let egg = fps_exp(&lngg, gen, fac, invfac);
+    let egg = fps_exp(&lngg, fpgen, fac, invfac);
     let mut tot = mod_int::ModInt::new(0);
     for i in 0..k {
         tot += ff[i + 1] * (i + 1) as i64 * egg[k - 1 - i];

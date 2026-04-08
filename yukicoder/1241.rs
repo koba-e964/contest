@@ -238,17 +238,17 @@ mod fft {
     }
 }
 
-fn twofft(a: &mut [Vec<MInt>], gen: MInt) {
+fn twofft(a: &mut [Vec<MInt>], fpgen: MInt) {
     let w = a[0].len();
     let fac = (MOD - 1) / w as i64;
     let n = a.len();
-    let zeta = gen.pow(fac);
+    let zeta = fpgen.pow(fac);
     for i in 0..n {
         fft::transform(&mut a[i], zeta, 1.into());
     }
     let fac = (MOD - 1) / n as i64;
     let mut tmp = vec![MInt::new(0); n];
-    let zeta = gen.pow(fac);
+    let zeta = fpgen.pow(fac);
     for i in 0..w {
         for j in 0..n {
             tmp[j] = a[j][i];
@@ -277,21 +277,21 @@ fn solve() {
     dp[a][(1 << (y + 1)) - b] -= 1;
     dp[(1 << (x + 1)) - a][b] -= 1;
     dp[(1 << (x + 1)) - a][(1 << (y + 1)) - b] += 1;
-    let gen = MInt::new(3);
-    twofft(&mut dp, gen);
+    let fpgen = MInt::new(3);
+    twofft(&mut dp, fpgen);
     let mut trans = vec![vec![MInt::new(0); 1 << (y + 1)]; 1 << (x + 1)];
     trans[0][0] += 1;
     trans[0][1] += 1;
     trans[1][0] += 1;
     trans[0][(1 << (y + 1)) - 1] += 1;
     trans[(1 << (x + 1)) - 1][0] += 1;
-    twofft(&mut trans, gen);
+    twofft(&mut trans, fpgen);
     for i in 0..1 << (x + 1) {
         for j in 0..1 << (y + 1) {
             dp[i][j] *= trans[i][j].pow(t);
         }
     }
-    twofft(&mut dp, gen.inv());
+    twofft(&mut dp, fpgen.inv());
     puts!("{}\n", dp[c][d] * MInt::new(1 << (x + y + 2)).inv());
 }
 

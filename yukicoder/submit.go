@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"mime/multipart"
@@ -105,8 +106,14 @@ func postCode(problemID int, language string, code []byte, apiKey string) (uint6
 	var respData struct {
 		SubmissionID uint64 `json:"SubmissionId"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&respData); err != nil {
+	readBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("reading body failed")
+		return 0, err
+	}
+	if err := json.Unmarshal(readBody, &respData); err != nil {
 		log.Println("Parsing JSON failed")
+		log.Print("body:", readBody)
 		return 0, err
 	}
 	return respData.SubmissionID, nil

@@ -242,7 +242,7 @@ mod arbmod {
     define_mod!(P2, MOD2);
 
     // f *= g, g is destroyed
-    fn convolution_friendly<P: mod_int::Mod>(a: &[i64], b: &[i64], gen: i64) -> Vec<i64> {
+    fn convolution_friendly<P: mod_int::Mod>(a: &[i64], b: &[i64], fpgen: i64) -> Vec<i64> {
         let d = a.len();
         let mut f = vec![ModInt::<P>::new(0); d];
         let mut g = vec![ModInt::<P>::new(0); d];
@@ -250,7 +250,7 @@ mod arbmod {
             f[i] = a[i].into();
             g[i] = b[i].into();
         }
-        let zeta = ModInt::new(gen).pow((P::m() - 1) / d as i64);
+        let zeta = ModInt::new(fpgen).pow((P::m() - 1) / d as i64);
         fft::fft(&mut f, zeta, ModInt::new(1));
         fft::fft(&mut g, zeta, ModInt::new(1));
         for i in 0..d {
