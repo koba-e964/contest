@@ -139,6 +139,10 @@ prefix = "cht"
 filename = "datastr/MinCHT.rs"
 
 [[rust.entries]]
+prefix = "slopetrick"
+filename = "datastr/SlopeTrick.rs"
+
+[[rust.entries]]
 prefix = "zalgo"
 filename = "string/z_algorithm.rs"
 
