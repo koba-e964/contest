@@ -151,6 +151,10 @@ prefix = "suffix"
 filename = "string/sa_is.rs"
 
 [[rust.entries]]
+prefix = "lis"
+filename = "string/lis.rs"
+
+[[rust.entries]]
 prefix = "lcp"
 filename = "string/lcp.rs"
 depends_on = ["string/sa_is.rs"]

@@ -21,7 +21,7 @@ fn lis_by<F: FnMut(&i64, &i64) -> bool>(a: &[i64], mut cmp: F) -> Vec<usize> {
             }
         }
         ans[i] = pass + 1;
-        dp[pass + 1] = std::cmp::min(dp[pass + 1], a[i]);
+        dp[pass + 1] = dp[pass + 1].min(a[i]);
     }
     ans
 }
