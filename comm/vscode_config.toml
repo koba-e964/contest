@@ -52,6 +52,10 @@ prefix = "mo"
 filename = "vscode/mo.rs"
 
 [[rust.entries]]
+prefix = "grid-dist"
+filename = "vscode/grid-dist.rs"
+
+[[rust.entries]]
 prefix = "bs"
 filename = "binary_search.rs"
 
