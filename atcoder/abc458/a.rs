@@ -1,0 +1,11 @@
+fn getline() -> String {
+    let mut ret = String::new();
+    std::io::stdin().read_line(&mut ret).unwrap();
+    ret
+}
+
+fn main() {
+    let s = getline().trim().to_string();
+    let n = getline().trim().parse::<usize>().unwrap();
+    println!("{}", &s[n..s.len() - n]);
+}
