@@ -12,7 +12,7 @@ fn fps_ln<P: mod_int::Mod + PartialEq>(
     let n = f.len();
     assert!(n.is_power_of_two());
     assert_eq!(f[0], 1.into());
-    let mut inv = fps_inv(&f, gen);
+    let mut inv = fps_inv(&f, fpgen);
     let mut der = vec![mod_int::ModInt::new(0); 2 * n];
     for i in 1..n {
         der[i - 1] = f[i] * i as i64;

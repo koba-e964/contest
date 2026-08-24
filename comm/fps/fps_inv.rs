@@ -46,7 +46,7 @@ impl<M: mod_int::Mod + PartialEq> FPSOps<M> {
         let mut p = 1;
         while p < n { p *= 2; }
         a.resize(p, 0.into());
-        let mut a = fps_inv(&a, self.gen);
+        let mut a = fps_inv(&a, self.fpgen);
         a.truncate(n);
         a
     }
