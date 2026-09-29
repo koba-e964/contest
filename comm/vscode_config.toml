@@ -56,6 +56,18 @@ prefix = "grid-dist"
 filename = "vscode/grid-dist.rs"
 
 [[rust.entries]]
+prefix = "plane-scan"
+filename = "vscode/impl-notes/plane-scan.rs"
+
+[[rust.entries]]
+prefix = "rolling-hash"
+filename = "vscode/impl-notes/rolling-hash.rs"
+
+[[rust.entries]]
+prefix = "next-distinct"
+filename = "vscode/impl-notes/next-distinct.rs"
+
+[[rust.entries]]
 prefix = "bs"
 filename = "binary_search.rs"
 
