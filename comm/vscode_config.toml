@@ -56,6 +56,10 @@ prefix = "grid-dist"
 filename = "vscode/grid-dist.rs"
 
 [[rust.entries]]
+prefix = "prime-sieve"
+filename = "vscode/prime-sieve.rs"
+
+[[rust.entries]]
 prefix = "plane-scan"
 filename = "vscode/impl-notes/plane-scan.rs"
 

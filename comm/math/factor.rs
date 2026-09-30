@@ -38,7 +38,7 @@ fn is_primes_tbl(n: usize) -> Vec<bool> {
     pr[1] = false;
     for i in 2..n {
         if !pr[i] { continue; }
-        for j in 2..(n - 1) / i {
+        for j in 2..(n - 1) / i + 1 {
             pr[i * j] = false;
         }
     }
