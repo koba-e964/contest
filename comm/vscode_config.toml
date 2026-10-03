@@ -176,5 +176,5 @@ filename = "string/lcp.rs"
 depends_on = ["string/sa_is.rs"]
 
 [[cpp.entries]]
-prefix = "uf"
+prefix = "uf-cpp"
 filename = "graph/UnionFind.cpp"

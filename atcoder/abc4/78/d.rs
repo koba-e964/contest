@@ -1,10 +1,42 @@
+// https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8
+macro_rules! input {
+    ($($r:tt)*) => {
+        let stdin = std::io::stdin();
+        let mut bytes = std::io::Read::bytes(std::io::BufReader::new(stdin.lock()));
+        let mut next = move || -> String{
+            bytes.by_ref().map(|r|r.unwrap() as char)
+                .skip_while(|c|c.is_whitespace())
+                .take_while(|c|!c.is_whitespace())
+                .collect()
+        };
+        input_inner!{next, $($r)*}
+    };
+}
+
+macro_rules! input_inner {
+    ($next:expr) => {};
+    ($next:expr,) => {};
+    ($next:expr, $var:ident : $t:tt $($r:tt)*) => {
+        let $var = read_value!($next, $t);
+        input_inner!{$next $($r)*}
+    };
+}
+
+macro_rules! read_value {
+    ($next:expr, ( $($t:tt),* )) => { ($(read_value!($next, $t)),*) };
+    ($next:expr, [ $t:tt ; $len:expr ]) => {
+        (0..$len).map(|_| read_value!($next, $t)).collect::<Vec<_>>()
+    };
+    ($next:expr, usize1) => (read_value!($next, usize) - 1);
+    ($next:expr, $t:ty) => ($next().parse::<$t>().expect("Parse error"));
+}
+
 // Port from https://satanic0258.github.io/snippets/data-structure/SegmentMap.html
 // Verified by:
 // - https://yukicoder.me/submissions/701257
 // - https://codeforces.com/contest/1556/submission/129318651
 // - https://yukicoder.me/submissions/894977
-// - https://atcoder.jp/contests/abc478/submissions/79750744
-type SegType = i64;
+type SegType = usize;
 #[derive(Clone, Debug, Default)]
 struct Segs {
     s: std::collections::BTreeMap<SegType, SegType>,
@@ -74,5 +106,32 @@ impl Segs {
     #[allow(unused)]
     fn each<F: FnMut(SegType, SegType)>(&self, mut f: F) {
         for (&x, &y) in &self.s { f(x, y); }
+    }
+}
+
+fn main() {
+    input! {
+        n: usize, q: usize,
+        lrx: [(usize1, usize, usize1); q],
+    }
+    let mut ps = vec![vec![]; q];
+    for (l, r, x) in lrx {
+        ps[x].push((l, r));
+    }
+    let mut imos = vec![0; n + 1];
+    for i in 0..q {
+        let mut seg = Segs::new();
+        for &(l, r) in &ps[i] {
+            seg.add(l..r);
+        }
+        seg.each(|l, r| { imos[l] += 1; imos[r] -= 1; });
+    }
+    let mut ans = vec![0; n];
+    ans[0] = imos[0];
+    for i in 1..n {
+        ans[i] = ans[i - 1] + imos[i];
+    }
+    for i in 0..n {
+        print!("{}{}", ans[i], if i + 1 == n { "\n" } else { " " });
     }
 }
