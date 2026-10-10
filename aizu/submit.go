@@ -19,7 +19,7 @@ import (
 // Run: ./submit PROBLEM_ID.ext or ./submit ArenaID/ID.ext
 // You can just run without explicitly compiling by: go run submit.go PROBLEM_ID.ext
 
-const Endpoint string = "https://judgeapi.u-aizu.ac.jp"
+const Endpoint string = "https://onlinejudge.u-aizu.ac.jp/api"
 const JSessionIDName string = "JSESSIONID"
 
 type session struct {
@@ -213,6 +213,17 @@ func (session *session) logout() error {
 	return nil
 }
 
+func allNumeric(s string) bool {
+	ok := true
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			ok = false
+			break
+		}
+	}
+	return ok
+}
+
 func main() {
 	if len(os.Args) != 2 {
 		log.Fatalf("Usage: ./submit PROBLEM_ID.ext\n")
@@ -273,15 +284,15 @@ func main() {
 	})()
 	// TODO: subtyping
 	segments := strings.Split(problemName, "/")
-	if len(segments) == 2 {
+	if len(segments) == 2 && !allNumeric(segments[0]) {
 		arenaID := segments[0]
 		ID := segments[1]
 		err := session.submitInArena(arenaID, ID, language, string(source))
 		if err != nil {
 			log.Fatalf("%w", err)
 		}
-	} else if len(segments) == 1 {
-		problemId := segments[0]
+	} else if len(segments) == 1 || allNumeric(segments[0]) {
+		problemId := strings.Join(segments, "")
 		err := session.submit(problemId, language, string(source))
 		if err != nil {
 			log.Fatalf("%w", err)
