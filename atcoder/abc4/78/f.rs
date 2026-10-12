@@ -178,7 +178,6 @@ fn main() {
         }
         let l = l.max(1) - 1;
         ans = ans * (i - l) as i64 % 998_244_353;
-        ans *= (i - l.max(1)) as i64 + 1;
     }
     println!("{ans}");
 }
