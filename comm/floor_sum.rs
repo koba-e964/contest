@@ -3,10 +3,20 @@
 // Verified by: https://atcoder.jp/contests/arc111/submissions/23877969
 fn floor_sum(n: i64, m: i64, a: i64, b: i64) -> i64 {
     fn internal(n: i64, m: i64, mut a: i64, mut b: i64, mut acc: i64) -> i64 {
+        if a < 0 {
+            let q = (-a - 1) / m + 1;
+            acc -= (n - 1) * n / 2 * q;
+            a += q * m;
+        }
         if a >= m {
             let q = a / m;
             acc += (n - 1) * n / 2 * q;
             a -= q * m;
+        }
+        if b < 0 {
+            let q = (-b - 1) / m + 1;
+            acc -= n * q;
+            b += q * m;
         }
         if b >= m {
             let q = b / m;
