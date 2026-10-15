@@ -6,3 +6,5 @@
 *~
 *.class
 *.dll
+
+!comm/LICENSE
